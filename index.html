@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Django Backend Training</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+  <style>
+    .home-hero {
+      background: linear-gradient(135deg, #0d6e3c 0%, #1a9e58 100%);
+      color: #fff;
+      padding: 3rem 2rem 2.5rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+    .home-hero h1 {
+      font-size: 2.2rem;
+      margin: 0 0 .5rem;
+      font-weight: 800;
+      letter-spacing: -.5px;
+    }
+    .home-hero p {
+      font-size: 1.05rem;
+      opacity: .88;
+      margin: 0;
+    }
+    .home-meta {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-top: 1.2rem;
+      font-size: .88rem;
+      opacity: .8;
+    }
+    .lessons-grid {
+      display: grid;
+      gap: 1rem;
+    }
+    .lesson-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 1.1rem;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 1.2rem 1.4rem;
+      text-decoration: none;
+      color: inherit;
+      transition: box-shadow .15s, border-color .15s, transform .15s;
+    }
+    .lesson-card:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,.1);
+      border-color: #1a9e58;
+      transform: translateY(-2px);
+    }
+    .lesson-num {
+      flex-shrink: 0;
+      width: 2.4rem;
+      height: 2.4rem;
+      background: #e8f5ee;
+      color: #0d6e3c;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: .9rem;
+    }
+    .lesson-info h3 {
+      margin: 0 0 .25rem;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1a202c;
+    }
+    .lesson-info p {
+      margin: 0 0 .5rem;
+      font-size: .88rem;
+      color: #64748b;
+      line-height: 1.4;
+    }
+    .lesson-tags {
+      display: flex;
+      gap: .5rem;
+      flex-wrap: wrap;
+    }
+    .tag {
+      background: #f1f5f9;
+      color: #475569;
+      border-radius: 4px;
+      padding: .15rem .5rem;
+      font-size: .78rem;
+      font-weight: 500;
+    }
+    .tag.time {
+      background: #eff6ff;
+      color: #2563eb;
+    }
+    .section-title {
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: #94a3b8;
+      margin: 2rem 0 .75rem;
+    }
+    .ref-card {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: .7rem 1.1rem;
+      text-decoration: none;
+      color: #1a202c;
+      font-size: .9rem;
+      font-weight: 500;
+      transition: border-color .15s, background .15s;
+    }
+    .ref-card:hover {
+      border-color: #1a9e58;
+      background: #f0fdf4;
+    }
+    .ref-row {
+      display: flex;
+      gap: .75rem;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+<div class="lesson-wrap">
+
+  <div class="home-hero">
+    <h1>Django Backend Training</h1>
+  </div>
+
+  <p class="section-title">Course Lessons</p>
+  <div class="lessons-grid">
+
+    <a class="lesson-card" href="lessons/0001-introduction-to-django.html">
+      <div class="lesson-num">01</div>
+      <div class="lesson-info">
+        <h3>Introduction to Django</h3>
+        <p>What Django is, why it exists, and how a request travels through the MVT architecture.</p>
+        <div class="lesson-tags">
+          <span class="tag time">⏱ 15 min</span>
+          <span class="tag">Beginner</span>
+          <span class="tag">MVT</span>
+          <span class="tag">Request lifecycle</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="lesson-card" href="lessons/0002-django-project-structure.html">
+      <div class="lesson-num">02</div>
+      <div class="lesson-info">
+        <h3>Django Project Structure</h3>
+        <p>Navigate <code>manage.py</code>, <code>settings.py</code>, <code>urls.py</code>, apps, and migrations with confidence.</p>
+        <div class="lesson-tags">
+          <span class="tag time">⏱ 10 min</span>
+          <span class="tag">Beginner</span>
+          <span class="tag">Project layout</span>
+          <span class="tag">Apps</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="lesson-card" href="lessons/0003-models-and-orm.html">
+      <div class="lesson-num">03</div>
+      <div class="lesson-info">
+        <h3>Models &amp; ORM</h3>
+        <p>Design models and relationships, then query them with CRUD operations, filters, and aggregations.</p>
+        <div class="lesson-tags">
+          <span class="tag time">⏱ 40 min</span>
+          <span class="tag">Core</span>
+          <span class="tag">ORM</span>
+          <span class="tag">ForeignKey</span>
+          <span class="tag">M2M</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="lesson-card" href="lessons/0004-building-apis.html">
+      <div class="lesson-num">04</div>
+      <div class="lesson-info">
+        <h3>Building APIs</h3>
+        <p>Build GET / POST / PUT / DELETE endpoints with plain Django <code>HttpResponse</code> and Django REST Framework.</p>
+        <div class="lesson-tags">
+          <span class="tag time">⏱ 35 min</span>
+          <span class="tag">Core</span>
+          <span class="tag">DRF</span>
+          <span class="tag">REST</span>
+          <span class="tag">Serializers</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="lesson-card" href="lessons/0005-openapi-swagger.html">
+      <div class="lesson-num">05</div>
+      <div class="lesson-info">
+        <h3>OpenAPI / Swagger</h3>
+        <p>Write an OpenAPI 3.0 spec and render interactive documentation with Swagger UI.</p>
+        <div class="lesson-tags">
+          <span class="tag time">⏱ 15 min</span>
+          <span class="tag">Intermediate</span>
+          <span class="tag">OpenAPI 3.0</span>
+          <span class="tag">Swagger UI</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="lesson-card" href="lessons/0006-wrap-up-and-learning-path.html">
+      <div class="lesson-num">06</div>
+      <div class="lesson-info">
+        <h3>Wrap Up &amp; Learning Path</h3>
+        <p>Course summary, assignments (IMDb, Social Network), and your independent learning roadmap.</p>
+        <div class="lesson-tags">
+          <span class="tag time">⏱ 5 min</span>
+          <span class="tag">Summary</span>
+          <span class="tag">Assignments</span>
+        </div>
+      </div>
+    </a>
+
+  </div>
+
+  <p class="section-title">Reference</p>
+  <div class="ref-row">
+    <a class="ref-card" href="reference/django-cheatsheet.html">📄 Django Cheatsheet</a>
+  </div>
+
+</div>
+</body>
+</html>
