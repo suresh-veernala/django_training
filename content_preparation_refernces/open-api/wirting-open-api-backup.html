@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Open API Specification | NxtWave</title>
+    <meta name="generator" content="VuePress 1.9.10">
+    
+    <meta name="description" content="Backend Training">
+    
+    <link rel="preload" href="/assets/css/0.styles.43e81801.css" as="style"><link rel="preload" href="/assets/js/app.6f169a24.js" as="script"><link rel="preload" href="/assets/js/2.72287618.js" as="script"><link rel="preload" href="/assets/js/1.d7e6cbd8.js" as="script"><link rel="preload" href="/assets/js/107.5ccf6aa8.js" as="script"><link rel="prefetch" href="/assets/js/10.69cbdc88.js"><link rel="prefetch" href="/assets/js/100.dd7f6455.js"><link rel="prefetch" href="/assets/js/101.840d1e32.js"><link rel="prefetch" href="/assets/js/102.1013142a.js"><link rel="prefetch" href="/assets/js/103.a740e20f.js"><link rel="prefetch" href="/assets/js/104.9034e62b.js"><link rel="prefetch" href="/assets/js/105.78f15f58.js"><link rel="prefetch" href="/assets/js/106.6819b0a4.js"><link rel="prefetch" href="/assets/js/108.55d9857e.js"><link rel="prefetch" href="/assets/js/109.6eb53b6f.js"><link rel="prefetch" href="/assets/js/11.79542240.js"><link rel="prefetch" href="/assets/js/110.7422f814.js"><link rel="prefetch" href="/assets/js/111.b5f98ba8.js"><link rel="prefetch" href="/assets/js/112.eef04042.js"><link rel="prefetch" href="/assets/js/113.bdeed54b.js"><link rel="prefetch" href="/assets/js/114.7eeb8f58.js"><link rel="prefetch" href="/assets/js/115.edf03832.js"><link rel="prefetch" href="/assets/js/116.73e47f73.js"><link rel="prefetch" href="/assets/js/117.da72f84f.js"><link rel="prefetch" href="/assets/js/118.9f080276.js"><link rel="prefetch" href="/assets/js/119.48946455.js"><link rel="prefetch" href="/assets/js/12.e1729356.js"><link rel="prefetch" href="/assets/js/120.8931c0e6.js"><link rel="prefetch" href="/assets/js/121.f31ba150.js"><link rel="prefetch" href="/assets/js/122.30037aff.js"><link rel="prefetch" href="/assets/js/123.0383c744.js"><link rel="prefetch" href="/assets/js/124.8635f6e3.js"><link rel="prefetch" href="/assets/js/125.fa25e138.js"><link rel="prefetch" href="/assets/js/126.679f1784.js"><link rel="prefetch" href="/assets/js/127.0225fa00.js"><link rel="prefetch" href="/assets/js/128.96b2d13c.js"><link rel="prefetch" href="/assets/js/129.fbf08aea.js"><link rel="prefetch" href="/assets/js/13.5f545117.js"><link rel="prefetch" href="/assets/js/130.352a8fe7.js"><link rel="prefetch" href="/assets/js/131.3d7b07d6.js"><link rel="prefetch" href="/assets/js/132.1ca2c1e7.js"><link rel="prefetch" href="/assets/js/133.ab228b9a.js"><link rel="prefetch" href="/assets/js/134.7adf549e.js"><link rel="prefetch" href="/assets/js/135.e8f8414a.js"><link rel="prefetch" href="/assets/js/136.bdfbea69.js"><link rel="prefetch" href="/assets/js/14.f1f66bb3.js"><link rel="prefetch" href="/assets/js/15.c3ade99b.js"><link rel="prefetch" href="/assets/js/16.104ad100.js"><link rel="prefetch" href="/assets/js/19.40589d3a.js"><link rel="prefetch" href="/assets/js/20.8e189412.js"><link rel="prefetch" href="/assets/js/21.18c7642c.js"><link rel="prefetch" href="/assets/js/22.c644b564.js"><link rel="prefetch" href="/assets/js/23.9f6115a9.js"><link rel="prefetch" href="/assets/js/24.a750cf65.js"><link rel="prefetch" href="/assets/js/25.acfea3be.js"><link rel="prefetch" href="/assets/js/26.2a7d3c73.js"><link rel="prefetch" href="/assets/js/27.7b4a4653.js"><link rel="prefetch" href="/assets/js/28.e9b57095.js"><link rel="prefetch" href="/assets/js/29.c1df7354.js"><link rel="prefetch" href="/assets/js/3.18c53e5b.js"><link rel="prefetch" href="/assets/js/30.5572921d.js"><link rel="prefetch" href="/assets/js/31.94c09ba9.js"><link rel="prefetch" href="/assets/js/32.112a0c56.js"><link rel="prefetch" href="/assets/js/33.82d2812e.js"><link rel="prefetch" href="/assets/js/34.6c1b756d.js"><link rel="prefetch" href="/assets/js/35.2d4760be.js"><link rel="prefetch" href="/assets/js/36.de1c370c.js"><link rel="prefetch" href="/assets/js/37.c1b6c005.js"><link rel="prefetch" href="/assets/js/38.43983a7e.js"><link rel="prefetch" href="/assets/js/39.79abbc4f.js"><link rel="prefetch" href="/assets/js/4.d85bbc42.js"><link rel="prefetch" href="/assets/js/40.f41af366.js"><link rel="prefetch" href="/assets/js/41.696e732a.js"><link rel="prefetch" href="/assets/js/42.343abf45.js"><link rel="prefetch" href="/assets/js/43.24a8a5da.js"><link rel="prefetch" href="/assets/js/44.f0657052.js"><link rel="prefetch" href="/assets/js/45.07a1f42e.js"><link rel="prefetch" href="/assets/js/46.cde55439.js"><link rel="prefetch" href="/assets/js/47.d9330ade.js"><link rel="prefetch" href="/assets/js/48.b934f603.js"><link rel="prefetch" href="/assets/js/49.53f62952.js"><link rel="prefetch" href="/assets/js/5.2931a1d5.js"><link rel="prefetch" href="/assets/js/50.e9254817.js"><link rel="prefetch" href="/assets/js/51.3db428c9.js"><link rel="prefetch" href="/assets/js/52.6514df79.js"><link rel="prefetch" href="/assets/js/53.4e3eb779.js"><link rel="prefetch" href="/assets/js/54.c3800773.js"><link rel="prefetch" href="/assets/js/55.770f8a30.js"><link rel="prefetch" href="/assets/js/56.3ed35fc6.js"><link rel="prefetch" href="/assets/js/57.cb24f7f0.js"><link rel="prefetch" href="/assets/js/58.d48e3559.js"><link rel="prefetch" href="/assets/js/59.b17a3be2.js"><link rel="prefetch" href="/assets/js/6.7936f375.js"><link rel="prefetch" href="/assets/js/60.58fba5ff.js"><link rel="prefetch" href="/assets/js/61.2250e907.js"><link rel="prefetch" href="/assets/js/62.352025c6.js"><link rel="prefetch" href="/assets/js/63.cde46eaf.js"><link rel="prefetch" href="/assets/js/64.b7dbce06.js"><link rel="prefetch" href="/assets/js/65.67b04ce3.js"><link rel="prefetch" href="/assets/js/66.5c2e07c3.js"><link rel="prefetch" href="/assets/js/67.83816518.js"><link rel="prefetch" href="/assets/js/68.f7e656b6.js"><link rel="prefetch" href="/assets/js/69.e2332b86.js"><link rel="prefetch" href="/assets/js/7.67a90826.js"><link rel="prefetch" href="/assets/js/70.650837bf.js"><link rel="prefetch" href="/assets/js/71.2f176c61.js"><link rel="prefetch" href="/assets/js/72.c83836a1.js"><link rel="prefetch" href="/assets/js/73.6fc4700c.js"><link rel="prefetch" href="/assets/js/74.6cd5b58f.js"><link rel="prefetch" href="/assets/js/75.60841aa2.js"><link rel="prefetch" href="/assets/js/76.6d5bc66d.js"><link rel="prefetch" href="/assets/js/77.207623f9.js"><link rel="prefetch" href="/assets/js/78.03dc12a9.js"><link rel="prefetch" href="/assets/js/79.ef86e106.js"><link rel="prefetch" href="/assets/js/8.c4f9d6d6.js"><link rel="prefetch" href="/assets/js/80.1ac09eb6.js"><link rel="prefetch" href="/assets/js/81.e7e83eb9.js"><link rel="prefetch" href="/assets/js/82.15437e9e.js"><link rel="prefetch" href="/assets/js/83.5672f402.js"><link rel="prefetch" href="/assets/js/84.cfc02b37.js"><link rel="prefetch" href="/assets/js/85.e09e01e5.js"><link rel="prefetch" href="/assets/js/86.52204316.js"><link rel="prefetch" href="/assets/js/87.4601bc04.js"><link rel="prefetch" href="/assets/js/88.76e84c07.js"><link rel="prefetch" href="/assets/js/89.df51f231.js"><link rel="prefetch" href="/assets/js/9.aa9f7718.js"><link rel="prefetch" href="/assets/js/90.ec0b772d.js"><link rel="prefetch" href="/assets/js/91.86179cb0.js"><link rel="prefetch" href="/assets/js/92.94c0dbaf.js"><link rel="prefetch" href="/assets/js/93.fadbd226.js"><link rel="prefetch" href="/assets/js/94.260b8cd2.js"><link rel="prefetch" href="/assets/js/95.f03c3f1b.js"><link rel="prefetch" href="/assets/js/96.f48069e6.js"><link rel="prefetch" href="/assets/js/97.35ec079f.js"><link rel="prefetch" href="/assets/js/98.f5788d6b.js"><link rel="prefetch" href="/assets/js/99.53540d4d.js"><link rel="prefetch" href="/assets/js/vendors~docsearch.0a33344a.js">
+    <link rel="stylesheet" href="/assets/css/0.styles.43e81801.css">
+  </head>
+  <body>
+    <div id="app" data-server-rendered="true"><div class="theme-container no-sidebar"><header class="navbar"><div class="sidebar-button"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" viewBox="0 0 448 512" class="icon"><path fill="currentColor" d="M436 124H12c-6.627 0-12-5.373-12-12V80c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12z"></path></svg></div> <a href="/" class="home-link router-link-active"><!----> <span class="site-name">NxtWave</span></a> <div class="links"><div class="search-box"><input aria-label="Search" autocomplete="off" spellcheck="false" value=""> <!----></div> <nav class="nav-links can-hide"><div class="nav-item"><a href="/" class="nav-link">
+  Home
+</a></div> <!----></nav></div></header> <div class="sidebar-mask"></div> <aside class="sidebar"><nav class="nav-links"><div class="nav-item"><a href="/" class="nav-link">
+  Home
+</a></div> <!----></nav>  <!----> </aside> <main class="page"> <div class="theme-default-content content__default"><h1 id="open-api-specification"><a href="#open-api-specification" class="header-anchor">#</a> Open API Specification</h1> <p><img src="https://miro.medium.com/max/1000/1*ZHFxaMQ_71h-2GwMTeIkew.png" alt=""></p> <h2 id="writing-an-oas"><a href="#writing-an-oas" class="header-anchor">#</a> Writing an OAS</h2> <p>For practise you can use <a href="http://editor.swagger.io/" target="_blank">Online Editor</a></p> <p>A typical API consists of the following sections</p> <ul><li>URL</li> <li>HTTP Method</li> <li>Request Data</li> <li>Response Data</li> <li>Security</li> <li>A Unique Operation Id</li></ul> <p>We will be writing OAS in the following sections for the below mentioned API.</p> <ul><li>URL
+<ul><li>http://localhost:8000/api/person/create/</li> <li>POST METHOD</li></ul></li> <li>Request
+<ul><li>Body</li></ul></li></ul> <div class="language-json extra-class"><pre class="language-json"><code><span class="token punctuation">{</span>
+    <span class="token property">&quot;firstName&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;lastName&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;username&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;age&quot;</span><span class="token operator">:</span> <span class="token number">24</span>
+<span class="token punctuation">}</span>
+</code></pre></div><ul><li>Response
+<ul><li>Status Code</li> <li>Body</li></ul> <div class="language-json extra-class"><pre class="language-json"><code><span class="token punctuation">{</span>
+    <span class="token property">&quot;createdOn&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;firstName&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;lastName&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;username&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;age&quot;</span><span class="token operator">:</span> <span class="token number">25</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;userId&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span>
+<span class="token punctuation">}</span>
+</code></pre></div></li> <li>Security</li> <li>A Unique Operation Id</li></ul> <details class="custom-block details"><summary>Note: Copy the below template in api_spec.json file to get started.</summary> <div class="language-json5 extra-class"><pre class="language-json5"><code><span class="token punctuation">{</span>
+    <span class="token property">&quot;swagger&quot;</span><span class="token operator">:</span> <span class="token string">&quot;2.0&quot;</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;host&quot;</span><span class="token operator">:</span> <span class="token string">&quot;127.0.0.1:8000&quot;</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;basePath&quot;</span><span class="token operator">:</span> <span class="token string">&quot;/api/ip_traffic/&quot;</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;info&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">&quot;version&quot;</span><span class="token operator">:</span> <span class="token string">&quot;1.0.0&quot;</span><span class="token punctuation">,</span>
+        <span class="token property">&quot;title&quot;</span><span class="token operator">:</span> <span class="token string">&quot;Simple API&quot;</span><span class="token punctuation">,</span>
+        <span class="token property">&quot;description&quot;</span><span class="token operator">:</span> <span class="token string">&quot;A simple API to learn how to write OpenAPI Specification&quot;</span>
+    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;schemes&quot;</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+        <span class="token string">&quot;https&quot;</span><span class="token punctuation">,</span>
+        <span class="token string">&quot;http&quot;</span>
+    <span class="token punctuation">]</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;consumes&quot;</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+        <span class="token string">&quot;application/json&quot;</span>
+    <span class="token punctuation">]</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;produces&quot;</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+        <span class="token string">&quot;application/json&quot;</span>
+    <span class="token punctuation">]</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;securityDefinitions&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">&quot;oauth&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+            <span class="token property">&quot;tokenUrl&quot;</span><span class="token operator">:</span> <span class="token string">&quot;http://auth.ibtspl.com/oauth2/&quot;</span><span class="token punctuation">,</span>
+            <span class="token property">&quot;flow&quot;</span><span class="token operator">:</span> <span class="token string">&quot;password&quot;</span><span class="token punctuation">,</span>
+            <span class="token property">&quot;scopes&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                <span class="token property">&quot;read&quot;</span><span class="token operator">:</span> <span class="token string">&quot;read users&quot;</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;write&quot;</span><span class="token operator">:</span> <span class="token string">&quot;create users&quot;</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;update&quot;</span><span class="token operator">:</span> <span class="token string">&quot;update users&quot;</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;delete&quot;</span><span class="token operator">:</span> <span class="token string">&quot;delete users&quot;</span>
+            <span class="token punctuation">}</span><span class="token punctuation">,</span>
+            <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;oauth2&quot;</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;definitions&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;parameters&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;responses&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;paths&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span><span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre></div></details> <h2 id="specifying-the-url"><a href="#specifying-the-url" class="header-anchor">#</a> Specifying the URL</h2> <ul><li>The API should serve on the following endpoint<div class="language-shell script extra-class"><pre class="language-shell"><code>http://localhost:8000/api/person/create/
+</code></pre></div></li></ul> <h4 id="task-1"><a href="#task-1" class="header-anchor">#</a> Task 1:</h4> <ul><li>Update <code>host</code> to <code>localhost:8000</code> - <a href="#api-url">Refer API URL Section</a></li> <li>Update <code>path</code> as <code>api</code> - <a href="#api-url">Refer API URL Section</a></li></ul> <h4 id="task-2"><a href="#task-2" class="header-anchor">#</a> Task 2:</h4> <ul><li>Add <code>/person/create/</code> in <code>path</code> - <a href="#adding-a-path">Refer Adding a path section</a></li></ul> <h2 id="specifying-http-method"><a href="#specifying-http-method" class="header-anchor">#</a> Specifying HTTP METHOD</h2> <ul><li>The API should allow only <strong>POST</strong> http method
+<ul><li>Task 3:
+<ul><li>add <code>method</code> to the <code>path</code> section - <a href="#adding-http-method">Refer Adding HTTP Method</a></li></ul></li></ul></li></ul> <h2 id="specifying-request-format"><a href="#specifying-request-format" class="header-anchor">#</a> Specifying Request Format</h2> <ul><li>It should expect the below request data. And shouldn't accept partial request object<div class="language-json extra-class"><pre class="language-json"><code><span class="token punctuation">{</span>
+    <span class="token property">&quot;firstName&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;lastName&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;username&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;age&quot;</span><span class="token operator">:</span> <span class="token number">24</span>
+<span class="token punctuation">}</span>
+</code></pre></div><ul><li>Tasks 4:
+<ul><li>Define request body for api - <a href="#specifying-request">Refer Specifying Request</a></li></ul></li> <li>Task 5:
+<ul><li>Marking fields as required - <a href="#marking-fields-required">Refer Marking Fields Required</a></li></ul></li></ul></li></ul> <h2 id="specifying-response-format"><a href="#specifying-response-format" class="header-anchor">#</a> Specifying Response Format</h2> <ul><li>It returns the below response on success with 201 CREATED as status code<div class="language-json5 extra-class"><pre class="language-json5"><code><span class="token punctuation">{</span>
+    <span class="token property">&quot;createdOn&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;firstName&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;lastName&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;username&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;age&quot;</span><span class="token operator">:</span> <span class="token number">25</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;userId&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span>
+<span class="token punctuation">}</span>
+</code></pre></div><ul><li>Task 6: Specifying Response Status Code
+<ul><li>Refer: <a href="#specifying-response-status-code">Specifying Response Status Code</a></li></ul></li> <li>Task 7: Specifying Response Body
+<ul><li>Refer: <a href="#specifying-response-body">Specifying Response Body</a></li></ul></li></ul></li></ul> <h2 id="specifying-security"><a href="#specifying-security" class="header-anchor">#</a> Specifying Security</h2> <ul><li>It should be accessible only by <code>superuser</code> <ul><li>Task 8: Define OAuth scope <code>superuser</code> for it
+<ul><li>Refer: <a href="#defining-oauth-scopes">Defining OAuth Scopes</a></li></ul></li> <li>Task 9: Protect API using OAuth Scopes
+<ul><li>Refer: <a href="#protecting-api-using-oauth-scopes">Protecting API using OAuth Scopes</a></li></ul></li></ul></li></ul> <h2 id="making-apis-readable"><a href="#making-apis-readable" class="header-anchor">#</a> Making APIs readable</h2> <ul><li>Task 10: Add <code>summary</code> and <code>description</code> short and long descriptions respectively, And field level descriptions</li> <li>Refer: <a href="#adding-api-descriptions">Adding API Descriptions</a></li></ul> <h2 id="defining-operation-id"><a href="#defining-operation-id" class="header-anchor">#</a> Defining Operation Id</h2> <ul><li>Task 11: Add Operation Id Refer: <a href="#adding-operationid">Adding OperationId</a></li></ul> <h2 id="final-oas"><a href="#final-oas" class="header-anchor">#</a> Final OAS</h2> <p>Below is a complete OAS for <code>create_person</code> api.</p> <details class="custom-block details"><summary>Click here for specification</summary> <div class="language-json5 extra-class"><pre class="language-json5"><code><span class="token punctuation">{</span>
+    <span class="token property">&quot;swagger&quot;</span><span class="token operator">:</span> <span class="token string">&quot;2.0&quot;</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;host&quot;</span><span class="token operator">:</span> <span class="token string">&quot;localhost:8000&quot;</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;basePath&quot;</span><span class="token operator">:</span> <span class="token string">&quot;/api/&quot;</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;info&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">&quot;version&quot;</span><span class="token operator">:</span> <span class="token string">&quot;1.0.0&quot;</span><span class="token punctuation">,</span>
+        <span class="token property">&quot;title&quot;</span><span class="token operator">:</span> <span class="token string">&quot;Simple API&quot;</span><span class="token punctuation">,</span>
+        <span class="token property">&quot;description&quot;</span><span class="token operator">:</span> <span class="token string">&quot;A simple API to learn how to write OpenAPI Specification&quot;</span>
+    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;schemes&quot;</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+        <span class="token string">&quot;https&quot;</span><span class="token punctuation">,</span>
+        <span class="token string">&quot;http&quot;</span>
+    <span class="token punctuation">]</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;consumes&quot;</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+        <span class="token string">&quot;application/json&quot;</span>
+    <span class="token punctuation">]</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;produces&quot;</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+        <span class="token string">&quot;application/json&quot;</span>
+    <span class="token punctuation">]</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;securityDefinitions&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">&quot;oauth&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+            <span class="token property">&quot;tokenUrl&quot;</span><span class="token operator">:</span> <span class="token string">&quot;http://auth.ibtspl.com/oauth2/&quot;</span><span class="token punctuation">,</span>
+            <span class="token property">&quot;flow&quot;</span><span class="token operator">:</span> <span class="token string">&quot;password&quot;</span><span class="token punctuation">,</span>
+            <span class="token property">&quot;scopes&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                <span class="token property">&quot;read&quot;</span><span class="token operator">:</span> <span class="token string">&quot;read users&quot;</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;write&quot;</span><span class="token operator">:</span> <span class="token string">&quot;create users&quot;</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;update&quot;</span><span class="token operator">:</span> <span class="token string">&quot;update users&quot;</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;delete&quot;</span><span class="token operator">:</span> <span class="token string">&quot;delete users&quot;</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;superuser&quot;</span><span class="token operator">:</span> <span class="token string">&quot;super user permission&quot;</span>
+            <span class="token punctuation">}</span><span class="token punctuation">,</span>
+            <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;oauth2&quot;</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;definitions&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;parameters&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;responses&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;paths&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">&quot;/person/create/&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+            <span class="token property">&quot;post&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                <span class="token property">&quot;operationId&quot;</span><span class="token operator">:</span> <span class="token string">&quot;create_person&quot;</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;summary&quot;</span><span class="token operator">:</span> <span class="token string">&quot;Create New Person&quot;</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;description&quot;</span><span class="token operator">:</span> <span class="token string">&quot;Creates a new person and return the user object. This api is not idempotent.&quot;</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;security&quot;</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+                    <span class="token punctuation">{</span>
+                        <span class="token property">&quot;oauth&quot;</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+                            <span class="token string">&quot;superuser&quot;</span>
+                        <span class="token punctuation">]</span>
+                    <span class="token punctuation">}</span>
+                <span class="token punctuation">]</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;parameters&quot;</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+                    <span class="token punctuation">{</span>
+                        <span class="token property">&quot;name&quot;</span><span class="token operator">:</span> <span class="token string">&quot;person&quot;</span><span class="token punctuation">,</span>
+                        <span class="token property">&quot;in&quot;</span><span class="token operator">:</span> <span class="token string">&quot;body&quot;</span><span class="token punctuation">,</span>
+                        <span class="token property">&quot;description&quot;</span><span class="token operator">:</span> <span class="token string">&quot;The person to create.&quot;</span><span class="token punctuation">,</span>
+                        <span class="token property">&quot;schema&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                            <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;object&quot;</span><span class="token punctuation">,</span>
+                            <span class="token property">&quot;properties&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                                <span class="token property">&quot;firstName&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                                    <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span>
+                                <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                                <span class="token property">&quot;lastName&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                                    <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span>
+                                <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                                <span class="token property">&quot;username&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                                    <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span>
+                                <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                                <span class="token property">&quot;age&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                                    <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;integer&quot;</span><span class="token punctuation">,</span>
+                                    <span class="token property">&quot;format&quot;</span><span class="token operator">:</span> <span class="token string">&quot;int64&quot;</span>
+                                <span class="token punctuation">}</span>
+                            <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                            <span class="token property">&quot;required&quot;</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+                                <span class="token string">&quot;firstName&quot;</span><span class="token punctuation">,</span>
+                                <span class="token string">&quot;lastName&quot;</span><span class="token punctuation">,</span>
+                                <span class="token string">&quot;username&quot;</span><span class="token punctuation">,</span>
+                                <span class="token string">&quot;age&quot;</span>
+                            <span class="token punctuation">]</span>
+                        <span class="token punctuation">}</span>
+                    <span class="token punctuation">}</span>
+                <span class="token punctuation">]</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;responses&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                    <span class="token property">&quot;201&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                        <span class="token property">&quot;description&quot;</span><span class="token operator">:</span> <span class="token string">&quot;Success Response&quot;</span><span class="token punctuation">,</span>
+                        <span class="token property">&quot;schema&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                            <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;object&quot;</span><span class="token punctuation">,</span>
+                            <span class="token property">&quot;properties&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                                <span class="token property">&quot;createdOn&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                                    <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span><span class="token punctuation">,</span>
+                                    <span class="token property">&quot;format&quot;</span><span class="token operator">:</span> <span class="token string">&quot;datetime&quot;</span>
+                                <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                                <span class="token property">&quot;firstName&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                                    <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span>
+                                <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                                <span class="token property">&quot;lastName&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                                    <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span>
+                                <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                                <span class="token property">&quot;username&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                                    <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span>
+                                <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                                <span class="token property">&quot;age&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                                    <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;integer&quot;</span><span class="token punctuation">,</span>
+                                    <span class="token property">&quot;format&quot;</span><span class="token operator">:</span> <span class="token string">&quot;int64&quot;</span>
+                                <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                                <span class="token property">&quot;userId&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                                    <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span>
+                                <span class="token punctuation">}</span>
+                            <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                            <span class="token property">&quot;required&quot;</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+                                <span class="token string">&quot;createdOn&quot;</span><span class="token punctuation">,</span>
+                                <span class="token string">&quot;firstName&quot;</span><span class="token punctuation">,</span>
+                                <span class="token string">&quot;lastName&quot;</span><span class="token punctuation">,</span>
+                                <span class="token string">&quot;username&quot;</span><span class="token punctuation">,</span>
+                                <span class="token string">&quot;age&quot;</span><span class="token punctuation">,</span>
+                                <span class="token string">&quot;userId&quot;</span>
+                            <span class="token punctuation">]</span>
+                        <span class="token punctuation">}</span>
+                    <span class="token punctuation">}</span>
+                <span class="token punctuation">}</span>
+            <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span> 
+</code></pre></div></details> <h2 id="organizing-api-spec"><a href="#organizing-api-spec" class="header-anchor">#</a> Organizing API Spec</h2> <ul><li>Organize Parameters and Responses
+<ul><li>Refer: <a href="#organizing-parameters-and-responses">Organizing parameters and responses</a></li></ul></li> <li>Optimize using definitions
+<ul><li>Refer: <a href="#simplify-spec-using-definitions">Optimizing using definitions</a></li></ul></li> <li><a href="#organized-final-oas">Fully Organized OAS</a></li></ul> <h2 id="api-url"><a href="#api-url" class="header-anchor">#</a> API URL</h2> <p>Speaking of web API, an important information is the root URL which people/programs use to make requests to. This is described by giving a list of accepted <code>schemes</code> (or protocols, like http or https), a <code>host</code>, and a <code>basePath</code>. <code>basePath</code> usually will be your app name.</p> <div class="language-json5 extra-class"><pre class="language-json5"><code><span class="token punctuation">{</span>
+    <span class="token property">&quot;schemes&quot;</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+        <span class="token string">&quot;https&quot;</span><span class="token punctuation">,</span>
+        <span class="token string">&quot;http&quot;</span>
+    <span class="token punctuation">]</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;host&quot;</span><span class="token operator">:</span> <span class="token string">&quot;localhost:8000&quot;</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;basePath&quot;</span><span class="token operator">:</span> <span class="token string">&quot;/api/&quot;</span>
+<span class="token punctuation">}</span>
+</code></pre></div><p>All the apis defined in the api specification file will have <code>https://localhost:8000/api/</code> as base URL.</p> <p><a href="#specifying-the-url">Back to specifying the url</a></p> <h2 id="adding-a-path"><a href="#adding-a-path" class="header-anchor">#</a> Adding a path</h2> <p>In the paths section we specify the URL tail by adding a new path <code>/person/create/</code>.</p> <div class="language-json5 extra-class"><pre class="language-json5"><code><span class="token punctuation">{</span>
+    <span class="token property">&quot;paths&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">&quot;/person/create/&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span><span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre></div><p><a href="#specifying-the-url">Back to specifying the url</a></p> <h2 id="adding-http-method"><a href="#adding-http-method" class="header-anchor">#</a> Adding HTTP Method</h2> <p>Lets specify the HTTP Method with which the apis is to be requested.</p> <div class="language-json5 extra-class"><pre class="language-json5"><code><span class="token punctuation">{</span>
+    <span class="token property">&quot;paths&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">&quot;/person/create/&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+            <span class="token property">&quot;post&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span><span class="token punctuation">}</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre></div><p><a href="#speifying-http-method">Back to specifying http method</a></p> <h2 id="specifying-request"><a href="#specifying-request" class="header-anchor">#</a> Specifying Request</h2> <p>Lets specify the request body</p> <details class="custom-block details"><summary>DETAILS</summary> <div class="language-json extra-class"><pre class="language-json"><code><span class="token punctuation">{</span>
+    <span class="token property">&quot;paths&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">&quot;/person/create/&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+            <span class="token property">&quot;post&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                <span class="token property">&quot;parameters&quot;</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+                    <span class="token punctuation">{</span>
+                        <span class="token property">&quot;name&quot;</span><span class="token operator">:</span> <span class="token string">&quot;person&quot;</span><span class="token punctuation">,</span>
+                        <span class="token property">&quot;in&quot;</span><span class="token operator">:</span> <span class="token string">&quot;body&quot;</span><span class="token punctuation">,</span>
+                        <span class="token property">&quot;required&quot;</span><span class="token operator">:</span> <span class="token boolean">true</span><span class="token punctuation">,</span>
+                        <span class="token property">&quot;description&quot;</span><span class="token operator">:</span> <span class="token string">&quot;The person to create.&quot;</span><span class="token punctuation">,</span>
+                        <span class="token property">&quot;schema&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                            <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;object&quot;</span><span class="token punctuation">,</span>
+                            <span class="token property">&quot;properties&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                                <span class="token property">&quot;firstName&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                                    <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span>
+                                <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                                <span class="token property">&quot;lastName&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                                    <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span>
+                                <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                                <span class="token property">&quot;username&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                                    <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span>
+                                <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                                <span class="token property">&quot;age&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                                    <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;integer&quot;</span><span class="token punctuation">,</span>
+                                    <span class="token property">&quot;format&quot;</span><span class="token operator">:</span> <span class="token string">&quot;int64&quot;</span>
+                                <span class="token punctuation">}</span>
+                            <span class="token punctuation">}</span>
+                        <span class="token punctuation">}</span>
+                    <span class="token punctuation">}</span>
+                <span class="token punctuation">]</span>
+            <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre></div></details> <p><a href="#specifying-request-format">Back to specifying request format</a></p> <h2 id="marking-fields-required"><a href="#marking-fields-required" class="header-anchor">#</a> Marking Fields Required</h2> <p>We can mention the ssome fields as required i.e when making a request to the API these fields are to be sent or else the server wouldn't accept your request by raises <code>404 BadRequest</code> . We will be using <code>required</code> field for this purpose</p> <details class="custom-block details"><summary>Click here for specification</summary> <div class="language-json5 extra-class"><pre class="language-json5"><code><span class="token punctuation">{</span>
+    <span class="token property">&quot;paths&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">&quot;/person/create/&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+            <span class="token property">&quot;post&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                <span class="token property">&quot;parameters&quot;</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+                    <span class="token punctuation">{</span>
+                        <span class="token property">&quot;name&quot;</span><span class="token operator">:</span> <span class="token string">&quot;person&quot;</span><span class="token punctuation">,</span>
+                        <span class="token property">&quot;in&quot;</span><span class="token operator">:</span> <span class="token string">&quot;body&quot;</span><span class="token punctuation">,</span>
+                        <span class="token property">&quot;required&quot;</span><span class="token operator">:</span> <span class="token boolean">true</span><span class="token punctuation">,</span>
+                        <span class="token property">&quot;description&quot;</span><span class="token operator">:</span> <span class="token string">&quot;The person to create.&quot;</span><span class="token punctuation">,</span>
+                        <span class="token property">&quot;schema&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                            <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;object&quot;</span><span class="token punctuation">,</span>
+                            <span class="token property">&quot;properties&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                                <span class="token property">&quot;firstName&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                                    <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span>
+                                <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                                <span class="token property">&quot;lastName&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                                    <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span>
+                                <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                                <span class="token property">&quot;username&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                                    <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span>
+                                <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                                <span class="token property">&quot;age&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                                    <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;integer&quot;</span><span class="token punctuation">,</span>
+                                    <span class="token property">&quot;format&quot;</span><span class="token operator">:</span> <span class="token string">&quot;int64&quot;</span>
+                                <span class="token punctuation">}</span>
+                            <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                            <span class="token property">&quot;required&quot;</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+                                <span class="token string">&quot;firstName&quot;</span><span class="token punctuation">,</span>
+                                <span class="token string">&quot;lastName&quot;</span><span class="token punctuation">,</span>
+                                <span class="token string">&quot;username&quot;</span><span class="token punctuation">,</span>
+                                <span class="token string">&quot;age&quot;</span>
+                            <span class="token punctuation">]</span>
+                        <span class="token punctuation">}</span>
+                    <span class="token punctuation">}</span>
+                <span class="token punctuation">]</span>
+            <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre></div></details> <p><a href="#specifying-request-format">Back to specifying request format</a></p> <h2 id="specifying-response-status-code"><a href="#specifying-response-status-code" class="header-anchor">#</a> Specifying Response Status Code</h2> <p>We specify response code which the API returns in <code>responses</code> section.</p> <details class="custom-block details"><summary>Click here for specification</summary> <div class="language-json extra-class"><pre class="language-json"><code><span class="token punctuation">{</span>
+    <span class="token property">&quot;paths&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">&quot;/person/create/&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+            <span class="token property">&quot;post&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                ...
+                <span class="token property">&quot;responses&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                    <span class="token property">&quot;201&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                        <span class="token property">&quot;description&quot;</span><span class="token operator">:</span> <span class="token string">&quot;Success Response&quot;</span>
+                    <span class="token punctuation">}</span>
+                <span class="token punctuation">}</span>
+            <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre></div></details> <p><a href="#specifying-response-format">Back to specifying response format</a></p> <h2 id="specifying-response-body"><a href="#specifying-response-body" class="header-anchor">#</a> Specifying Response Body</h2> <p>We specify the data in the response body as below.</p> <details class="custom-block details"><summary>Click here for specification</summary> <div class="language-json extra-class"><pre class="language-json"><code><span class="token punctuation">{</span>
+    <span class="token property">&quot;paths&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">&quot;/person/create/&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+            <span class="token property">&quot;post&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                ...
+                <span class="token property">&quot;responses&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                    <span class="token property">&quot;201&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                        <span class="token property">&quot;description&quot;</span><span class="token operator">:</span> <span class="token string">&quot;Success Response&quot;</span><span class="token punctuation">,</span>
+                        <span class="token property">&quot;schema&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                            <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;object&quot;</span><span class="token punctuation">,</span>
+                            <span class="token property">&quot;properties&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                                <span class="token property">&quot;createdOn&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                                    <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span><span class="token punctuation">,</span>
+                                    <span class="token property">&quot;format&quot;</span><span class="token operator">:</span> <span class="token string">&quot;datetime&quot;</span>
+                                <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                                <span class="token property">&quot;firstName&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                                    <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span>
+                                <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                                <span class="token property">&quot;lastName&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                                    <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span>
+                                <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                                <span class="token property">&quot;username&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                                    <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span>
+                                <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                                <span class="token property">&quot;age&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                                    <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;integer&quot;</span><span class="token punctuation">,</span>
+                                    <span class="token property">&quot;format&quot;</span><span class="token operator">:</span> <span class="token string">&quot;int64&quot;</span>
+                                <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                                <span class="token property">&quot;userId&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                                    <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span>
+                                <span class="token punctuation">}</span>
+                            <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                            <span class="token property">&quot;required&quot;</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+                                <span class="token string">&quot;createdOn&quot;</span><span class="token punctuation">,</span>
+                                <span class="token string">&quot;firstName&quot;</span><span class="token punctuation">,</span>
+                                <span class="token string">&quot;lastName&quot;</span><span class="token punctuation">,</span>
+                                <span class="token string">&quot;username&quot;</span><span class="token punctuation">,</span>
+                                <span class="token string">&quot;age&quot;</span><span class="token punctuation">,</span>
+                                <span class="token string">&quot;userId&quot;</span>
+                            <span class="token punctuation">]</span>
+                        <span class="token punctuation">}</span>
+                    <span class="token punctuation">}</span>
+                <span class="token punctuation">}</span>
+            <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre></div></details> <p><a href="#specifying-response-format">Back to specifying response foramt</a></p> <h2 id="specifying-oauth-scopes"><a href="#specifying-oauth-scopes" class="header-anchor">#</a> Specifying OAuth Scopes</h2> <ul><li><code>securityDefinitions</code> provide a way to specify security related information for APIs.</li> <li><code>oauth</code> key in <code>securityDefinitions</code> is used to specify oauth related security definitions.</li> <li>To add new scopes update the <code>scopes</code> dictionary.</li></ul> <details class="custom-block details"><summary>Click here for specification</summary> <div class="language-json5 extra-class"><pre class="language-json5"><code><span class="token punctuation">{</span>
+    <span class="token property">&quot;schemes&quot;</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+        <span class="token string">&quot;https&quot;</span><span class="token punctuation">,</span>
+        <span class="token string">&quot;http&quot;</span>
+    <span class="token punctuation">]</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;host&quot;</span><span class="token operator">:</span> <span class="token string">&quot;localhost:8000&quot;</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;basePath&quot;</span><span class="token operator">:</span> <span class="token string">&quot;/api/&quot;</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;securityDefinitions&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">&quot;oauth&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+            <span class="token property">&quot;tokenUrl&quot;</span><span class="token operator">:</span> <span class="token string">&quot;http://auth.ibtspl.com/oauth2/&quot;</span><span class="token punctuation">,</span>
+            <span class="token property">&quot;flow&quot;</span><span class="token operator">:</span> <span class="token string">&quot;password&quot;</span><span class="token punctuation">,</span>
+            <span class="token property">&quot;scopes&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                <span class="token property">&quot;read&quot;</span><span class="token operator">:</span> <span class="token string">&quot;read users&quot;</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;write&quot;</span><span class="token operator">:</span> <span class="token string">&quot;create users&quot;</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;update&quot;</span><span class="token operator">:</span> <span class="token string">&quot;update users&quot;</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;delete&quot;</span><span class="token operator">:</span> <span class="token string">&quot;delete users&quot;</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;superuser&quot;</span><span class="token operator">:</span> <span class="token string">&quot;super user permission&quot;</span>  # New Scope
+            <span class="token punctuation">}</span><span class="token punctuation">,</span>
+            <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;oauth2&quot;</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre></div></details> <p><a href="#specifying-security">Back to specifying security</a></p> <h3 id="protecting-api-using-oauth-scopes"><a href="#protecting-api-using-oauth-scopes" class="header-anchor">#</a> Protecting API using OAuth Scopes</h3> <p>We can specify the scopes required for an OAuth user to access this api as below.</p> <details class="custom-block details"><summary>Click here for specification</summary> <div class="language-json extra-class"><pre class="language-json"><code><span class="token punctuation">{</span>
+    <span class="token property">&quot;paths&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">&quot;/person/create/&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+            <span class="token property">&quot;post&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                <span class="token property">&quot;security&quot;</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+                    <span class="token punctuation">{</span>
+                        <span class="token property">&quot;oauth&quot;</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+                            <span class="token string">&quot;superuser&quot;</span>
+                        <span class="token punctuation">]</span>
+                    <span class="token punctuation">}</span>
+                <span class="token punctuation">]</span><span class="token punctuation">,</span>
+                ...
+            <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre></div></details> <p><a href="#specifying-security">Back to specifying security</a></p> <h2 id="adding-api-descriptions"><a href="#adding-api-descriptions" class="header-anchor">#</a> Adding API Descriptions</h2> <p>We can add a short description called <code>summary</code> for our API and also a detailed description about our api in <code>description</code> field. These are used for documentation and help in readability of the API.</p> <details class="custom-block details"><summary>Click here for specification</summary> <div class="language-json extra-class"><pre class="language-json"><code><span class="token punctuation">{</span>
+    <span class="token property">&quot;paths&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">&quot;/person/create/&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+            <span class="token property">&quot;post&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                <span class="token property">&quot;summary&quot;</span><span class="token operator">:</span> <span class="token string">&quot;Create New Person&quot;</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;description&quot;</span><span class="token operator">:</span> <span class="token string">&quot;Creates a new person and return the user object. This api is not idempotent.&quot;</span><span class="token punctuation">,</span>
+                ...
+            <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre></div></details> <p><a href="#making-apis-readable">Back to making apis readable</a></p> <h3 id="adding-operationid"><a href="#adding-operationid" class="header-anchor">#</a> Adding OperationId</h3> <p><code>OperationId</code> is a unique identifier for an API and will be used in different automations.</p> <details class="custom-block details"><summary>Click here for specification</summary> <div class="language-json extra-class"><pre class="language-json"><code><span class="token punctuation">{</span>
+    <span class="token property">&quot;paths&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">&quot;/person/create/&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+            <span class="token property">&quot;post&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                <span class="token property">&quot;operationId&quot;</span><span class="token operator">:</span> <span class="token string">&quot;create_person&quot;</span><span class="token punctuation">,</span>
+                ....
+            <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre></div></details> <p><a href="#defining-operation-id">Back to defining operation id</a></p> <h2 id="organizing-parameters-and-responses"><a href="#organizing-parameters-and-responses" class="header-anchor">#</a> Organizing Parameters and Responses</h2> <p>We can further organize <code>parameters</code> and <code>responses</code> to improve readability &amp; re-usability of the <code>OAS</code>.</p> <details class="custom-block details"><summary>Click here for specification</summary> <div class="language-json extra-class"><pre class="language-json"><code><span class="token punctuation">{</span>
+    ...
+    <span class="token property">&quot;parameters&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">&quot;CreateNewPersonParameter&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+            <span class="token property">&quot;name&quot;</span><span class="token operator">:</span> <span class="token string">&quot;person&quot;</span><span class="token punctuation">,</span>
+            <span class="token property">&quot;in&quot;</span><span class="token operator">:</span> <span class="token string">&quot;body&quot;</span><span class="token punctuation">,</span>
+            <span class="token property">&quot;description&quot;</span><span class="token operator">:</span> <span class="token string">&quot;The person to create.&quot;</span><span class="token punctuation">,</span>
+            <span class="token property">&quot;schema&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;object&quot;</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;properties&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                    <span class="token property">&quot;firstName&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                        <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span>
+                    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                    <span class="token property">&quot;lastName&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                        <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span>
+                    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                    <span class="token property">&quot;username&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                        <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span>
+                    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                    <span class="token property">&quot;age&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                        <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;integer&quot;</span><span class="token punctuation">,</span>
+                        <span class="token property">&quot;format&quot;</span><span class="token operator">:</span> <span class="token string">&quot;int64&quot;</span>
+                    <span class="token punctuation">}</span>
+                <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;required&quot;</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+                    <span class="token string">&quot;firstName&quot;</span><span class="token punctuation">,</span>
+                    <span class="token string">&quot;lastName&quot;</span><span class="token punctuation">,</span>
+                    <span class="token string">&quot;username&quot;</span><span class="token punctuation">,</span>
+                    <span class="token string">&quot;age&quot;</span>
+                <span class="token punctuation">]</span>
+            <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;responses&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">&quot;CreateNewPersonResponse&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+            <span class="token property">&quot;description&quot;</span><span class="token operator">:</span> <span class="token string">&quot;Success Response&quot;</span><span class="token punctuation">,</span>
+            <span class="token property">&quot;schema&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;object&quot;</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;properties&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                    <span class="token property">&quot;createdOn&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                        <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span><span class="token punctuation">,</span>
+                        <span class="token property">&quot;format&quot;</span><span class="token operator">:</span> <span class="token string">&quot;datetime&quot;</span>
+                    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                    <span class="token property">&quot;firstName&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                        <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span>
+                    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                    <span class="token property">&quot;lastName&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                        <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span>
+                    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                    <span class="token property">&quot;username&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                        <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span>
+                    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                    <span class="token property">&quot;age&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                        <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;integer&quot;</span><span class="token punctuation">,</span>
+                        <span class="token property">&quot;format&quot;</span><span class="token operator">:</span> <span class="token string">&quot;int64&quot;</span>
+                    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                    <span class="token property">&quot;userId&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                        <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span>
+                    <span class="token punctuation">}</span>
+                <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;required&quot;</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+                    <span class="token string">&quot;createdOn&quot;</span><span class="token punctuation">,</span>
+                    <span class="token string">&quot;firstName&quot;</span><span class="token punctuation">,</span>
+                    <span class="token string">&quot;lastName&quot;</span><span class="token punctuation">,</span>
+                    <span class="token string">&quot;username&quot;</span><span class="token punctuation">,</span>
+                    <span class="token string">&quot;age&quot;</span><span class="token punctuation">,</span>
+                    <span class="token string">&quot;userId&quot;</span>
+                <span class="token punctuation">]</span>
+            <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;paths&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">&quot;/person/create/&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+            <span class="token property">&quot;post&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                ...
+                <span class="token property">&quot;parameters&quot;</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+                    <span class="token punctuation">{</span>
+                        <span class="token property">&quot;$ref&quot;</span><span class="token operator">:</span> <span class="token string">&quot;#/parameters/CreateNewPersonParameter&quot;</span>
+                    <span class="token punctuation">}</span>
+                <span class="token punctuation">]</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;responses&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                    <span class="token property">&quot;201&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                        <span class="token property">&quot;$ref&quot;</span><span class="token operator">:</span> <span class="token string">&quot;#/responses/CreateNewPersonResponse&quot;</span>
+                    <span class="token punctuation">}</span>
+                <span class="token punctuation">}</span>
+            <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span> 
+</code></pre></div></details> <p><a href="#organizing-api-spec">Back to Organized API Spec</a></p> <h2 id="simplify-spec-using-definitions"><a href="#simplify-spec-using-definitions" class="header-anchor">#</a> Simplify Spec Using Definitions</h2> <p>Definitions are a way to reuse any object definitions.</p> <div class="custom-block warning"><p class="custom-block-title">Note</p> <p>This doesn't mean that every thing should be written in definitions.</p></div> <details class="custom-block details"><summary>Click here for specification</summary> <div class="language-json5 extra-class"><pre class="language-json5"><code><span class="token punctuation">{</span>
+    <span class="token property">&quot;definitions&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">&quot;User&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+            <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;object&quot;</span><span class="token punctuation">,</span>
+            <span class="token property">&quot;properties&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                <span class="token property">&quot;firstName&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                    <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span>
+                <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;lastName&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                    <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span>
+                <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;username&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                    <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span>
+                <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;age&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                    <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;integer&quot;</span><span class="token punctuation">,</span>
+                    <span class="token property">&quot;format&quot;</span><span class="token operator">:</span> <span class="token string">&quot;int64&quot;</span>
+                <span class="token punctuation">}</span>
+            <span class="token punctuation">}</span><span class="token punctuation">,</span>
+            <span class="token property">&quot;required&quot;</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+                <span class="token string">&quot;firstName&quot;</span><span class="token punctuation">,</span>
+                <span class="token string">&quot;lastName&quot;</span><span class="token punctuation">,</span>
+                <span class="token string">&quot;username&quot;</span><span class="token punctuation">,</span>
+                <span class="token string">&quot;age&quot;</span>
+            <span class="token punctuation">]</span>
+        <span class="token punctuation">}</span><span class="token punctuation">,</span>
+        <span class="token property">&quot;UserWithExtraFields&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+            <span class="token property">&quot;allOf&quot;</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+                <span class="token punctuation">{</span>
+                    <span class="token property">&quot;$ref&quot;</span><span class="token operator">:</span> <span class="token string">&quot;#/definitions/User&quot;</span>
+                <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                <span class="token punctuation">{</span>
+                    <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;object&quot;</span><span class="token punctuation">,</span>
+                    <span class="token property">&quot;properties&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                        <span class="token property">&quot;createdOn&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                            <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span><span class="token punctuation">,</span>
+                            <span class="token property">&quot;format&quot;</span><span class="token operator">:</span> <span class="token string">&quot;datetime&quot;</span>
+                        <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                        <span class="token property">&quot;userId&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                            <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span>
+                        <span class="token punctuation">}</span>
+                    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                    <span class="token property">&quot;required&quot;</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+                        <span class="token string">&quot;createdOn&quot;</span><span class="token punctuation">,</span>
+                        <span class="token string">&quot;userId&quot;</span>
+                    <span class="token punctuation">]</span>
+                <span class="token punctuation">}</span>
+            <span class="token punctuation">]</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;parameters&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">&quot;CreateNewPersonParameter&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+            <span class="token property">&quot;name&quot;</span><span class="token operator">:</span> <span class="token string">&quot;person&quot;</span><span class="token punctuation">,</span>
+            <span class="token property">&quot;in&quot;</span><span class="token operator">:</span> <span class="token string">&quot;body&quot;</span><span class="token punctuation">,</span>
+            <span class="token property">&quot;description&quot;</span><span class="token operator">:</span> <span class="token string">&quot;The person to create.&quot;</span><span class="token punctuation">,</span>
+            <span class="token property">&quot;schema&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                <span class="token property">&quot;$ref&quot;</span><span class="token operator">:</span> <span class="token string">&quot;#/definitions/User&quot;</span>
+            <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;responses&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">&quot;CreateNewPersonResponse&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+            <span class="token property">&quot;description&quot;</span><span class="token operator">:</span> <span class="token string">&quot;Success Response&quot;</span><span class="token punctuation">,</span>
+            <span class="token property">&quot;schema&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                <span class="token property">&quot;$ref&quot;</span><span class="token operator">:</span> <span class="token string">&quot;#/definitions/UserWithExtraFields&quot;</span>
+            <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span> 
+</code></pre></div></details> <p><a href="#organizing-api-spec">Back to Organize API Spec</a></p> <h2 id="organized-final-oas"><a href="#organized-final-oas" class="header-anchor">#</a> Organized Final OAS</h2> <p>Below is a fully organized <code>OAS</code></p> <details class="custom-block details"><summary>Click here for specification</summary> <div class="language-json5 extra-class"><pre class="language-json5"><code><span class="token punctuation">{</span>
+    <span class="token property">&quot;swagger&quot;</span><span class="token operator">:</span> <span class="token string">&quot;2.0&quot;</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;host&quot;</span><span class="token operator">:</span> <span class="token string">&quot;localhost:8000&quot;</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;basePath&quot;</span><span class="token operator">:</span> <span class="token string">&quot;/api/&quot;</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;info&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">&quot;version&quot;</span><span class="token operator">:</span> <span class="token string">&quot;1.0.0&quot;</span><span class="token punctuation">,</span>
+        <span class="token property">&quot;title&quot;</span><span class="token operator">:</span> <span class="token string">&quot;Simple API&quot;</span><span class="token punctuation">,</span>
+        <span class="token property">&quot;description&quot;</span><span class="token operator">:</span> <span class="token string">&quot;A simple API to learn how to write OpenAPI Specification&quot;</span>
+    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;schemes&quot;</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+        <span class="token string">&quot;https&quot;</span><span class="token punctuation">,</span>
+        <span class="token string">&quot;http&quot;</span>
+    <span class="token punctuation">]</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;consumes&quot;</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+        <span class="token string">&quot;application/json&quot;</span>
+    <span class="token punctuation">]</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;produces&quot;</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+        <span class="token string">&quot;application/json&quot;</span>
+    <span class="token punctuation">]</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;securityDefinitions&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">&quot;oauth&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+            <span class="token property">&quot;tokenUrl&quot;</span><span class="token operator">:</span> <span class="token string">&quot;http://auth.ibtspl.com/oauth2/&quot;</span><span class="token punctuation">,</span>
+            <span class="token property">&quot;flow&quot;</span><span class="token operator">:</span> <span class="token string">&quot;password&quot;</span><span class="token punctuation">,</span>
+            <span class="token property">&quot;scopes&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                <span class="token property">&quot;read&quot;</span><span class="token operator">:</span> <span class="token string">&quot;read users&quot;</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;write&quot;</span><span class="token operator">:</span> <span class="token string">&quot;create users&quot;</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;update&quot;</span><span class="token operator">:</span> <span class="token string">&quot;update users&quot;</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;delete&quot;</span><span class="token operator">:</span> <span class="token string">&quot;delete users&quot;</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;superuser&quot;</span><span class="token operator">:</span> <span class="token string">&quot;super user permission&quot;</span>
+            <span class="token punctuation">}</span><span class="token punctuation">,</span>
+            <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;oauth2&quot;</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;definitions&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">&quot;User&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+            <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;object&quot;</span><span class="token punctuation">,</span>
+            <span class="token property">&quot;properties&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                <span class="token property">&quot;firstName&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                    <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span>
+                <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;lastName&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                    <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span>
+                <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;username&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                    <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span>
+                <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;age&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                    <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;integer&quot;</span><span class="token punctuation">,</span>
+                    <span class="token property">&quot;format&quot;</span><span class="token operator">:</span> <span class="token string">&quot;int64&quot;</span>
+                <span class="token punctuation">}</span>
+            <span class="token punctuation">}</span><span class="token punctuation">,</span>
+            <span class="token property">&quot;required&quot;</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+                <span class="token string">&quot;firstName&quot;</span><span class="token punctuation">,</span>
+                <span class="token string">&quot;lastName&quot;</span><span class="token punctuation">,</span>
+                <span class="token string">&quot;username&quot;</span><span class="token punctuation">,</span>
+                <span class="token string">&quot;age&quot;</span>
+            <span class="token punctuation">]</span>
+        <span class="token punctuation">}</span><span class="token punctuation">,</span>
+        <span class="token property">&quot;UserWithExtraFields&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+            <span class="token property">&quot;allOf&quot;</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+                <span class="token punctuation">{</span>
+                    <span class="token property">&quot;$ref&quot;</span><span class="token operator">:</span> <span class="token string">&quot;#/definitions/User&quot;</span>
+                <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                <span class="token punctuation">{</span>
+                    <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;object&quot;</span><span class="token punctuation">,</span>
+                    <span class="token property">&quot;properties&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                        <span class="token property">&quot;createdOn&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                            <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span><span class="token punctuation">,</span>
+                            <span class="token property">&quot;format&quot;</span><span class="token operator">:</span> <span class="token string">&quot;datetime&quot;</span>
+                        <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                        <span class="token property">&quot;userId&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                            <span class="token property">&quot;type&quot;</span><span class="token operator">:</span> <span class="token string">&quot;string&quot;</span>
+                        <span class="token punctuation">}</span>
+                    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                    <span class="token property">&quot;required&quot;</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+                        <span class="token string">&quot;createdOn&quot;</span><span class="token punctuation">,</span>
+                        <span class="token string">&quot;userId&quot;</span>
+                    <span class="token punctuation">]</span>
+                <span class="token punctuation">}</span>
+            <span class="token punctuation">]</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;parameters&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">&quot;CreateNewPersonParameter&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+            <span class="token property">&quot;name&quot;</span><span class="token operator">:</span> <span class="token string">&quot;person&quot;</span><span class="token punctuation">,</span>
+            <span class="token property">&quot;in&quot;</span><span class="token operator">:</span> <span class="token string">&quot;body&quot;</span><span class="token punctuation">,</span>
+            <span class="token property">&quot;description&quot;</span><span class="token operator">:</span> <span class="token string">&quot;The person to create.&quot;</span><span class="token punctuation">,</span>
+            <span class="token property">&quot;schema&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                <span class="token property">&quot;$ref&quot;</span><span class="token operator">:</span> <span class="token string">&quot;#/definitions/User&quot;</span>
+            <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;responses&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">&quot;CreateNewPersonResponse&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+            <span class="token property">&quot;description&quot;</span><span class="token operator">:</span> <span class="token string">&quot;Success Response&quot;</span><span class="token punctuation">,</span>
+            <span class="token property">&quot;schema&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                <span class="token property">&quot;$ref&quot;</span><span class="token operator">:</span> <span class="token string">&quot;#/definitions/UserWithExtraFields&quot;</span>
+            <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;paths&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">&quot;/person/create/&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+            <span class="token property">&quot;post&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                <span class="token property">&quot;operationId&quot;</span><span class="token operator">:</span> <span class="token string">&quot;create_person&quot;</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;summary&quot;</span><span class="token operator">:</span> <span class="token string">&quot;Create New Person&quot;</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;description&quot;</span><span class="token operator">:</span> <span class="token string">&quot;Creates a new person and return the user object. This api is not idempotent.&quot;</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;security&quot;</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+                    <span class="token punctuation">{</span>
+                        <span class="token property">&quot;oauth&quot;</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+                            <span class="token string">&quot;superuser&quot;</span>
+                        <span class="token punctuation">]</span>
+                    <span class="token punctuation">}</span>
+                <span class="token punctuation">]</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;parameters&quot;</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+                    <span class="token punctuation">{</span>
+                        <span class="token property">&quot;$ref&quot;</span><span class="token operator">:</span> <span class="token string">&quot;#/parameters/CreateNewPersonParameter&quot;</span>
+                    <span class="token punctuation">}</span>
+                <span class="token punctuation">]</span><span class="token punctuation">,</span>
+                <span class="token property">&quot;responses&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                    <span class="token property">&quot;201&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                        <span class="token property">&quot;$ref&quot;</span><span class="token operator">:</span> <span class="token string">&quot;#/responses/CreateNewPersonResponse&quot;</span>
+                    <span class="token punctuation">}</span>
+                <span class="token punctuation">}</span>
+            <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span> 
+</code></pre></div></details> <p><a href="#organizing-api-spec">Back to Organize API Spec</a></p></div> <footer class="page-edit"><!----> <!----></footer> <!----> </main></div><div class="global-ui"></div></div>
+    <script src="/assets/js/app.6f169a24.js" defer></script><script src="/assets/js/2.72287618.js" defer></script><script src="/assets/js/1.d7e6cbd8.js" defer></script><script src="/assets/js/107.5ccf6aa8.js" defer></script>
+  </body>
+</html>

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lesson 02 — Django Project Structure</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body>
+<div class="lesson-wrap">
+
+  <header class="lesson-header">
+    <div class="lesson-meta">
+      <span class="badge">Module 2 / 6</span>
+      <span>Django Backend Training</span>
+      <span>⏱ ~10 min</span>
+      <span>Beginner</span>
+    </div>
+    <h1 class="lesson-title">Django Project Structure</h1>
+    <p class="lesson-subtitle">What every file does, and the project-vs-app distinction that confuses everyone at first.</p>
+  </header>
+
+  <nav class="course-map">
+    <div class="course-map-title">Course Map — Django Backend Training</div>
+    <ol>
+      <li><a href="0001-introduction-to-django.html">Introduction to Django</a> <span>15 min</span></li>
+      <li class="current"><a href="0002-django-project-structure.html">Django Project Structure</a> <span>10 min</span></li>
+      <li><a href="0003-models-and-orm.html">Models &amp; ORM</a> <span>40 min</span></li>
+      <li><a href="0004-building-apis.html">Building APIs</a> <span>35 min</span></li>
+      <li><a href="0005-openapi-swagger.html">OpenAPI / Swagger</a> <span>15 min</span></li>
+      <li><a href="0006-wrap-up-and-learning-path.html">Wrap Up &amp; Learning Path</a> <span>5 min</span></li>
+    </ol>
+  </nav>
+
+  <!-- ── 1. Project vs App ── -->
+  <h2>1. Project vs App — the key distinction</h2>
+
+  <p>This is the single most important idea in this lesson. Django splits your code into two levels:</p>
+
+  <table>
+    <thead><tr><th></th><th>Project</th><th>App</th></tr></thead>
+    <tbody>
+      <tr><td><strong>What</strong></td><td>The whole website / configuration</td><td>A single feature module</td></tr>
+      <tr><td><strong>How many</strong></td><td>One per site</td><td>Many per project</td></tr>
+      <tr><td><strong>Created by</strong></td><td><code>django-admin startproject</code></td><td><code>python manage.py startapp</code></td></tr>
+      <tr><td><strong>Example</strong></td><td><code>imdb_project</code></td><td><code>movies</code>, <code>actors</code>, <code>accounts</code></td></tr>
+      <tr><td><strong>Contains</strong></td><td>Settings, root URLs, WSGI/ASGI</td><td>Models, views, app URLs, migrations</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout key">
+    <div class="callout-title">Mental model</div>
+    A <strong>project</strong> is the building. <strong>Apps</strong> are the rooms inside it — each one self-contained
+    and ideally reusable in another building. The <a href="https://docs.djangoproject.com/en/5.1/intro/tutorial01/" target="_blank">official tutorial</a> reuses its "polls" app exactly this way.
+  </div>
+
+  <!-- ── 2. The file tree ── -->
+  <h2>2. What the files look like</h2>
+
+  <div class="callout info">
+    <div class="callout-title">Most common confusion</div>
+    You usually see <strong>two folders with the same name</strong>. The outer one is your project root folder.
+    The inner one is the Django configuration package (where <code>settings.py</code> and root <code>urls.py</code> live).
+  </div>
+
+  <div class="filetree">
+<span class="dir">imdb_project/</span>                    <span class="cmt"># PROJECT ROOT (outer folder)</span>
+├── <span class="file">manage.py</span>                    <span class="cmt"># command-line entry point</span>
+├── <span class="dir">imdb_project/</span>                <span class="cmt"># CONFIG PACKAGE (inner folder)</span>
+│   ├── <span class="file">settings.py</span>              <span class="cmt"># global config: apps, DB, middleware</span>
+│   ├── <span class="file">urls.py</span>                  <span class="cmt"># root URL router</span>
+│   ├── <span class="file">wsgi.py</span>                  <span class="cmt"># WSGI server entry point</span>
+│   └── <span class="file">asgi.py</span>                  <span class="cmt"># ASGI server entry point</span>
+└── <span class="dir">movies/</span>                      <span class="cmt"># APP (feature module)</span>
+    ├── <span class="file">models.py</span>                <span class="cmt"># data models / ORM tables</span>
+    ├── <span class="file">views.py</span>                 <span class="cmt"># request handling logic</span>
+    ├── <span class="file">urls.py</span>                  <span class="cmt"># app-level routes</span>
+    ├── <span class="file">admin.py</span>                 <span class="cmt"># admin registration</span>
+    ├── <span class="file">apps.py</span>                  <span class="cmt"># app metadata</span>
+    ├── <span class="dir">migrations/</span>              <span class="cmt"># schema history</span>
+    └── <span class="file">tests.py</span>                 <span class="cmt"># tests</span>
+  </div>
+
+  <h3>Path → purpose (quick map)</h3>
+  <table>
+    <thead><tr><th>Path</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>manage.py</code></td><td>Run Django commands: server, migrations, shell, tests</td></tr>
+      <tr><td><code>imdb_project/settings.py</code></td><td>Project-wide configuration</td></tr>
+      <tr><td><code>imdb_project/urls.py</code></td><td>Root URL entry; delegates to app URLs via <code>include()</code></td></tr>
+      <tr><td><code>movies/models.py</code></td><td>Define tables and relationships</td></tr>
+      <tr><td><code>movies/views.py</code></td><td>Implement request → response logic</td></tr>
+      <tr><td><code>movies/urls.py</code></td><td>Define app routes (e.g., movie endpoints)</td></tr>
+      <tr><td><code>movies/migrations/</code></td><td>Versioned schema changes for the app</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ── 3. File-by-file ── -->
+  <h2>3. File-by-file walkthrough</h2>
+
+  <h3><code>manage.py</code></h3>
+  <p>Your command-line Swiss army knife. Every command you run goes through it:</p>
+<pre><code>python manage.py runserver        # start the dev server
+python manage.py startapp movies  # create a new app
+python manage.py makemigrations   # generate migration files
+python manage.py migrate          # apply migrations to the DB
+python manage.py createsuperuser  # create an admin login
+python manage.py shell            # interactive Python + ORM</code></pre>
+
+  <h3><code>settings.py</code></h3>
+  <p>Central configuration: database connection, installed apps, middleware, secret key, timezone.
+  When you create an app, you register it here:</p>
+<pre><code># settings.py
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    # ...
+    'rest_framework',   # third-party
+    'movies',           # ← your app
+]
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}</code></pre>
+  <div class="callout warn">
+    <div class="callout-title">Easy to forget</div>
+    A new app does nothing until you add it to <code>INSTALLED_APPS</code>. Migrations and the admin won't pick it up otherwise.
+  </div>
+
+  <h3><code>urls.py</code> (root vs app)</h3>
+  <p>The <strong>root</strong> <code>urls.py</code> (in the config package) usually delegates to each app's own <code>urls.py</code> using <code>include()</code>:</p>
+<pre><code># imdb_project/urls.py  (ROOT)
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('movies/', include('movies.urls')),   # delegate to app
+]
+
+# movies/urls.py  (APP)
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('&lt;int:movie_id&gt;/', views.movie_detail),
+]</code></pre>
+
+  <h3><code>models.py</code></h3>
+  <p>Defines your database tables as Python classes. This is the "M" in MVT. We go deep here in <a href="0003-models-and-orm.html">Module 3</a>.</p>
+
+  <h3><code>views.py</code></h3>
+  <p>The logic that handles a request and returns a response. This is the "V" in MVT (the Controller in MVC terms). Covered in <a href="0004-building-apis.html">Module 4</a>.</p>
+
+  <h3><code>admin.py</code></h3>
+  <p>Register a model here and Django gives you a full CRUD admin dashboard for free:</p>
+<pre><code># movies/admin.py
+from django.contrib import admin
+from .models import Movie
+
+admin.site.register(Movie)</code></pre>
+
+  <h3><code>apps.py</code></h3>
+  <p>App-specific configuration (the app's name, default auto field). You rarely touch it early on.</p>
+
+  <h3><code>migrations/</code></h3>
+  <p>A version-controlled history of your schema. <code>makemigrations</code> writes files here; <code>migrate</code> applies them to the database. Think of it as "git for your DB schema." More in <a href="0003-models-and-orm.html#migrations">Module 3</a>.</p>
+
+  <!-- ── 4. Request flow recap ── -->
+  <h2>4. How a request flows through these files</h2>
+
+  <ol class="steps">
+    <li><strong>Request arrives</strong> → Django hands it to the root <code>urls.py</code>.</li>
+    <li><strong>Root <code>urls.py</code></strong> matches a prefix and <code>include()</code>s the app's <code>urls.py</code>.</li>
+    <li><strong>App <code>urls.py</code></strong> matches the rest of the path and points to a view in <code>views.py</code>.</li>
+    <li><strong>View</strong> runs logic, calls the ORM in <code>models.py</code> if it needs data.</li>
+    <li><strong>Model / ORM</strong> queries the database and returns Python objects.</li>
+    <li><strong>View</strong> builds a response (JSON for an API) and returns it to the client.</li>
+  </ol>
+
+  <div class="callout info">
+    <div class="callout-title">Connects to Lesson 1</div>
+    This is the same lifecycle diagram from <a href="0001-introduction-to-django.html#5.-request-lifecycle">Module 1</a> — now you know exactly which <em>file</em> each box lives in.
+  </div>
+
+  <!-- ── Quiz ── -->
+  <h2>Quick Check</h2>
+  <div class="quiz" data-quiz-id="project-structure"></div>
+  <script type="application/json" data-quiz-data="project-structure">
+  [
+    {
+      "q": "What is the relationship between a Django project and an app?",
+      "options": [
+        "One project contains many apps inside it ",
+        "One app contains many projects inside it ",
+        "They are two names for the same concept ",
+        "A project must always have exactly one app"
+      ],
+      "answer": 0,
+      "explain": "A project is the whole site/config; an app is a self-contained feature module. A project typically contains several apps."
+    },
+    {
+      "q": "Which file must you edit to register a newly created app?",
+      "options": [
+        "manage.py at the project root level   ",
+        "settings.py in INSTALLED_APPS list    ",
+        "admin.py inside the new app directory ",
+        "urls.py with a brand new path() call  "
+      ],
+      "answer": 1,
+      "explain": "Add the app to INSTALLED_APPS in settings.py. Without it, migrations and the admin won't recognise the app."
+    },
+    {
+      "q": "What does the root urls.py typically do with an app's urls.py?",
+      "options": [
+        "Copies every route into the project file",
+        "Includes it via include('app.urls') call",
+        "Imports each view function one at a time",
+        "Ignores it unless DEBUG is set to false "
+      ],
+      "answer": 1,
+      "explain": "The root urls.py delegates to each app using include('app.urls'), keeping routes modular and per-app."
+    },
+    {
+      "q": "What lives in the migrations/ directory?",
+      "options": [
+        "Compiled Python bytecode for the models ",
+        "Version history of database schema edits",
+        "Backups of every row stored in the table",
+        "Server configuration for the dev runtime"
+      ],
+      "answer": 1,
+      "explain": "migrations/ holds auto-generated files describing schema changes over time — like version control for your database structure."
+    }
+  ]
+  </script>
+
+  <h2>Primary Source</h2>
+  <p>
+    Read <a href="https://docs.djangoproject.com/en/5.1/intro/tutorial01/" target="_blank"><strong>Writing your first Django app, Part 1</strong></a> —
+    it creates a project and app exactly as described here, and you'll repeat it in the hands-on session.
+  </p>
+
+  <div class="ask-agent">
+    <strong>Questions?</strong> Try asking — "Why does the config package have the same name as the project folder?",
+    "When should I split code into a new app vs adding to an existing one?", "What's the difference between <code>wsgi.py</code> and <code>asgi.py</code>?"
+  </div>
+
+  <h2>What's Next</h2>
+  <p>
+    Next: <strong><a href="0003-models-and-orm.html">Models &amp; ORM</a></strong> — the longest and most important module.
+    You'll define tables as Python classes, set up relationships, run migrations, and master the core ORM operations.
+  </p>
+
+  <footer class="lesson-footer">
+    <div class="lesson-nav">
+      <a href="0001-introduction-to-django.html">← Module 1: Introduction</a>
+    </div>
+    <div class="lesson-nav">
+      Module 2 of 6 &nbsp;|&nbsp;
+      <a href="0003-models-and-orm.html">Next: Models &amp; ORM →</a>
+    </div>
+  </footer>
+
+</div>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

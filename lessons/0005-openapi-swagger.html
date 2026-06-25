@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lesson 05 — OpenAPI / Swagger</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body>
+<div class="lesson-wrap">
+
+  <header class="lesson-header">
+    <div class="lesson-meta">
+      <span class="badge">Module 5 / 6</span>
+      <span>Django Backend Training</span>
+      <span>⏱ ~15 min</span>
+      <span>Core</span>
+    </div>
+    <h1 class="lesson-title">OpenAPI / Swagger</h1>
+    <p class="lesson-subtitle">Describe your API in a standard contract that humans and tools can both read.</p>
+  </header>
+
+  <nav class="course-map">
+    <div class="course-map-title">Course Map — Django Backend Training</div>
+    <ol>
+      <li><a href="0001-introduction-to-django.html">Introduction to Django</a> <span>15 min</span></li>
+      <li><a href="0002-django-project-structure.html">Django Project Structure</a> <span>10 min</span></li>
+      <li><a href="0003-models-and-orm.html">Models &amp; ORM</a> <span>40 min</span></li>
+      <li><a href="0004-building-apis.html">Building APIs</a> <span>35 min</span></li>
+      <li class="current"><a href="0005-openapi-swagger.html">OpenAPI / Swagger</a> <span>15 min</span></li>
+      <li><a href="0006-wrap-up-and-learning-path.html">Wrap Up &amp; Learning Path</a> <span>5 min</span></li>
+    </ol>
+  </nav>
+
+  <!-- ── 1. What & why ── -->
+  <h2>1. What is OpenAPI?</h2>
+  <p>
+    <strong>OpenAPI</strong> (formerly Swagger) is a standard, language-agnostic format for describing a REST API in a
+    single document (YAML or JSON). It is the <em>contract</em> for your API: every endpoint, parameter, request body,
+    and response shape, written down. See the <a href="https://spec.openapis.org/oas/v3.0.3" target="_blank">OpenAPI 3.0 spec</a>.
+  </p>
+
+  <div class="callout key">
+    <div class="callout-title">OpenAPI vs Swagger — clearing the confusion</div>
+    <strong>OpenAPI</strong> = the specification (the standard). <strong>Swagger UI</strong> = a tool that reads an
+    OpenAPI document and renders interactive, try-it-out documentation in the browser.
+  </div>
+
+  <h3>Why document an API?</h3>
+  <div class="feature-grid">
+    <div class="feature-card"><h4>Shared contract</h4><p>Frontend and backend agree on shapes before code is written.</p></div>
+    <div class="feature-card"><h4>Interactive docs</h4><p>Swagger UI lets anyone test endpoints in the browser.</p></div>
+    <div class="feature-card"><h4>Codegen</h4><p>Generate client SDKs and server stubs from the spec.</p></div>
+    <div class="feature-card"><h4>Single source of truth</h4><p>One file describes the whole API surface.</p></div>
+  </div>
+
+  <!-- ── 2. Structure ── -->
+  <h2>2. The OpenAPI Document Structure (Swagger 2.0 style)</h2>
+  <p>Based on your sample, this is the Swagger 2.0 structure you'll see in your codebase:</p>
+  <table>
+    <thead><tr><th>Key</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>swagger</code></td><td>Spec version, e.g. <code>2.0</code></td></tr>
+      <tr><td><code>host</code> + <code>basePath</code></td><td>API host and base URL prefix</td></tr>
+      <tr><td><code>schemes</code></td><td>Protocol list (<code>http</code> / <code>https</code>)</td></tr>
+      <tr><td><code>consumes</code> / <code>produces</code></td><td>Request and response content types</td></tr>
+      <tr><td><code>info</code></td><td>API title, version, description</td></tr>
+      <tr><td><code>securityDefinitions</code></td><td>Auth schemes (oauth2, apiKey, etc.)</td></tr>
+      <tr><td><code>security</code></td><td>Global/default security requirements</td></tr>
+      <tr><td><code>paths</code></td><td>The endpoints — the heart of the spec</td></tr>
+      <tr><td><code>definitions</code></td><td>Reusable schema models</td></tr>
+      <tr><td><code>parameters</code></td><td>Reusable parameter objects</td></tr>
+      <tr><td><code>responses</code></td><td>Reusable response objects</td></tr>
+    </tbody>
+  </table>
+  <p>In Swagger 2.0, request body payloads are described via <code>parameters</code> with <code>in: body</code> (not <code>requestBody</code>).</p>
+
+  <!-- ── 3. Live example ── -->
+  <h2>3. A Complete Spec for the IMDb API</h2>
+  <p>This version follows your sample style (Swagger 2.0 with <code>definitions</code>, reusable <code>parameters</code>, and reusable <code>responses</code>).</p>
+
+<pre><code>{
+  "swagger": "2.0",
+  "host": "127.0.0.1:8000",
+  "basePath": "/api/imdb/",
+  "info": {
+    "version": "1.0.0",
+    "title": "IMDb API",
+    "description": "Movie and actor APIs"
+  },
+  "schemes": ["http"],
+  "consumes": ["application/json"],
+  "produces": ["application/json"],
+
+  "securityDefinitions": {
+    "apiKey": {
+      "type": "apiKey",
+      "in": "header",
+      "name": "x-api-key"
+    }
+  },
+  "security": [],
+
+  "definitions": {
+    "Movie": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer" },
+        "title": { "type": "string" },
+        "release_year": { "type": "integer" },
+        "rating": { "type": "number" }
+      },
+      "required": ["id", "title", "release_year"]
+    },
+    "Actor": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer" },
+        "name": { "type": "string" }
+      },
+      "required": ["id", "name"]
+    },
+    "CreateMovieRequest": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "release_year": { "type": "integer" },
+        "rating": { "type": "number" }
+      },
+      "required": ["title", "release_year"]
+    },
+    "ErrorResponse": {
+      "type": "object",
+      "properties": {
+        "response": { "type": "string" },
+        "http_status_code": { "type": "integer" },
+        "res_status": { "type": "string" }
+      },
+      "required": ["response", "http_status_code", "res_status"]
+    }
+  },
+
+  "parameters": {
+    "MovieIdPathParam": {
+      "name": "movie_id",
+      "in": "path",
+      "required": true,
+      "type": "integer",
+      "description": "Movie ID"
+    },
+    "CreateMovieBodyParam": {
+      "name": "CreateMovieBodyParam",
+      "in": "body",
+      "required": true,
+      "description": "Payload to create a movie",
+      "schema": {
+        "$ref": "#/definitions/CreateMovieRequest"
+      }
+    }
+  },
+
+  "responses": {
+    "GetMovieSuccessResponse": {
+      "description": "movie details success response",
+      "schema": { "$ref": "#/definitions/Movie" }
+    },
+    "GetMovieActorsSuccessResponse": {
+      "description": "movie actors success response",
+      "schema": {
+        "type": "array",
+        "items": { "$ref": "#/definitions/Actor" }
+      }
+    },
+    "CreateMovieSuccessResponse": {
+      "description": "create movie success response",
+      "schema": { "$ref": "#/definitions/Movie" }
+    },
+    "GenericFailureResponse": {
+      "description": "failure response",
+      "schema": { "$ref": "#/definitions/ErrorResponse" }
+    }
+  },
+
+  "paths": {
+    "/movies/{movie_id}/": {
+      "get": {
+        "summary": "Get movie details",
+        "operationId": "get_movie_details",
+        "security": [{ "apiKey": [] }],
+        "parameters": [
+          { "$ref": "#/parameters/MovieIdPathParam" }
+        ],
+        "responses": {
+          "200": { "$ref": "#/responses/GetMovieSuccessResponse" },
+          "404": { "$ref": "#/responses/GenericFailureResponse" }
+        }
+      }
+    },
+    "/movies/{movie_id}/actors/": {
+      "get": {
+        "summary": "Get actors for a movie",
+        "operationId": "get_movie_actors",
+        "security": [{ "apiKey": [] }],
+        "parameters": [
+          { "$ref": "#/parameters/MovieIdPathParam" }
+        ],
+        "responses": {
+          "200": { "$ref": "#/responses/GetMovieActorsSuccessResponse" },
+          "404": { "$ref": "#/responses/GenericFailureResponse" }
+        }
+      }
+    },
+    "/movies/": {
+      "post": {
+        "summary": "Create a movie",
+        "operationId": "create_movie",
+        "security": [{ "apiKey": [] }],
+        "parameters": [
+          { "$ref": "#/parameters/CreateMovieBodyParam" }
+        ],
+        "responses": {
+          "201": { "$ref": "#/responses/CreateMovieSuccessResponse" },
+          "400": { "$ref": "#/responses/GenericFailureResponse" }
+        }
+      }
+    }
+  }
+}</code></pre>
+
+  <div class="callout info">
+    <div class="callout-title"><code>$ref</code> = don't repeat yourself</div>
+    Define reusable objects once (in <code>definitions</code>, <code>parameters</code>, or <code>responses</code>) and reference them with <code>$ref</code>.
+    This keeps large Swagger files maintainable.
+  </div>
+
+  <!-- ── 4. parameters vs requestBody ── -->
+  <h2>4. Parameter styles in Swagger 2.0</h2>
+  <table>
+    <thead><tr><th></th><th><code>in: path/query/header</code></th><th><code>in: body</code></th></tr></thead>
+    <tbody>
+      <tr><td>Where</td><td>URL path, query string, request headers</td><td>HTTP request body (JSON object)</td></tr>
+      <tr><td>Example</td><td><code>/movies/{movie_id}/</code>, <code>?year=2010</code></td><td><code>{"title":"Inception","release_year":2010}</code></td></tr>
+      <tr><td>Declared as</td><td>parameter object with <code>in</code> = <code>path/query/header</code></td><td>parameter object with <code>in</code> = <code>body</code> + <code>schema</code></td></tr>
+    </tbody>
+  </table>
+
+  <!-- ── 5. Swagger UI ── -->
+  <h2>5. Rendering with Swagger UI</h2>
+  <p>Feed the document above into <a href="https://editor.swagger.io/" target="_blank">editor.swagger.io</a> and it renders interactive docs: expandable endpoints, a "Try it out" button, example payloads, and response schemas.</p>
+
+  <h3>In a Django project</h3>
+  <p>Keep your API spec in a versioned file (for example <code>swagger.json</code>), and load it in Swagger UI. Teams usually review this file in pull requests just like code.</p>
+<pre><code># Example workflow
+# 1) update swagger.json when endpoint/request/response changes
+# 2) open Swagger UI and point it to swagger.json
+# 3) verify request/response examples and status codes</code></pre>
+  <div class="callout key">
+    <div class="callout-title">Hands-on goal</div>
+    In the hands-on session you'll <strong>hand-write</strong> a Swagger/OpenAPI document for your IMDb endpoints,
+    then render and test it in Swagger UI.
+  </div>
+
+  <!-- ── Quiz ── -->
+  <h2>Quick Check</h2>
+  <div class="quiz" data-quiz-id="openapi"></div>
+  <script type="application/json" data-quiz-data="openapi">
+  [
+    {
+      "q": "What is the difference between OpenAPI and Swagger UI?",
+      "options": [
+        "OpenAPI tests APIs; Swagger writes the spec",
+        "OpenAPI is the spec; Swagger UI renders docs",
+        "They are identical names for one single tool",
+        "OpenAPI is for Django; Swagger is for Python"
+      ],
+      "answer": 1,
+      "explain": "OpenAPI is the specification standard. Swagger UI is a tool that reads an OpenAPI document and renders interactive documentation."
+    },
+    {
+      "q": "In Swagger 2.0, where do you describe a POST JSON body?",
+      "options": [
+        "In parameters with in: body and schema ",
+        "In requestBody under the operation key ",
+        "In host and basePath at document root  ",
+        "In securityDefinitions under apiKey    "
+      ],
+      "answer": 0,
+      "explain": "Swagger 2.0 uses parameters with in: body for request payloads. requestBody is an OpenAPI 3.x field."
+    },
+    {
+      "q": "In Swagger 2.0, what does $ref: '#/definitions/Movie' achieve?",
+      "options": [
+        "Runs the Movie endpoint as a live request ",
+        "Reuses a schema defined once in definitions",
+        "Refreshes the Movie data from the database",
+        "Restricts the Movie schema to admin users "
+      ],
+      "answer": 1,
+      "explain": "$ref points to reusable objects. In Swagger 2.0, schemas are usually reused from definitions."
+    },
+    {
+      "q": "Which top-level key holds the actual endpoint definitions?",
+      "options": [
+        "The info key with title and version data ",
+        "The paths key mapping URLs to operations ",
+        "The servers key listing the base URLs all ",
+        "The openapi key naming the spec version  "
+      ],
+      "answer": 1,
+      "explain": "paths is the heart of the document: it maps each URL to its HTTP operations, parameters, bodies, and responses."
+    }
+  ]
+  </script>
+
+  <h2>Primary Source</h2>
+  <p>
+    Skim the <a href="https://swagger.io/docs/specification/about/" target="_blank"><strong>OpenAPI / Swagger documentation guide</strong></a>,
+    and try pasting the spec above into the live <a href="https://editor.swagger.io/" target="_blank">Swagger Editor</a>.
+  </p>
+
+  <div class="ask-agent">
+    <strong>Questions?</strong> Ask — "How do I document a query parameter like <code>?year=2010</code>?",
+    "What's the difference between a path and a body parameter?", "How should I split definitions for very large response payloads?"
+  </div>
+
+  <h2>What's Next</h2>
+  <p>
+    Final module: <strong><a href="0006-wrap-up-and-learning-path.html">Wrap Up &amp; Learning Path</a></strong> —
+    your roadmap through the tutorial and assignments for independent practice.
+  </p>
+
+  <footer class="lesson-footer">
+    <div class="lesson-nav">
+      <a href="0004-building-apis.html">← Module 4: Building APIs</a>
+    </div>
+    <div class="lesson-nav">
+      Module 5 of 6 &nbsp;|&nbsp;
+      <a href="0006-wrap-up-and-learning-path.html">Next: Wrap Up →</a>
+    </div>
+  </footer>
+
+</div>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

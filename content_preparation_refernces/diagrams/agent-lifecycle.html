@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Lifecycle</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;1,300&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #f0f0ea; font-family: 'DM Sans', sans-serif; padding: 48px 24px 80px; min-height: 100vh; }
+
+  h1 { font-family: 'Fraunces', serif; font-weight: 300; font-size: 26px; text-align: center; color: #1c1917; letter-spacing: -.02em; margin-bottom: 6px; }
+  h1 em { font-style: italic; color: #2563eb; }
+  .subtitle { text-align: center; font-size: 12px; color: #a8a29e; letter-spacing: .06em; margin-bottom: 48px; }
+
+  .chart-outer { position: relative; width: 900px; margin: 0 auto; }
+  .connector-svg { position: absolute; top: 0; left: 0; width: 100%; overflow: visible; pointer-events: none; z-index: 1; }
+
+  .node {
+    position: absolute;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; border-radius: 10px; border: 1.5px solid;
+    font-size: 13px; font-weight: 500; line-height: 1.45;
+    padding: 10px 16px; z-index: 2; cursor: default;
+    transition: transform .15s, box-shadow .15s;
+  }
+  .node:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.12); }
+  .node sub  { font-size: 11px; font-weight: 300; font-style: italic; opacity: .72; margin-top: 3px; }
+  .node code { font-family: 'DM Mono', 'Fira Code', monospace; font-size: 14px; font-weight: 700; letter-spacing: -.01em; }
+  .node ul   { list-style: none; text-align: left; font-size: 11.5px; font-weight: 400; margin-top: 6px; line-height: 1.7; }
+  .node ul li::before { content: "• "; font-weight: 600; }
+
+  .pill { border-radius: 999px; padding: 9px 28px; font-family: 'Fraunces', serif; font-weight: 600; font-size: 13.5px; }
+
+  /* phase header bar — spans from skip-rail to right edge */
+  .phase-hdr {
+    position: absolute; left: 80px; right: 0;
+    height: 28px; border-radius: 8px;
+    display: flex; align-items: center; padding-left: 14px;
+    font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+    z-index: 2;
+  }
+
+  /* inline reiterate box — sits ON the loop rail between two nodes */
+  .reiterate {
+    position: absolute;
+    border-radius: 8px; border: 1.5px solid #c8c2ba;
+    background: #e8e8e2;
+    font-size: 11px; font-weight: 500;
+    color: #57534e; line-height: 1.55;
+    padding: 7px 12px; text-align: center; z-index: 4; cursor: default;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08);
+  }
+
+  .blabel { position: absolute; font-size: 10.5px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; z-index: 3; }
+
+  /* skip-in label that sits on the left rail next to each phase */
+  .skip-label {
+    position: absolute;
+    font-size: 9.5px; font-weight: 600; letter-spacing: .05em;
+    z-index: 3; text-align: right;
+    color: #64748b;
+  }
+
+  .c-green  { background:#f0fdf4; border-color:#86efac; color:#166534; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+  .c-yellow { background:#fefce8; border-color:#fde68a; color:#713f12; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+  .c-blue   { background:#eff6ff; border-color:#93c5fd; color:#1d4ed8; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+  .c-red    { background:#fff1f2; border-color:#fca5a5; color:#991b1b; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+  .c-teal   { background:#e6fafa; border-color:#5eead4; color:#0f766e; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+  .c-purple { background:#faf5ff; border-color:#d8b4fe; color:#6b21a8; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+
+  @keyframes fadeUp { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+  .node { animation: fadeUp .4s ease both; }
+</style>
+</head>
+<body>
+
+<h1>Agent <em>Lifecycle</em></h1>
+<p class="subtitle">Task intake · Breakdown · Approach · Plan · Build · Test · Deploy</p>
+
+<!--
+=============================================================================
+  LAYOUT  chart-outer width = 900
+
+  SKIP RAIL (left):  x=44  (vertical dashed line from Complexity → last phase)
+  SPINE:             cx=360  left=240  w=240  right-edge=480
+  RIGHT BRANCH:      cx=680  left=560  w=240  right-edge=800
+  LOOP RAIL:         x=840
+
+  Skip arrows branch RIGHT from x=44 into phase headers at x=80
+
+  ── ENTRY ──────────────────────────────────────────────────────────
+  Pick a Task (pill)               top:0      h:40   cy:20
+  Fill Req Format                  top:90     h:44   cy:112
+  Evaluate Complexity              top:184    h:100  cy:234  bottom:284
+
+  ── BREAKDOWN PHASE ────────────────────────────────────────────────
+  phase-hdr                        top:330    h:28   cy:344
+  /breakdown                       top:380    h:60   cy:410   SPINE
+  Dev Reviews BD                   top:500    h:44   cy:522   SPINE
+  reiterate box (inline on loop):  top:448    right side, between /breakdown and Dev Reviews
+  loop: right-edge(480,410) → x=840 → reiterate(top:448) → x=840 → right-edge(480,522) back
+  BD approved → Approach phase-hdr
+
+  ── APPROACH PHASE ─────────────────────────────────────────────────
+  phase-hdr                        top:620    h:28   cy:634
+  Agent Proposes                   top:668    h:60   cy:698   SPINE
+  Agent Reviews                    top:788    h:44   cy:810   SPINE
+  Agent Recommends                 top:892    h:44   cy:914   SPINE
+  Dev Reviews Approach             top:996    h:44   cy:1018  SPINE
+  reiterate (inline, between Agent Proposes and Dev Reviews): top:840
+  loop: right-edge(480,698) → x=840 → reiterate(top:840) → x=840 → right-edge(480,1018) back
+  Approach approved → Plan phase-hdr
+
+  ── PLAN PHASE ─────────────────────────────────────────────────────
+  phase-hdr                        top:1096   h:28   cy:1110
+  /plan                            top:1144   h:60   cy:1174  SPINE
+  /review-plan                     top:1264   h:56   cy:1292  SPINE
+  Dev Reviews Plan                 top:1380   h:44   cy:1402  SPINE
+  reiterate (inline, between /plan and Dev Reviews): top:1292 (same row as /review-plan, right side)
+  Actually: loop from Dev Reviews Plan back to /plan
+  loop: right-edge(480,1402) → x=840 → reiterate(top:1310) → x=840 → right-edge(480,1174) back
+  Plan approved → Build phase-hdr
+
+  ── BUILD PHASE ────────────────────────────────────────────────────
+  phase-hdr                        top:1490   h:28   cy:1504
+  API Changes?                     top:1538   h:100  cy:1588  SPINE  bottom:1638
+  YES → /build-api RIGHT
+  /build-api                       top:1708   h:60   cy:1738  RIGHT
+  Share to Frontend                top:1828   h:44   cy:1850  RIGHT
+  /implement                       top:1948   h:60   cy:1978  SPINE
+  /review-impl                     top:2068   h:56   cy:2096  SPINE
+  Dev Reviews Impl                 top:2184   h:44   cy:2206  SPINE
+  reiterate (inline loop /implement ↔ Dev Reviews): top:2096 right side
+  loop: right-edge(480,2206) → x=840 → reiterate(top:2096) → x=840 → right-edge(480,1978) back
+
+  ── TESTING PHASE ──────────────────────────────────────────────────
+  phase-hdr                        top:2300   h:28
+  Agent Writes Unit Tests          top:2348   h:56   cy:2376  SPINE
+  Agent Makes Code Changes         top:2464   h:44   cy:2486  SPINE
+  Output PR V2 (pill)              top:2568   h:44   cy:2590  SPINE
+
+  ── OUTPUT TESTING PHASE ───────────────────────────────────────────
+  phase-hdr                        top:2680   h:28
+  Dev Chooses Testing              top:2728   h:80   cy:2768  SPINE  bottom:2808
+  AGENT → RIGHT col:
+    Agent Writes Test Plan         top:2878   h:56   cy:2906  RIGHT
+    Dev Reviews Test Plan          top:2994   h:44   cy:3016  RIGHT
+    reiterate (inline, right of RIGHT col): loop between these two
+    Agent Executes Tests           top:3108   h:56   cy:3136  RIGHT
+    Agent Outputs Test Report      top:3224   h:44   cy:3246  RIGHT
+  MANUAL → spine drops to Dev Reviews PR
+  Dev Reviews PR Manually          top:3338   h:44   cy:3360  SPINE
+  reiterate (inline loop → /implement): right side
+
+  ── DEPLOY ─────────────────────────────────────────────────────────
+  phase-hdr                        top:3452   h:28
+  /update-docs                     top:3500   h:56   cy:3528  SPINE
+  Push to Beta (pill)              top:3616   h:40   cy:3636  SPINE
+
+  Total height: 3700
+
+  SKIP RAIL x=44, from y=284 to y=1504 (top of Build phase-hdr)
+  Skip arrows (horizontal, from x=44 to x=80):
+    → Approach phase entry:  y=634
+    → Plan phase entry:      y=1110
+    → Build phase entry:     y=1504
+=============================================================================
+-->
+
+<div class="chart-outer" style="height:3700px;">
+
+  <svg class="connector-svg" height="3700">
+    <defs>
+      <marker id="arr" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+        <path d="M1,1 L7,4 L1,7 Z" fill="#b0a99f"/>
+      </marker>
+      <marker id="arr-loop" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+        <path d="M1,1 L7,4 L1,7 Z" fill="#94a3b8"/>
+      </marker>
+      <marker id="arr-skip" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+        <path d="M1,1 L7,4 L1,7 Z" fill="#64748b"/>
+      </marker>
+    </defs>
+
+    <!-- ══ SKIP RAIL — left vertical line from Complexity bottom to Build entry ══ -->
+    <line x1="44" y1="284" x2="44" y2="1504"
+          stroke="#64748b" stroke-width="1.5" stroke-dasharray="6,3"/>
+
+    <!-- Skip arrow 1: rail → Approach phase header -->
+    <line x1="44" y1="634" x2="78" y2="634"
+          stroke="#64748b" stroke-width="1.5" marker-end="url(#arr-skip)"/>
+    <!-- Skip arrow 2: rail → Plan phase header -->
+    <line x1="44" y1="1110" x2="78" y2="1110"
+          stroke="#64748b" stroke-width="1.5" marker-end="url(#arr-skip)"/>
+    <!-- Skip arrow 3: rail → Build phase header -->
+    <line x1="44" y1="1504" x2="78" y2="1504"
+          stroke="#64748b" stroke-width="1.5" marker-end="url(#arr-skip)"/>
+
+    <!-- ── ENTRY ── -->
+    <line x1="360" y1="40"  x2="360" y2="88"  stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+    <line x1="360" y1="134" x2="360" y2="182" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+    <!-- Complexity bottom → skip rail tap + /breakdown -->
+    <line x1="360" y1="284" x2="360" y2="378" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+    <!-- Complexity left-edge → skip rail -->
+    <line x1="240" y1="284" x2="44" y2="284" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4,2"/>
+
+    <!-- ── BREAKDOWN ── -->
+    <!-- /breakdown → Dev Reviews BD -->
+    <line x1="360" y1="440" x2="360" y2="498" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+    <!-- LOOP 1 inline: right-edge of /breakdown → rail right → reiterate box → rail right → right-edge of Dev Reviews BD back to /breakdown -->
+    <!-- Up-leg: Dev Reviews right (480,522) → x=840 → y=448 (mid of reiterate) -->
+    <path d="M480,522 L840,522 L840,448" stroke="#94a3b8" stroke-width="1.5" fill="none" stroke-dasharray="5,3"/>
+    <!-- Down-leg: reiterate top (840,448) → x=840 → right-edge of /breakdown (480,410) -->
+    <path d="M840,448 L840,410 L482,410" stroke="#94a3b8" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#arr-loop)"/>
+    <!-- BD approved → Approach phase -->
+    <line x1="360" y1="544" x2="360" y2="618" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- ── APPROACH ── -->
+    <line x1="360" y1="728" x2="360" y2="786" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+    <line x1="360" y1="832" x2="360" y2="890" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+    <line x1="360" y1="936" x2="360" y2="994" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+    <!-- LOOP 2 inline: Dev Reviews Approach (480,1018) → rail → reiterate(840,858) → back to Agent Proposes (480,698) -->
+    <path d="M480,1018 L840,1018 L840,858" stroke="#94a3b8" stroke-width="1.5" fill="none" stroke-dasharray="5,3"/>
+    <path d="M840,858 L840,698 L482,698" stroke="#94a3b8" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#arr-loop)"/>
+    <!-- Approach approved → Plan phase -->
+    <line x1="360" y1="1040" x2="360" y2="1090" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- ── PLAN ── -->
+    <line x1="360" y1="1204" x2="360" y2="1262" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+    <line x1="360" y1="1318" x2="360" y2="1378" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+    <!-- LOOP 3 inline: Dev Reviews Plan (480,1402) → rail → reiterate(840,1292) → back to /plan (480,1174) -->
+    <path d="M480,1402 L840,1402 L840,1292" stroke="#94a3b8" stroke-width="1.5" fill="none" stroke-dasharray="5,3"/>
+    <path d="M840,1292 L840,1174 L482,1174" stroke="#94a3b8" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#arr-loop)"/>
+    <!-- Plan approved → Build phase -->
+    <line x1="360" y1="1424" x2="360" y2="1488" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- ── BUILD ── -->
+    <!-- API Changes? YES → /build-api -->
+    <path d="M480,1588 L680,1588 L680,1706" stroke="#c8c2ba" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+    <!-- API Changes? NO → /implement -->
+    <line x1="360" y1="1638" x2="360" y2="1946" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+    <!-- /build-api → Share to Frontend -->
+    <line x1="680" y1="1766" x2="680" y2="1826" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+    <!-- Share to Frontend → /implement right-edge -->
+    <path d="M680,1872 L680,1978 L482,1978" stroke="#c8c2ba" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+    <!-- /implement → /review-impl -->
+    <line x1="360" y1="2008" x2="360" y2="2066" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+    <!-- /review-impl → Dev Reviews Impl -->
+    <line x1="360" y1="2122" x2="360" y2="2182" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+    <!-- LOOP 4 inline: Dev Reviews Impl (480,2206) → rail → reiterate(840,2096) → back to /implement (480,1978) -->
+    <path d="M480,2206 L840,2206 L840,2096" stroke="#94a3b8" stroke-width="1.5" fill="none" stroke-dasharray="5,3"/>
+    <path d="M840,2096 L840,1978 L482,1978" stroke="#94a3b8" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#arr-loop)"/>
+    <!-- Dev Reviews Impl → Testing phase -->
+    <line x1="360" y1="2228" x2="360" y2="2296" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- ── TESTING ── -->
+    <line x1="360" y1="2404" x2="360" y2="2462" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+    <line x1="360" y1="2508" x2="360" y2="2566" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+    <line x1="360" y1="2612" x2="360" y2="2676" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- ── OUTPUT TESTING ── -->
+    <!-- AGENT → right col -->
+    <path d="M480,2768 L680,2768 L680,2876" stroke="#c8c2ba" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+    <!-- Agent Writes Test Plan → Dev Reviews Test Plan -->
+    <line x1="680" y1="2934" x2="680" y2="2992" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+    <!-- LOOP 5 inline: Dev Reviews Test Plan right (800,3016) → reiterate(840,2962) → back to Agent Writes Test Plan (800,2906) -->
+    <path d="M800,3016 L840,3016 L840,2962" stroke="#94a3b8" stroke-width="1.5" fill="none" stroke-dasharray="5,3"/>
+    <path d="M840,2962 L840,2906 L802,2906" stroke="#94a3b8" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#arr-loop)"/>
+    <!-- Dev Reviews Test Plan → Agent Executes Tests -->
+    <line x1="680" y1="3038" x2="680" y2="3106" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+    <!-- Agent Executes Tests → Test Report -->
+    <line x1="680" y1="3164" x2="680" y2="3222" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+    <!-- Test Report → Dev Reviews PR (merge to spine) -->
+    <path d="M680,3268 L680,3360 L482,3360" stroke="#c8c2ba" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+    <!-- MANUAL → spine drops to Dev Reviews PR -->
+    <line x1="360" y1="2808" x2="360" y2="3336" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+    <!-- LOOP 6 inline: Dev Reviews PR (480,3360) → rail → reiterate(840,3240) → back to /implement (480,1978) -->
+    <path d="M480,3360 L840,3360 L840,3240" stroke="#94a3b8" stroke-width="1.5" fill="none" stroke-dasharray="5,3"/>
+    <path d="M840,3240 L840,1978 L482,1978" stroke="#94a3b8" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#arr-loop)"/>
+
+    <!-- ── DEPLOY ── -->
+    <line x1="360" y1="3382" x2="360" y2="3448" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+    <line x1="360" y1="3556" x2="360" y2="3614" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+  </svg>
+
+  <!-- ══ ENTRY ══ -->
+  <div class="node pill c-green" style="left:240px;top:0;width:240px;height:40px;animation-delay:.02s">
+    Pick a Task
+  </div>
+  <div class="node c-yellow" style="left:240px;top:90px;width:240px;height:44px;animation-delay:.05s">
+    Fill Requirement Format
+  </div>
+  <div class="node c-red" style="left:240px;top:184px;width:240px;height:100px;animation-delay:.08s">
+    <strong style="font-size:13px;margin-bottom:4px;">Evaluate Complexity</strong>
+    <ul>
+      <li>Complex multi-domain feature?</li>
+      <li>New data models needed?</li>
+      <li>Multiple API changes?</li>
+      <li>Non-trivial business logic?</li>
+    </ul>
+  </div>
+
+  <!-- Skip rail labels -->
+  <div class="skip-label" style="left:2px;top:290px;width:36px;">skip<br>to →</div>
+
+  <!-- ══ BREAKDOWN PHASE ══ -->
+  <div class="phase-hdr" style="top:330px;background:#ede9fe;color:#6b21a8;">
+    ① Breakdown Phase
+    <span style="font-size:9px;font-weight:400;font-style:italic;margin-left:8px;opacity:.7;">for complex multi-domain tasks</span>
+  </div>
+  <div class="node c-blue" style="left:240px;top:380px;width:240px;height:60px;animation-delay:.11s">
+    <code>/breakdown</code>
+    <sub>Business PRD → Tech PRD</sub>
+  </div>
+  <!-- REITERATE 1 — inline on loop rail, vertically centred between /breakdown (cy:410) and Dev Reviews (cy:522) → mid=466 -->
+  <div class="reiterate" style="left:680px;top:436px;width:180px;">
+    ↺ re-run /breakdown<br>or edit manually
+  </div>
+  <div class="node c-yellow" style="left:240px;top:500px;width:240px;height:44px;animation-delay:.14s">
+    Dev Reviews Output
+  </div>
+
+  <!-- ══ APPROACH PHASE ══ -->
+  <div class="phase-hdr" style="top:620px;background:#faf5ff;color:#6b21a8;">
+    ② Approach Phase
+    <span style="font-size:9px;font-weight:400;font-style:italic;margin-left:8px;opacity:.7;">optional — when best approach is unclear</span>
+  </div>
+  <div class="skip-label" style="left:2px;top:624px;width:36px;color:#6b21a8;">②</div>
+  <div class="node c-purple" style="left:240px;top:668px;width:240px;height:60px;animation-delay:.17s">
+    Agent Proposes Approaches
+    <sub>multiple options with trade-offs</sub>
+  </div>
+  <div class="node c-purple" style="left:240px;top:788px;width:240px;height:44px;animation-delay:.20s">
+    Agent Reviews Approaches
+  </div>
+  <div class="node c-purple" style="left:240px;top:892px;width:240px;height:44px;animation-delay:.23s">
+    Agent Recommends Approach
+  </div>
+  <div class="node c-yellow" style="left:240px;top:996px;width:240px;height:44px;animation-delay:.26s">
+    Dev Reviews &amp; Approves
+  </div>
+  <!-- REITERATE 2 — mid of Agent Proposes (cy:698) and Dev Reviews (cy:1018) → mid=858 -->
+  <div class="reiterate" style="left:680px;top:830px;width:180px;">
+    ↺ re-run approach<br>or edit manually
+  </div>
+
+  <!-- ══ PLAN PHASE ══ -->
+  <div class="phase-hdr" style="top:1090px;background:#dbeafe;color:#1d4ed8;">
+    ③ Planning Phase
+    <span style="font-size:9px;font-weight:400;font-style:italic;margin-left:8px;opacity:.7;">skip in if no breakdown / approach needed</span>
+  </div>
+  <div class="skip-label" style="left:2px;top:1094px;width:36px;color:#1d4ed8;">③</div>
+  <div class="node c-blue" style="left:240px;top:1144px;width:240px;height:60px;animation-delay:.29s">
+    <code>/plan</code>
+    <sub>Write Implementation Plan</sub>
+  </div>
+  <div class="node c-blue" style="left:240px;top:1264px;width:240px;height:56px;animation-delay:.32s">
+    <code>/review-plan</code>
+    <sub>Validate plan against requirement</sub>
+  </div>
+  <div class="node c-yellow" style="left:240px;top:1380px;width:240px;height:44px;animation-delay:.35s">
+    Dev Reviews Plan
+  </div>
+  <!-- REITERATE 3 — mid of /plan (cy:1174) and Dev Reviews Plan (cy:1402) → mid=1288 -->
+  <div class="reiterate" style="left:680px;top:1264px;width:180px;">
+    ↺ re-run /plan<br>or edit manually
+  </div>
+
+  <!-- ══ BUILD PHASE ══ -->
+  <div class="phase-hdr" style="top:1490px;background:#fefce8;color:#713f12;">
+    ④ Build Phase
+    <span style="font-size:9px;font-weight:400;font-style:italic;margin-left:8px;opacity:.7;">skip in for trivial / obvious tasks</span>
+  </div>
+  <div class="skip-label" style="left:2px;top:1494px;width:36px;color:#713f12;">④</div>
+  <div class="node c-red" style="left:240px;top:1538px;width:240px;height:100px;animation-delay:.38s">
+    <strong style="font-size:13px;margin-bottom:4px;">API Changes?</strong>
+    <ul>
+      <li>New endpoints added?</li>
+      <li>Existing endpoints modified?</li>
+      <li>Request / response schema changed?</li>
+    </ul>
+  </div>
+  <div class="blabel" style="left:286px;top:1644px;color:#166534;">NO ↓</div>
+  <div class="blabel" style="left:486px;top:1582px;color:#991b1b;">YES →</div>
+  <div class="node c-blue" style="left:560px;top:1708px;width:240px;height:60px;animation-delay:.41s">
+    <code>/build-api</code>
+    <sub>Build API Specification</sub>
+  </div>
+  <div class="node c-teal" style="left:560px;top:1828px;width:240px;height:44px;animation-delay:.44s">
+    Share Output to Frontend
+  </div>
+  <div class="node c-blue" style="left:240px;top:1948px;width:240px;height:60px;animation-delay:.47s;font-weight:600;">
+    <code>/implement</code>
+    <sub>Execute Implementation</sub>
+  </div>
+  <div class="node c-blue" style="left:240px;top:2068px;width:240px;height:56px;animation-delay:.50s">
+    <code>/review-impl</code>
+    <sub>Code Review</sub>
+  </div>
+  <div class="node c-yellow" style="left:240px;top:2184px;width:240px;height:44px;animation-delay:.53s">
+    Dev Reviews Implementation
+  </div>
+  <!-- REITERATE 4 — mid of /implement (cy:1978) and Dev Reviews Impl (cy:2206) → mid=2092 -->
+  <div class="reiterate" style="left:680px;top:2068px;width:180px;">
+    ↺ re-run /implement<br>or edit manually
+  </div>
+
+  <!-- ══ TESTING PHASE ══ -->
+  <div class="phase-hdr" style="top:2300px;background:#fef9c3;color:#713f12;">
+    ⑤ Testing Phase
+  </div>
+  <div class="node c-blue" style="left:240px;top:2348px;width:240px;height:56px;animation-delay:.56s">
+    Agent Writes Unit Tests
+    <sub>covers all cases in the plan</sub>
+  </div>
+  <div class="node c-blue" style="left:240px;top:2464px;width:240px;height:44px;animation-delay:.59s">
+    Agent Makes Code Changes
+  </div>
+  <div class="node pill c-teal" style="left:240px;top:2568px;width:240px;height:44px;animation-delay:.62s">
+    Output PR V2
+  </div>
+
+  <!-- ══ OUTPUT TESTING PHASE ══ -->
+  <div class="phase-hdr" style="top:2680px;background:#ffe4e6;color:#991b1b;">
+    ⑥ Output Testing Phase
+  </div>
+  <div class="node c-red" style="left:240px;top:2728px;width:240px;height:80px;animation-delay:.65s">
+    <strong style="font-size:13px;margin-bottom:4px;">Dev Chooses Testing</strong>
+    <ul>
+      <li>Manual testing by Dev</li>
+      <li>Assign to Agent</li>
+    </ul>
+  </div>
+  <div class="blabel" style="left:286px;top:2814px;color:#166534;">MANUAL ↓</div>
+  <div class="blabel" style="left:486px;top:2762px;color:#991b1b;">AGENT →</div>
+
+  <div class="node c-blue" style="left:560px;top:2878px;width:240px;height:56px;animation-delay:.68s">
+    Agent Writes Testing Plan
+    <sub>all cases · asks questions if needed</sub>
+  </div>
+  <div class="node c-yellow" style="left:560px;top:2994px;width:240px;height:44px;animation-delay:.71s">
+    Dev Reviews Testing Plan
+  </div>
+  <!-- REITERATE 5 — inline between Agent Writes Test Plan (cy:2906) and Dev Reviews (cy:3016) → mid=2961 -->
+  <div class="reiterate" style="left:700px;top:2938px;width:160px;left:810px;">
+    ↺ iterate until<br>plan is good
+  </div>
+  <div class="node c-blue" style="left:560px;top:3108px;width:240px;height:56px;animation-delay:.74s">
+    Agent Executes Tests
+    <sub>runs all planned test cases</sub>
+  </div>
+  <div class="node c-teal" style="left:560px;top:3224px;width:240px;height:44px;animation-delay:.77s">
+    Agent Outputs Test Report
+  </div>
+
+  <!-- Both paths merge -->
+  <div class="node c-yellow" style="left:240px;top:3338px;width:240px;height:44px;animation-delay:.80s">
+    Dev Reviews PR Manually
+  </div>
+  <!-- REITERATE 6 — inline on big loop back to /implement, mid of Dev Reviews PR (cy:3360) and /implement (cy:1978) → shown at 3240 -->
+  <div class="reiterate" style="left:680px;top:3210px;width:180px;">
+    ↺ re-run /implement<br>or edit manually
+  </div>
+
+  <!-- ══ DEPLOY ══ -->
+  <div class="phase-hdr" style="top:3452px;background:#e6fafa;color:#0f766e;">
+    ⑦ Deploy
+  </div>
+  <div class="node c-blue" style="left:240px;top:3500px;width:240px;height:56px;animation-delay:.83s">
+    <code>/update-docs</code>
+    <sub>Update Documentation</sub>
+  </div>
+  <div class="node pill c-green" style="left:240px;top:3616px;width:240px;height:40px;animation-delay:.86s">
+    Push to Beta 🚀
+  </div>
+
+</div>
+
+<!-- Legend -->
+<div style="display:flex;flex-wrap:wrap;gap:10px 20px;justify-content:center;margin-top:40px;padding:16px 24px;border-top:2px solid #d4cfc8;width:900px;margin-left:auto;margin-right:auto;background:#e8e8e2;border-radius:10px;">
+  <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#44403c;"><div style="width:12px;height:12px;border-radius:3px;background:#f0fdf4;border:1.5px solid #86efac;"></div>Start / End</div>
+  <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#44403c;"><div style="width:12px;height:12px;border-radius:3px;background:#eff6ff;border:1.5px solid #93c5fd;"></div>Agent Command</div>
+  <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#44403c;"><div style="width:12px;height:12px;border-radius:3px;background:#faf5ff;border:1.5px solid #d8b4fe;"></div>Approach Phase</div>
+  <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#44403c;"><div style="width:12px;height:12px;border-radius:3px;background:#fefce8;border:1.5px solid #fde68a;"></div>Dev Review</div>
+  <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#44403c;"><div style="width:12px;height:12px;border-radius:3px;background:#fff1f2;border:1.5px solid #fca5a5;"></div>Decision</div>
+  <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#44403c;"><div style="width:12px;height:12px;border-radius:3px;background:#e6fafa;border:1.5px solid #5eead4;"></div>Output / Milestone</div>
+  <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#44403c;">
+    <svg width="24" height="10"><line x1="0" y1="5" x2="24" y2="5" stroke="#64748b" stroke-width="2" stroke-dasharray="4,2"/></svg>Skip-in from Evaluate Complexity
+  </div>
+  <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#44403c;">
+    <svg width="24" height="10"><line x1="0" y1="5" x2="24" y2="5" stroke="#94a3b8" stroke-width="2" stroke-dasharray="4,2"/></svg>Iterate loop
+  </div>
+</div>
+
+</body>
+</html>

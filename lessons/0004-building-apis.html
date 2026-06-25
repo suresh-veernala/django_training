@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lesson 04 — Building APIs</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body>
+<div class="lesson-wrap">
+
+  <header class="lesson-header">
+    <div class="lesson-meta">
+      <span class="badge">Module 4 / 6</span>
+      <span>Django Backend Training</span>
+      <span>⏱ ~35 min</span>
+      <span>Core</span>
+    </div>
+    <h1 class="lesson-title">Building APIs</h1>
+    <p class="lesson-subtitle">From HTTP basics to CRUD endpoints — in both plain Django and Django REST Framework.</p>
+  </header>
+
+  <nav class="course-map">
+    <div class="course-map-title">Course Map — Django Backend Training</div>
+    <ol>
+      <li><a href="0001-introduction-to-django.html">Introduction to Django</a> <span>15 min</span></li>
+      <li><a href="0002-django-project-structure.html">Django Project Structure</a> <span>10 min</span></li>
+      <li><a href="0003-models-and-orm.html">Models &amp; ORM</a> <span>40 min</span></li>
+      <li class="current"><a href="0004-building-apis.html">Building APIs</a> <span>35 min</span></li>
+      <li><a href="0005-openapi-swagger.html">OpenAPI / Swagger</a> <span>15 min</span></li>
+      <li><a href="0006-wrap-up-and-learning-path.html">Wrap Up &amp; Learning Path</a> <span>5 min</span></li>
+    </ol>
+  </nav>
+
+  <!-- ── 1. REST basics ── -->
+  <h2>1. REST API Basics</h2>
+  <p>A REST API exposes <em>resources</em> (like movies) over HTTP. The <strong>HTTP method</strong> says what to do; the <strong>URL</strong> says to which resource.</p>
+
+  <table>
+    <thead><tr><th>Method</th><th>Intent</th><th>Example</th><th>Has body?</th></tr></thead>
+    <tbody>
+      <tr><td><span class="method get">GET</span></td><td>Read</td><td><code>GET /movies/1/</code></td><td>No</td></tr>
+      <tr><td><span class="method post">POST</span></td><td>Create</td><td><code>POST /movies/</code></td><td>Yes</td></tr>
+      <tr><td><span class="method put">PUT</span></td><td>Replace / update</td><td><code>PUT /movies/1/</code></td><td>Yes</td></tr>
+      <tr><td><span class="method delete">DELETE</span></td><td>Remove</td><td><code>DELETE /movies/1/</code></td><td>No</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Request &amp; Response</h3>
+  <p>A request carries a method, URL, headers, and (sometimes) a JSON body. A response carries a <strong>status code</strong>, headers, and a JSON body.</p>
+
+  <h3>Status codes you'll use constantly</h3>
+  <table>
+    <thead><tr><th>Code</th><th>Meaning</th><th>When</th></tr></thead>
+    <tbody>
+      <tr><td><code>200 OK</code></td><td>Success</td><td>GET / PUT succeeded</td></tr>
+      <tr><td><code>201 Created</code></td><td>Created</td><td>POST created a resource</td></tr>
+      <tr><td><code>204 No Content</code></td><td>Success, empty</td><td>DELETE succeeded</td></tr>
+      <tr><td><code>400 Bad Request</code></td><td>Client error</td><td>Validation failed</td></tr>
+      <tr><td><code>404 Not Found</code></td><td>Missing</td><td>Resource doesn't exist</td></tr>
+      <tr><td><code>500 Server Error</code></td><td>Server bug</td><td>Unhandled exception</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout key">
+    <div class="callout-title">From Lesson 1</div>
+    Remember: in a backend API the View returns <strong>JSON</strong>, not an HTML template. The "T" of MVT is replaced by a serializer.
+  </div>
+
+  <!-- ── 2. Plain Django ── -->
+  <h2>2. The Plain Django Pattern (HttpResponse)</h2>
+  <p>
+    Parts of the production codebase return JSON using plain Django — no DRF. You build the response yourself with
+    <code>JsonResponse</code> (a thin wrapper over <code>HttpResponse</code> that serialises a dict to JSON).
+  </p>
+
+<pre><code># movies/views.py  — plain Django
+import json
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import get_object_or_404
+from .models import Movie
+
+def movie_detail(request, movie_id):
+    movie = get_object_or_404(Movie, id=movie_id)
+    data = {
+        'id': movie.id,
+        'title': movie.title,
+        'release_year': movie.release_year,
+        'rating': movie.rating,
+    }
+    return JsonResponse(data)                      # 200 OK
+
+@csrf_exempt
+def movie_create(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'method not allowed'}, status=405)
+    payload = json.loads(request.body)             # parse JSON body manually
+    movie = Movie.objects.create(
+        title=payload['title'],
+        release_year=payload['release_year'],
+    )
+    return JsonResponse({'id': movie.id}, status=201)</code></pre>
+
+  <div class="callout warn">
+    <div class="callout-title">Notice the manual work</div>
+    You hand-build the dict, parse <code>request.body</code> yourself, and there's no validation. This is exactly the
+    pain that <strong>DRF</strong> removes.
+  </div>
+
+  <!-- ── 3. DRF ── -->
+  <h2>3. The DRF Pattern (Serializer + APIView + Response)</h2>
+  <p>
+    <a href="https://www.django-rest-framework.org/" target="_blank">Django REST Framework</a> adds three pieces that
+    eliminate the boilerplate above. The rest of the production codebase uses this style.
+  </p>
+
+  <h3>Serializer — Model ↔ JSON + validation</h3>
+<pre><code># movies/serializers.py
+from rest_framework import serializers
+from .models import Movie
+
+class MovieSerializer(serializers.ModelSerializer):
+    class Meta:
+        model  = Movie
+        fields = ['id', 'title', 'release_year', 'rating']</code></pre>
+
+  <h3>APIView — class-based view, one method per HTTP verb</h3>
+<pre><code># movies/views.py  — DRF
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.shortcuts import get_object_or_404
+from .models import Movie
+from .serializers import MovieSerializer
+
+class MovieDetail(APIView):
+    def get(self, request, movie_id):
+        movie = get_object_or_404(Movie, id=movie_id)
+        serializer = MovieSerializer(movie)
+        return Response(serializer.data)            # 200 OK
+
+    def put(self, request, movie_id):
+        movie = get_object_or_404(Movie, id=movie_id)
+        serializer = MovieSerializer(movie, data=request.data)
+        serializer.is_valid(raise_exception=True)   # 400 if invalid
+        serializer.save()
+        return Response(serializer.data)
+
+    def delete(self, request, movie_id):
+        movie = get_object_or_404(Movie, id=movie_id)
+        movie.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+class MovieList(APIView):
+    def post(self, request):
+        serializer = MovieSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)   # validation built-in!
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)</code></pre>
+
+  <h3>Wire up the URLs</h3>
+<pre><code># movies/urls.py
+from django.urls import path
+from .views import MovieDetail, MovieList
+
+urlpatterns = [
+    path('movies/', MovieList.as_view()),
+    path('movies/&lt;int:movie_id&gt;/', MovieDetail.as_view()),
+]</code></pre>
+
+  <h3>Plain Django vs DRF — side by side</h3>
+  <table>
+    <thead><tr><th></th><th>Plain Django</th><th>DRF</th></tr></thead>
+    <tbody>
+      <tr><td>Parse request body</td><td><code>json.loads(request.body)</code></td><td>automatic (<code>request.data</code>)</td></tr>
+      <tr><td>Build JSON</td><td>hand-build a dict</td><td><code>serializer.data</code></td></tr>
+      <tr><td>Validation</td><td>manual <code>if</code> checks</td><td><code>is_valid(raise_exception=True)</code></td></tr>
+      <tr><td>Response</td><td><code>JsonResponse</code></td><td><code>Response</code></td></tr>
+      <tr><td>Browsable API</td><td>no</td><td>yes (auto HTML test UI)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout info">
+    <div class="callout-title">Production reality</div>
+    The codebase you'll work in contains <strong>both</strong> styles. Recognise both — newer endpoints tend to be DRF;
+    older ones use plain <code>HttpResponse</code>/<code>JsonResponse</code>.
+  </div>
+
+  <!-- ── 4. The 3 IMDb endpoints ── -->
+  <h2>4. The Three Endpoints You'll Build (Hands-on)</h2>
+  <p>In the hands-on session you'll implement these against the IMDb models:</p>
+  <ol class="steps">
+    <li><span class="method get">GET</span> <code>/movies/&lt;id&gt;/</code> — return complete movie details.</li>
+    <li><span class="method get">GET</span> <code>/movies/&lt;id&gt;/actors/</code> — return all actors in a movie (uses the M2M reverse relation: <code>movie.actors.all()</code>).</li>
+    <li><span class="method post">POST</span> <code>/movies/</code> — create a new movie from a JSON body.</li>
+  </ol>
+
+<pre><code># GET /movies/&lt;id&gt;/actors/  — connecting models + ORM + JSON
+class MovieActors(APIView):
+    def get(self, request, movie_id):
+        movie = get_object_or_404(Movie, id=movie_id)
+        actors = movie.actors.all()                 # ORM via M2M
+        data = ActorSerializer(actors, many=True).data
+        return Response(data)</code></pre>
+
+  <!-- ── Quiz ── -->
+  <h2>Quick Check</h2>
+  <div class="quiz" data-quiz-id="building-apis"></div>
+  <script type="application/json" data-quiz-data="building-apis">
+  [
+    {
+      "q": "Which HTTP method and status code pair correctly with creating a new movie?",
+      "options": [
+        "GET request returning 200 OK on success ",
+        "POST request returning 201 Created result",
+        "PUT request returning 204 No Content code",
+        "DELETE request returning 400 Bad Request "
+      ],
+      "answer": 1,
+      "explain": "Creating a resource uses POST and, on success, returns 201 Created."
+    },
+    {
+      "q": "In DRF, what does serializer.is_valid(raise_exception=True) do?",
+      "options": [
+        "Saves the object directly into the table ",
+        "Validates input and raises 400 if invalid",
+        "Converts the QuerySet into a JSON string ",
+        "Generates the URL routes for the resource"
+      ],
+      "answer": 1,
+      "explain": "is_valid() runs validation; with raise_exception=True it automatically returns a 400 Bad Request when the data is invalid."
+    },
+    {
+      "q": "What is the main advantage of DRF over the plain Django JsonResponse pattern?",
+      "options": [
+        "It runs database queries far more quickly ",
+        "It removes serialization and validation work",
+        "It replaces the need to define any models ",
+        "It hosts the API on a separate web server"
+      ],
+      "answer": 1,
+      "explain": "DRF handles parsing, serialization (Model ↔ JSON), and validation for you — removing the manual boilerplate of the plain pattern."
+    },
+    {
+      "q": "To return all actors in a movie via the ManyToMany relation, you call:",
+      "options": [
+        "Movie.objects.get(actors) for the movie  ",
+        "movie.actors.all() on the movie instance ",
+        "Actor.objects.create(movie) to fetch them",
+        "movie.delete() then read the actors back "
+      ],
+      "answer": 1,
+      "explain": "movie.actors.all() follows the ManyToManyField to return the related actors QuerySet."
+    }
+  ]
+  </script>
+
+  <h2>Primary Source</h2>
+  <p>
+    Work through the <a href="https://www.django-rest-framework.org/tutorial/1-serialization/" target="_blank"><strong>DRF Serialization tutorial</strong></a> —
+    it builds exactly this kind of API step by step.
+  </p>
+
+  <div class="ask-agent">
+    <strong>Questions?</strong> Ask — "Why is <code>@csrf_exempt</code> needed in the plain view but not in DRF?",
+    "When would I use <code>PUT</code> vs <code>PATCH</code>?", "What's the difference between <code>APIView</code> and a <code>ViewSet</code>?"
+  </div>
+
+  <h2>What's Next</h2>
+  <p>
+    Next: <strong><a href="0005-openapi-swagger.html">OpenAPI / Swagger</a></strong> — describe these endpoints in a
+    standard spec so anyone can understand and test them.
+  </p>
+
+  <footer class="lesson-footer">
+    <div class="lesson-nav">
+      <a href="0003-models-and-orm.html">← Module 3: Models &amp; ORM</a>
+    </div>
+    <div class="lesson-nav">
+      Module 4 of 6 &nbsp;|&nbsp;
+      <a href="0005-openapi-swagger.html">Next: OpenAPI / Swagger →</a>
+    </div>
+  </footer>
+
+</div>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dev Workflow</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;1,300&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #f0f0ea; font-family: 'DM Sans', sans-serif; padding: 48px 24px 80px; min-height: 100vh; }
+
+  h1 { font-family: 'Fraunces', serif; font-weight: 300; font-size: 26px; text-align: center; color: #1c1917; letter-spacing: -.02em; margin-bottom: 6px; }
+  h1 em { font-style: italic; color: #2563eb; }
+  .subtitle { text-align: center; font-size: 12px; color: #a8a29e; letter-spacing: .06em; margin-bottom: 48px; }
+
+  .chart-outer { position: relative; width: 920px; margin: 0 auto; }
+
+  .connector-svg { position: absolute; top: 0; left: 0; width: 100%; overflow: visible; pointer-events: none; z-index: 1; }
+
+  .node {
+    position: absolute;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center;
+    border-radius: 10px; border: 1.5px solid;
+    font-size: 13px; font-weight: 500; line-height: 1.45;
+    padding: 10px 16px; z-index: 2; cursor: default;
+    transition: transform .15s, box-shadow .15s;
+  }
+  .node:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.10); }
+  .node sub { font-size: 11px; font-weight: 300; font-style: italic; opacity: .72; margin-top: 3px; }
+  .node code { font-family: 'DM Mono', 'Fira Code', monospace; font-size: 14px; font-weight: 700; letter-spacing: -.01em; }
+  .node ul { list-style: none; text-align: left; font-size: 11.5px; font-weight: 400; margin-top: 6px; line-height: 1.7; }
+  .node ul li::before { content: "• "; font-weight: 600; }
+
+  .pill { border-radius: 999px; padding: 9px 28px; font-family: 'Fraunces', serif; font-weight: 600; font-size: 13.5px; }
+
+  /* inline reiterate box — sits on top of the dashed loop rail */
+  .reiterate {
+    position: absolute;
+    border-radius: 7px; border: 1.5px dashed #b0a99f;
+    background: #f0f0ea;
+    font-size: 11px; font-weight: 400; font-style: italic;
+    color: #57534e; line-height: 1.65;
+    padding: 7px 11px; text-align: center; z-index: 4; cursor: default;
+  }
+
+  /* colors */
+  .c-green  { background:#f0fdf4; border-color:#86efac; color:#166534; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+  .c-yellow { background:#fefce8; border-color:#fde68a; color:#713f12; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+  .c-blue   { background:#eff6ff; border-color:#93c5fd; color:#1d4ed8; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+  .c-red    { background:#fff1f2; border-color:#fca5a5; color:#991b1b; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+  .c-teal   { background:#e6fafa; border-color:#5eead4; color:#0f766e; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+
+  .blabel { position: absolute; font-size: 10.5px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; z-index: 3; }
+
+  @keyframes fadeUp { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+  .node { animation: fadeUp .4s ease both; }
+</style>
+</head>
+<body>
+
+<h1>AI-Native <em>Dev Workflow</em></h1>
+
+<!--
+  chart-outer width = 860
+  SPINE: cx=340  left=220  w=240  right-edge=460
+  RIGHT BRANCH: cx=620  left=500  w=240  right-edge=740
+  LOOP RAIL: x=780  reiterate boxes: left=700 w=160
+
+  ─── NODES ────────────────────────────────────────────────────
+  Pick a Task (pill,green)         top:0      h:40   bottom:40   cy:20
+  Fill Req Format (yellow)         top:90     h:44   bottom:134  cy:112
+  Evaluate Complexity (rect,red)   top:184    h:100  bottom:284  cy:234
+  /write-tech-prd (blue)           top:354    h:60   bottom:414  cy:384   RIGHT
+  Dev Reviews Output 1 (yellow)    top:474    h:44   bottom:518  cy:496   RIGHT
+  /propose-approaches (blue)       top:608    h:60   bottom:668  cy:638
+  Select Approach (blue)           top:748    h:56   bottom:804  cy:776
+  Dev Reviews Output 2 (yellow)    top:874    h:44   bottom:918  cy:896
+  API Changes? (rect,red)          top:988    h:100  bottom:1088 cy:1038
+  /build-api (blue)                top:1158   h:60   bottom:1218 cy:1188  RIGHT
+  Share to Frontend (teal)         top:1278   h:44   bottom:1322 cy:1300  RIGHT
+  Implementation Path (blue)       top:1392   h:60   bottom:1452 cy:1422
+  /review-impl (blue)              top:1532   h:56   bottom:1588 cy:1560
+  Manual Review (yellow)           top:1658   h:44   bottom:1702 cy:1680
+  /update-docs (blue)              top:1792   h:56   bottom:1848 cy:1820
+  Push to Beta (pill,green)        top:1928   h:40   bottom:1968 cy:1948
+
+  Total height: 1970
+
+  LOOP rails at x=780
+  Loop1: (740,496)→(780,496)→(780,384)→(742,384)  reiterate top:440 (mid of 384–496=440, top=412)
+  Loop2: (460,896)→(780,896)→(780,638)→(462,638)  reiterate top:739 (mid of 638–896=767, top=739)
+  Loop3: (460,1680)→(780,1680)→(780,1422)→(462,1422) reiterate top:1523 (mid 1422–1680=1551, top=1523)
+-->
+
+<div class="chart-outer" style="height:2210px;">
+
+  <svg class="connector-svg" height="2210">
+    <defs>
+      <marker id="arr" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+        <path d="M1,1 L7,4 L1,7 Z" fill="#b0a99f"/>
+      </marker>
+      <marker id="arr-loop" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+        <path d="M1,1 L7,4 L1,7 Z" fill="#b0a99f"/>
+      </marker>
+    </defs>
+
+    <!-- 1. Pick a Task → Fill Req Format -->
+    <line x1="340" y1="40" x2="340" y2="88" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- 2. Fill Req Format → Evaluate Complexity -->
+    <line x1="340" y1="134" x2="340" y2="182" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- 3. YES: Evaluate Complexity right-edge (460,234) → /write-tech-prd top -->
+    <path d="M460,234 L620,234 L620,352" stroke="#c8c2ba" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+
+    <!-- 4. NEED APPROACH: Evaluate Complexity bottom (340,284) → /propose-approaches top -->
+    <line x1="340" y1="284" x2="340" y2="606" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- 4b. ALREADY HAVE APPROACH: Evaluate Complexity left-edge → /implement-with-plan top -->
+    <path d="M220,234 L120,234 L120,1422 L338,1422" stroke="#c8c2ba" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+
+    <!-- 5. /write-tech-prd → Dev Reviews Output 1 -->
+    <line x1="620" y1="414" x2="620" y2="472" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- LOOP 1: Dev Reviews 1 right-edge → rail → /write-tech-prd right-edge -->
+    <path d="M740,496 L830,496 L830,384 L742,384"
+          stroke="#b0a99f" stroke-width="1.5" fill="none"
+          stroke-dasharray="5,3" marker-end="url(#arr-loop)"/>
+
+    <!-- 6. Dev Reviews 1 bottom → /propose-approaches right-edge -->
+    <path d="M620,518 L620,638 L462,638" stroke="#c8c2ba" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+
+    <!-- 7. /propose-approaches → Select Approach -->
+    <line x1="340" y1="668" x2="340" y2="746" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- 8. Select Approach → Dev Reviews Output 2 -->
+    <line x1="340" y1="804" x2="340" y2="872" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- LOOP 2: Dev Reviews 2 right-edge → rail → /propose-approaches right-edge -->
+    <path d="M460,896 L830,896 L830,638 L462,638"
+          stroke="#b0a99f" stroke-width="1.5" fill="none"
+          stroke-dasharray="5,3" marker-end="url(#arr-loop)"/>
+
+    <!-- 9. Dev Reviews 2 bottom → API Changes top -->
+    <line x1="340" y1="918" x2="340" y2="986" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- 10. YES: API Changes right-edge (460,1038) → /build-api top -->
+    <path d="M460,1038 L620,1038 L620,1156" stroke="#c8c2ba" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+
+    <!-- 11. NO: API Changes bottom (340,1088) → /implement-with-plan top -->
+    <line x1="340" y1="1088" x2="340" y2="1390" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- 12. /build-api → Share to Frontend -->
+    <line x1="620" y1="1218" x2="620" y2="1276" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- 13. Share to Frontend bottom → /implement-with-plan right-edge -->
+    <path d="M620,1322 L620,1422 L462,1422" stroke="#c8c2ba" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+
+    <!-- 14. Implementation Path → /review-impl -->
+    <line x1="340" y1="1452" x2="340" y2="1530" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- 15. /review-impl → Manual Review -->
+    <line x1="340" y1="1588" x2="340" y2="1656" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- LOOP 3: Manual Review right-edge → rail → /implement-with-plan right-edge -->
+    <path d="M460,1680 L830,1680 L830,1422 L462,1422"
+          stroke="#b0a99f" stroke-width="1.5" fill="none"
+          stroke-dasharray="5,3" marker-end="url(#arr-loop)"/>
+
+    <!-- 16. Manual Review bottom → Write Unit Tests top -->
+    <line x1="340" y1="1702" x2="340" y2="1790" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- 17. Write Unit Tests → Dev Manual Testing -->
+    <line x1="340" y1="1848" x2="340" y2="1906" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- 18. Dev Manual Testing → /update-docs -->
+    <line x1="340" y1="1950" x2="340" y2="2020" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- 19. /update-docs → Push to Beta -->
+    <line x1="340" y1="2076" x2="340" y2="2154" stroke="#c8c2ba" stroke-width="1.5" marker-end="url(#arr)"/>
+  </svg>
+
+  <!-- ══ NODES ══ -->
+
+  <div class="node pill c-green" style="left:220px;top:0;width:240px;height:40px;animation-delay:.03s">
+    Pick a Task
+  </div>
+
+  <div class="node c-yellow" style="left:220px;top:90px;width:240px;height:44px;animation-delay:.06s">
+    Give Input to Agent in the requirement format
+  </div>
+
+  <!-- Evaluate Complexity: rectangle decision block -->
+  <div class="node c-red" style="left:220px;top:184px;width:240px;height:140px;animation-delay:.09s">
+    <strong style="font-size:13px;margin-bottom:4px;">Evaluate Complexity</strong>
+    <ul>
+      <li>Complex/Ambiguous Task</li>
+      <li>Need a Tech PRD</li>
+      <li>Multiple API, logic, or model changes?</li>
+      <li>Need approach exploration</li>
+    </ul>
+  </div>
+  <div class="blabel" style="left:288px;top:330px;color:#166534;">NEED APPROACH ↓</div>
+  <div class="blabel" style="left:466px;top:222px;color:#991b1b;">NEED TECH PRD →</div>
+  <div class="blabel" style="left:18px;top:222px;color:#1d4ed8;">ALREADY HAVE APPROACH</div>
+
+  <!-- /write-tech-prd -->
+  <div class="node c-blue" style="left:500px;top:354px;width:240px;height:60px;animation-delay:.12s">
+    <code>/write-tech-prd</code>
+    <sub>Business PRD → Tech PRD</sub>
+  </div>
+
+  <!-- Dev Reviews Output 1 -->
+  <div class="node c-yellow" style="left:500px;top:474px;width:240px;height:44px;animation-delay:.15s">
+    Dev Reviews Output
+  </div>
+
+  <!-- REITERATE 1 — inline on loop rail at x=830, mid of 384–496=440 -->
+  <div class="reiterate" style="left:750px;top:412px;width:160px;">
+    Manually edit or<br>Iterate<br>until output is good
+  </div>
+
+  <!-- /propose-approaches -->
+  <div class="node c-blue" style="left:220px;top:608px;width:240px;height:60px;animation-delay:.18s">
+    <code>/propose-approaches</code>
+    <sub>Generate and compare approaches</sub>
+  </div>
+
+  <!-- Select Approach -->
+  <div class="node c-blue" style="left:220px;top:748px;width:240px;height:56px;animation-delay:.21s">
+    <code>Select approach</code>
+    <sub>Choose plan depth and keep only the chosen approach</sub>
+  </div>
+
+  <!-- Dev Reviews Output 2 -->
+  <div class="node c-yellow" style="left:220px;top:874px;width:240px;height:44px;animation-delay:.24s">
+    Dev Reviews Output
+  </div>
+
+  <!-- REITERATE 2 — inline on loop rail at x=830, mid of 638–896=767 -->
+  <div class="reiterate" style="left:750px;top:739px;width:160px;">
+    Manually edit or<br>Iterate<br>until output is good
+  </div>
+
+  <!-- API Changes? rectangle decision block -->
+  <div class="node c-red" style="left:220px;top:988px;width:240px;height:110px;animation-delay:.27s">
+    <strong style="font-size:13px;margin-bottom:4px;">API Changes?</strong>
+    <ul>
+      <li>New endpoints added?</li>
+      <li>Request/response schema changed?</li>
+      <li>Changes significant enough to inform frontend?</li>
+    </ul>
+  </div>
+  <div class="blabel" style="left:306px;top:1100px;color:#166534;">NO ↓</div>
+  <div class="blabel" style="left:466px;top:1025px;color:#991b1b;">YES →</div>
+
+  <!-- /build-api -->
+  <div class="node c-blue" style="left:500px;top:1158px;width:240px;height:60px;animation-delay:.30s">
+    <code>/build-api</code>
+    <sub>Build API Specification</sub>
+  </div>
+
+  <!-- Share Output to Frontend -->
+  <div class="node c-yellow" style="left:500px;top:1278px;width:240px;height:44px;animation-delay:.33s">
+    Share Output to Frontend
+  </div>
+
+  <!-- Implementation Path -->
+  <div class="node c-blue" style="left:220px;top:1392px;width:240px;height:60px;animation-delay:.36s;font-weight:600;">
+    <code>/implement-with-plan</code>
+    <sub>or /plan-approach → /implement</sub>
+  </div>
+
+  <!-- /review-impl -->
+  <div class="node c-blue" style="left:220px;top:1532px;width:240px;height:56px;animation-delay:.39s">
+    <code>/review-impl</code>
+    <sub>Code Review</sub>
+  </div>
+
+  <!-- Manual Review -->
+  <div class="node c-yellow" style="left:220px;top:1658px;width:240px;height:44px;animation-delay:.42s">
+    Dev Reviews Output
+  </div>
+
+  <!-- REITERATE 3 — inline on loop rail at x=830, mid of 1422–1680=1551 -->
+  <div class="reiterate" style="left:750px;top:1523px;width:160px;">
+    Manually edit or<br>Iterate<br>until output is good
+  </div>
+
+  <!-- Write Unit Tests -->
+  <div class="node c-blue" style="left:220px;top:1792px;width:240px;height:56px;animation-delay:.45s">
+    <code>/write-*-tests</code>
+    <sub>Choose interactor, presenter, storage, or view</sub>
+  </div>
+
+  <!-- Dev Manual Testing -->
+  <div class="node c-yellow" style="left:220px;top:1908px;width:240px;height:44px;animation-delay:.48s">
+    Dev Manual Testing
+  </div>
+
+  <!-- /update-docs -->
+  <div class="node c-blue" style="left:220px;top:2022px;width:240px;height:56px;animation-delay:.51s">
+    <code>/update-docs</code>
+    <sub>Update Documentation (When applicable)</sub>
+  </div>
+
+  <!-- Push to Beta -->
+  <div class="node pill c-green" style="left:220px;top:2158px;width:240px;height:40px;animation-delay:.54s">
+    Push to Beta 🚀
+  </div>
+
+</div>
+
+</body>
+</html>

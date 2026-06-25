@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reference — Django Cheatsheet</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <style>
+    /* compact reference overrides */
+    html { font-size: 14px; }
+    body { padding: 1.5rem 1rem 3rem; }
+    h2   { margin-top: 1.75rem; font-size: 1.1rem; }
+    h3   { margin-top: 1rem; font-size: 0.95rem; }
+    pre  { padding: 0.75rem 1rem; font-size: 0.8rem; margin: 0.5rem 0 1rem; }
+    p    { margin-bottom: 0.6rem; }
+    table { font-size: 0.84rem; }
+    td, th { padding: 0.4rem 0.75rem; }
+    .ref-header {
+      background: var(--accent);
+      color: #fff;
+      padding: 0.85rem 1.25rem;
+      border-radius: var(--radius);
+      margin-bottom: 1.5rem;
+    }
+    .ref-header h1 {
+      font-family: var(--font-sans);
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+    .ref-header p {
+      font-size: 0.83rem;
+      opacity: 0.8;
+      margin: 0;
+    }
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+    @media (max-width: 620px) { .two-col { grid-template-columns: 1fr; } }
+    .ref-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.9rem 1rem;
+    }
+    .ref-section h3 {
+      font-family: var(--font-sans);
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--accent);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.3rem;
+      margin: 0 0 0.6rem;
+    }
+  </style>
+</head>
+<body>
+<div class="lesson-wrap">
+
+  <div class="ref-header">
+    <h1>Django Cheatsheet</h1>
+    <p>Quick reference for Lesson 01 — Introduction to Django. Print-friendly.</p>
+  </div>
+
+  <!-- ── MVT ── -->
+  <h2>MVT Architecture</h2>
+  <table>
+    <thead><tr><th>Layer</th><th>File</th><th>Does</th><th>MVC equiv.</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Model</strong></td><td>models.py</td><td>Data shape, ORM, DB access</td><td>Model</td></tr>
+      <tr><td><strong>View</strong></td><td>views.py</td><td>Request logic, returns response</td><td>Controller</td></tr>
+      <tr><td><strong>Template / Serializer</strong></td><td>serializers.py</td><td>Output format (JSON for APIs)</td><td>View</td></tr>
+      <tr><td><strong>URLs</strong></td><td>urls.py</td><td>Route URL → View</td><td>Router</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ── Request Lifecycle ── -->
+  <h2>Request Lifecycle (REST API)</h2>
+  <pre><code>Client  →  urls.py  →  View  →  Business Logic  →  Model (ORM)  →  DB
+                                                                    ↓
+Client  ←  JSON Response  ←  Serializer  ←  QuerySet  ←  ←  ←  ←  ←</code></pre>
+
+  <div class="two-col">
+
+    <!-- ORM -->
+    <div class="ref-section">
+      <h3>ORM — Common QuerySet API</h3>
+<pre><code># Read
+Model.objects.all()
+Model.objects.filter(field=val)
+Model.objects.exclude(field=val)
+Model.objects.get(pk=1)      # raises if not found
+Model.objects.first()
+Model.objects.order_by('field')
+Model.objects.count()
+
+# Write
+Model.objects.create(f1=v, f2=v)
+obj.save()
+
+# Update
+Model.objects.filter(...).update(f=v)
+
+# Delete
+Model.objects.filter(...).delete()
+
+# Chaining
+Model.objects.filter(a=1).order_by('b')[:10]</code></pre>
+    </div>
+
+    <!-- Model Fields -->
+    <div class="ref-section">
+      <h3>Model — Common Field Types</h3>
+<pre><code>CharField(max_length=200)
+TextField()
+IntegerField()
+FloatField()
+BooleanField()
+DateField()
+DateTimeField(auto_now_add=True)
+ForeignKey('OtherModel', on_delete=models.CASCADE)
+ManyToManyField('Tag')
+EmailField()
+URLField()
+UUIDField(default=uuid.uuid4)</code></pre>
+    </div>
+
+    <!-- DRF Serializer -->
+    <div class="ref-section">
+      <h3>DRF — Serializer</h3>
+<pre><code>from rest_framework import serializers
+
+class BookSerializer(serializers.ModelSerializer):
+    class Meta:
+        model  = Book
+        fields = ['id', 'title', 'author']
+        # or: fields = '__all__'
+        # or: exclude = ['internal_field']
+
+# Serialize (→ JSON)
+s = BookSerializer(book_instance)
+s.data  # dict
+
+# Serialize many
+s = BookSerializer(queryset, many=True)
+
+# Deserialize (← JSON) + validate
+s = BookSerializer(data=request.data)
+s.is_valid(raise_exception=True)
+s.save()  # calls create() or update()</code></pre>
+    </div>
+
+    <!-- DRF View -->
+    <div class="ref-section">
+      <h3>DRF — Function-based View</h3>
+<pre><code>from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+
+@api_view(['GET', 'POST'])
+def book_list(request):
+    if request.method == 'GET':
+        books = Book.objects.all()
+        s = BookSerializer(books, many=True)
+        return Response(s.data)
+
+    if request.method == 'POST':
+        s = BookSerializer(data=request.data)
+        s.is_valid(raise_exception=True)
+        s.save()
+        return Response(s.data, status=status.HTTP_201_CREATED)</code></pre>
+    </div>
+
+    <!-- urls.py -->
+    <div class="ref-section">
+      <h3>urls.py — URL Routing</h3>
+<pre><code># myapp/urls.py
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('api/books/',     views.book_list),
+    path('api/books/&lt;int:pk&gt;/', views.book_detail),
+]
+
+# project/urls.py  (root)
+from django.urls import path, include
+
+urlpatterns = [
+    path('', include('myapp.urls')),
+]</code></pre>
+    </div>
+
+    <!-- HTTP Status codes -->
+    <div class="ref-section">
+      <h3>Common HTTP Status Codes</h3>
+<pre><code>200 OK            — successful GET / PUT
+201 Created       — successful POST
+204 No Content    — successful DELETE
+400 Bad Request   — validation failed
+401 Unauthorized  — not authenticated
+403 Forbidden     — not authorised
+404 Not Found     — resource missing
+500 Server Error  — unhandled exception</code></pre>
+    </div>
+
+  </div>
+
+  <!-- ── Key Vocabulary ── -->
+  <h2>Glossary</h2>
+  <table>
+    <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><strong>ORM</strong></td><td>Object-Relational Mapper — Python ↔ SQL abstraction</td></tr>
+      <tr><td><strong>QuerySet</strong></td><td>Lazy collection of DB rows returned by the ORM</td></tr>
+      <tr><td><strong>Migration</strong></td><td>Auto-generated DB schema change file</td></tr>
+      <tr><td><strong>Serializer</strong></td><td>DRF class that converts Model ↔ JSON and validates data</td></tr>
+      <tr><td><strong>ViewSet</strong></td><td>DRF class bundling CRUD operations into one class</td></tr>
+      <tr><td><strong>Router</strong></td><td>DRF utility that auto-generates URL patterns from a ViewSet</td></tr>
+      <tr><td><strong>Request object</strong></td><td>Django's wrapper around the raw HTTP request, passed to every View</td></tr>
+      <tr><td><strong>Response object</strong></td><td>DRF's wrapper that serializes data to JSON and sets status code</td></tr>
+      <tr><td><strong>App</strong></td><td>A reusable Django module inside a project (models + views + urls)</td></tr>
+      <tr><td><strong>Project</strong></td><td>The top-level Django configuration that wires apps together</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Footer -->
+  <footer class="lesson-footer">
+    <div class="lesson-nav">
+      <a href="../lessons/0001-introduction-to-django.html">← Lesson 01: Introduction to Django</a>
+    </div>
+    <span>Django Training — Reference</span>
+  </footer>
+
+</div>
+</body>
+</html>

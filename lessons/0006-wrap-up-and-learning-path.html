@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lesson 06 — Wrap Up &amp; Hands-on Plan</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body>
+<div class="lesson-wrap">
+
+  <header class="lesson-header">
+    <div class="lesson-meta">
+      <span class="badge">Module 6 / 6</span>
+      <span>Django Backend Training</span>
+      <span>⏱ ~5 min</span>
+      <span>Wrap Up</span>
+    </div>
+    <h1 class="lesson-title">Wrap Up &amp; Hands-on Plan</h1>
+    <p class="lesson-subtitle">A recap of the course, then a clear, time-boxed plan for the 4-hour hands-on.</p>
+  </header>
+
+  <nav class="course-map">
+    <div class="course-map-title">Course Map — Django Backend Training</div>
+    <ol>
+      <li><a href="0001-introduction-to-django.html">Introduction to Django</a> <span>15 min</span></li>
+      <li><a href="0002-django-project-structure.html">Django Project Structure</a> <span>10 min</span></li>
+      <li><a href="0003-models-and-orm.html">Models &amp; ORM</a> <span>40 min</span></li>
+      <li><a href="0004-building-apis.html">Building APIs</a> <span>35 min</span></li>
+      <li><a href="0005-openapi-swagger.html">OpenAPI / Swagger</a> <span>15 min</span></li>
+      <li class="current"><a href="0006-wrap-up-and-learning-path.html">Wrap Up &amp; Hands-on Plan</a> <span>5 min</span></li>
+    </ol>
+  </nav>
+
+  <!-- ════════ PART 1: RECAP ════════ -->
+  <h2>Part 1 — The Big Picture</h2>
+  <p>The whole course fits into one sentence: <em>a request flows through your files, the ORM talks to the database, and a documented API returns JSON.</em></p>
+  <div class="arch-diagram">
+    <div class="arch-flow">
+      <div class="arch-node"><div class="arch-box client">Client / Postman</div></div>
+      <div class="arch-arrow">↓ <span style="font-family:var(--font-sans);font-size:0.72rem;color:var(--muted)">documented by OpenAPI (M5)</span></div>
+      <div class="arch-node"><div class="arch-box layer">urls.py → View (M2, M4)</div></div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-node"><div class="arch-box layer">Model / ORM (M3)</div></div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-node"><div class="arch-box db">Database</div></div>
+      <div class="arch-arrow">↑ <span style="font-family:var(--font-sans);font-size:0.72rem;color:var(--muted)">JSON Response (M1, M4)</span></div>
+      <div class="arch-node"><div class="arch-box client">Client / Postman</div></div>
+    </div>
+  </div>
+
+  <!-- ════════ PART 2: PLAN OVERVIEW ════════ -->
+  <h2>Part 2 — Your 4-Hour Hands-on Plan</h2>
+  <p>This is the overview. Detailed content for each block follows in Part 3.</p>
+  <table>
+    <thead><tr><th>Duration</th><th>Block</th><th>Reinforces</th></tr></thead>
+    <tbody>
+      <tr><td>10 min</td><td><a href="#b1">Environment Setup</a></td><td>Module 2</td></tr>
+      <tr><td>40 min</td><td><a href="#b2">Django Tutorial – Part 1</a></td><td>Modules 1–2</td></tr>
+      <tr><td>1 hr 30 min</td><td><a href="#b3">IMDb Assignments</a></td><td>Module 3</td></tr>
+      <tr><td>50 min</td><td><a href="#b4">Build REST APIs</a></td><td>Module 4</td></tr>
+      <tr><td>30 min</td><td><a href="#b5">OpenAPI Specification</a></td><td>Module 5</td></tr>
+      <tr><td>—</td><td><a href="#b6">Advanced IMDb Assignments</a></td><td>Module 3 (deep)</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ════════ PART 3: DETAILED CONTENT ════════ -->
+  <h2>Part 3 — What To Do In Each Block</h2>
+
+  <!-- Block 1 -->
+  <h3 id="b1">10 min · Environment Setup</h3>
+  <p>Goal: a running Django dev server before anything else.</p>
+  <ol class="steps">
+    <li>Confirm Python: <code>python3 --version</code></li>
+    <li>Create a virtual environment: <code>python3 -m venv venv</code></li>
+    <li>Activate it: <code>source venv/bin/activate</code> (macOS/Linux)</li>
+    <li>Install dependencies: <code>pip install -r requirements.txt</code></li>
+    <li>Verify Django: <code>python -m django --version</code></li>
+    <li>Run the server: <code>python3 manage.py runserver</code> and open the local URL</li>
+  </ol>
+  <div class="callout warn">
+    <div class="callout-title">If you hit a host error</div>
+    Add <code>"*"</code> to <code>ALLOWED_HOSTS</code> in <code>settings.py</code> for local development, and always run <code>manage.py</code> commands from the folder that contains it.
+  </div>
+
+  <!-- Block 2 -->
+  <h3 id="b2">40 min · Django Tutorial – Part 1</h3>
+  <p>Goal: build a project + app end to end and serve your first response. Focus areas:</p>
+  <ul class="steps">
+    <li><strong>Create a project</strong> — <code>django-admin startproject</code> (see <a href="0002-django-project-structure.html">Module 2</a>).</li>
+    <li><strong>Create an app</strong> — <code>python3 manage.py startapp</code>, then register it in <code>INSTALLED_APPS</code>.</li>
+    <li><strong>URL routing</strong> — wire the root <code>urls.py</code> to the app's <code>urls.py</code> via <code>include()</code>.</li>
+    <li><strong>Views</strong> — write a view that returns a response.</li>
+    <li><strong>Run the application</strong> — confirm the route works in the browser.</li>
+  </ul>
+  <p>Primary source: <a href="https://docs.djangoproject.com/en/3.0/intro/tutorial01/" target="_blank">Writing your first Django app, Part 1</a>.</p>
+
+  <!-- Block 3 -->
+  <h3 id="b3">1 hr 30 min · IMDb Assignments (core)</h3>
+  <p>Goal: model the IMDb domain and perform CRUD + basic querying with the ORM. Work in order:</p>
+  <ol class="steps">
+    <li><strong>Design the models</strong> — Movie, Actor, Director, Cast, Rating. See the <a href="../reference/internal-django-course-pack.html#data-model">IMDb Data Model</a>.</li>
+    <li><strong>Make &amp; apply migrations</strong> — <code>makemigrations</code> → <code>migrate</code>.</li>
+    <li><strong>Populate the database</strong> — implement <code>populate_database(...)</code>.</li>
+    <li><strong>Basic ORM tasks</strong> — work through <a href="../reference/internal-django-course-pack.html#a1">Assignment 1 tasks</a> (counts, filters, updates, deletes).</li>
+  </ol>
+  <div class="callout key">
+    <div class="callout-title">Outcome for this block</div>
+    A working IMDb schema with data loaded, and Assignment 1 functions passing. This is the foundation the API block builds on.
+  </div>
+
+  <!-- Block 4 -->
+  <h3 id="b4">50 min · Build REST APIs</h3>
+  <p>Goal: connect your IMDb models to HTTP endpoints that return JSON (see <a href="0004-building-apis.html">Module 4</a>). Implement 2–3 endpoints:</p>
+  <ol class="steps">
+    <li><span class="method get">GET</span> <code>/movies/&lt;movie_id&gt;/</code> — return complete movie details.</li>
+    <li><span class="method get">GET</span> <code>/movies/&lt;movie_id&gt;/actors/</code> — return all actors in the movie (via the Cast relation).</li>
+    <li><span class="method post">POST</span> <code>/movies/</code> — create a new movie from a JSON body.</li>
+  </ol>
+  <p>For each: write the URL, the view, query with the ORM, and return a JSON response (plain Django or DRF — both are valid, see Module 4).</p>
+
+  <!-- Block 5 -->
+  <h3 id="b5">30 min · OpenAPI Specification</h3>
+  <p>Goal: document the APIs you just built and view them in Swagger UI (see <a href="0005-openapi-swagger.html">Module 5</a>).</p>
+  <ol class="steps">
+    <li>Describe the document basics: <code>info</code>, <code>host</code>/<code>basePath</code>, <code>schemes</code>.</li>
+    <li>Define each endpoint under <code>paths</code> with parameters and responses.</li>
+    <li>Define reusable schemas in <code>definitions</code> and reference them with <code>$ref</code>.</li>
+    <li>Render the spec in <a href="https://editor.swagger.io/" target="_blank">Swagger UI</a> and verify the examples.</li>
+  </ol>
+
+  <!-- Block 6 -->
+  <h3 id="b6">Advanced IMDb Assignments</h3>
+  <p>Goal: deepen ORM skill with filtering, aggregation, and optimization. Continue the IMDb track:</p>
+  <ul class="steps">
+    <li><strong>IMDb Contd-1</strong> — field lookups, date filters, complex conditions. <a href="../reference/internal-django-course-pack.html#a2">Tasks →</a></li>
+    <li><strong>IMDb Contd-2</strong> — aggregation &amp; annotation (counts per movie/actor/role). <a href="../reference/internal-django-course-pack.html#a3">Tasks →</a></li>
+    <li><strong>IMDb Contd-3</strong> — efficient population, bulk ops, related-object queries. <a href="../reference/internal-django-course-pack.html#a4">Tasks →</a></li>
+  </ul>
+  <div class="callout info">
+    <div class="callout-title">Explain with SQL</div>
+    For optimization tasks, inspect the generated SQL and reason about "order of N" — why <code>select_related</code> / <code>prefetch_related</code> reduce query counts.
+  </div>
+
+  <!-- ════════ PART 4: OUTCOME + REFERENCES ════════ -->
+  <h2>Part 4 — Expected Outcome</h2>
+  <p>By the end of the hands-on you should have:</p>
+  <ul>
+    <li>✅ Completed Django Tutorial – Part 1</li>
+    <li>✅ Modelled the IMDb schema and completed Assignment 1</li>
+    <li>✅ Built 2–3 REST APIs on the IMDb models</li>
+    <li>✅ Written an OpenAPI spec and rendered it in Swagger UI</li>
+    <li>✅ Started the advanced IMDb assignments (Contd-1/2/3)</li>
+  </ul>
+
+  <h2>Assignments Reference</h2>
+  <p>Every IMDb task — with descriptions and exact function signatures — lives in one place:</p>
+  <ul>
+    <li><a href="../reference/internal-django-course-pack.html"><strong>IMDb Assignment Pack</strong></a> — data model + all tasks, structured for doing.</li>
+    <li><a href="../reference/internal-django-course-pack.html#a1">Assignment 1 — IMDb</a> (models, populate, basic ORM)</li>
+    <li><a href="../reference/internal-django-course-pack.html#a2">Assignment 2 — IMDb Contd-1</a> (filtering &amp; lookups)</li>
+    <li><a href="../reference/internal-django-course-pack.html#a3">Assignment 3 — IMDb Contd-2</a> (aggregation &amp; annotation)</li>
+    <li><a href="../reference/internal-django-course-pack.html#a4">Assignment 4 — IMDb Contd-3</a> (optimization &amp; bulk ops)</li>
+  </ul>
+
+  <h2>Cheatsheets</h2>
+  <ul>
+    <li><a href="../reference/django-cheatsheet.html">Django Cheatsheet</a> — MVT, lifecycle, DRF, status codes, glossary.</li>
+    <li><a href="../reference/orm-cheatsheet.html">ORM Cheatsheet</a> — fields, relationships, queries, lookups, optimization.</li>
+  </ul>
+
+  <!-- ── Community ── -->
+  <h2>Where to Get Unstuck</h2>
+  <ul>
+    <li><a href="https://forum.djangoproject.com/" target="_blank">Official Django Forum</a> — thoughtful, high-signal.</li>
+    <li><a href="https://www.reddit.com/r/django/" target="_blank">r/django</a> — active, beginner-friendly.</li>
+    <li><a href="https://stackoverflow.com/questions/tagged/django" target="_blank">Stack Overflow [django]</a> — search first; most questions are answered.</li>
+    <li>Your instructor and teammates on the production codebase — the highest-value source.</li>
+  </ul>
+
+  <div class="ask-agent">
+    <strong>I'm your teacher between sessions.</strong> Stuck on an IMDb task, an ORM query, or a failing migration?
+    Paste the code or error and we'll work through it. We can also spin up a focused lesson on anything that gave you trouble.
+  </div>
+
+  <footer class="lesson-footer">
+    <div class="lesson-nav">
+      <a href="0005-openapi-swagger.html">← Module 5: OpenAPI / Swagger</a>
+    </div>
+    <div class="lesson-nav">
+      Module 6 of 6 &nbsp;|&nbsp;
+      <a href="0001-introduction-to-django.html">Back to start ↺</a>
+    </div>
+  </footer>
+
+</div>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lesson 03 — Models &amp; ORM</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body>
+<div class="lesson-wrap">
+
+  <header class="lesson-header">
+    <div class="lesson-meta">
+      <span class="badge">Module 3 / 6</span>
+      <span>Django Backend Training</span>
+      <span>⏱ ~85 min</span>
+      <span>Core + Advanced</span>
+    </div>
+    <h1 class="lesson-title">Models &amp; ORM</h1>
+    <p class="lesson-subtitle">Define tables as Python classes, query data without writing SQL — then go deeper with every advanced pattern you'll meet in production.</p>
+  </header>
+
+  <nav class="course-map">
+    <div class="course-map-title">Course Map — Django Backend Training</div>
+    <ol>
+      <li><a href="0001-introduction-to-django.html">Introduction to Django</a> <span>15 min</span></li>
+      <li><a href="0002-django-project-structure.html">Django Project Structure</a> <span>10 min</span></li>
+      <li class="current"><a href="0003-models-and-orm.html">Models &amp; ORM</a> <span>85 min</span></li>
+      <li><a href="0004-building-apis.html">Building APIs</a> <span>35 min</span></li>
+      <li><a href="0005-openapi-swagger.html">OpenAPI / Swagger</a> <span>15 min</span></li>
+      <li><a href="0006-wrap-up-and-learning-path.html">Wrap Up &amp; Learning Path</a> <span>5 min</span></li>
+    </ol>
+  </nav>
+
+  <p>
+    We'll use an <strong>IMDb-style</strong> data model throughout — the same scenario as the hands-on assignments.
+    Everything here is backed by the official <a href="https://docs.djangoproject.com/en/5.1/topics/db/models/" target="_blank">Models</a>
+    and <a href="https://docs.djangoproject.com/en/5.1/topics/db/queries/" target="_blank">Making queries</a> docs.
+  </p>
+
+  <!-- ══════════════════════════════════════════════════════
+       1. Creating models
+  ══════════════════════════════════════════════════════ -->
+  <h2>1. Creating a Model</h2>
+
+  <p>A <strong>model</strong> is a Python class that subclasses <code>models.Model</code>. Each class becomes a database table; each attribute becomes a column.</p>
+
+<pre><code># movies/models.py
+from django.db import models
+
+class Movie(models.Model):
+    title        = models.CharField(max_length=200)
+    release_year = models.IntegerField()
+    rating       = models.FloatField(default=0.0)
+    created_at   = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title</code></pre>
+
+  <h3>Model fields</h3>
+  <table>
+    <thead><tr><th>Field</th><th>Stores</th><th>Common args</th></tr></thead>
+    <tbody>
+      <tr><td><code>CharField</code></td><td>Short text</td><td><code>max_length</code> (required)</td></tr>
+      <tr><td><code>TextField</code></td><td>Long text</td><td>—</td></tr>
+      <tr><td><code>IntegerField</code></td><td>Whole numbers</td><td><code>default</code></td></tr>
+      <tr><td><code>FloatField</code> / <code>DecimalField</code></td><td>Decimals</td><td><code>max_digits</code>, <code>decimal_places</code></td></tr>
+      <tr><td><code>BooleanField</code></td><td>True / False</td><td><code>default</code></td></tr>
+      <tr><td><code>DateTimeField</code></td><td>Date + time</td><td><code>auto_now_add</code>, <code>auto_now</code></td></tr>
+      <tr><td><code>EmailField</code></td><td>Validated email</td><td><code>max_length</code></td></tr>
+    </tbody>
+  </table>
+  <p>Most fields accept <code>null=True</code> (allow NULL in DB), <code>blank=True</code> (allow empty in forms), <code>unique=True</code>, and <code>default=…</code>.</p>
+
+  <h3>Primary keys</h3>
+  <div class="callout key">
+    <div class="callout-title">Automatic by default</div>
+    You did not define an <code>id</code> field above — Django adds an auto-incrementing integer
+    primary key called <code>id</code> automatically. Override it by setting <code>primary_key=True</code> on any field.
+  </div>
+
+  <h3>From model to database table</h3>
+  <p>The <code>Movie</code> class above maps to a table named <code>movies_movie</code> (<code>&lt;app&gt;_&lt;model&gt;</code>, lowercased):</p>
+  <table>
+    <thead><tr><th>Python (Model)</th><th>SQL (Table)</th></tr></thead>
+    <tbody>
+      <tr><td>class <code>Movie</code></td><td>table <code>movies_movie</code></td></tr>
+      <tr><td><code>title = CharField(200)</code></td><td><code>title VARCHAR(200)</code></td></tr>
+      <tr><td>(auto) <code>id</code></td><td><code>id INTEGER PRIMARY KEY AUTOINCREMENT</code></td></tr>
+    </tbody>
+  </table>
+
+  <!-- ══════════════════════════════════════════════════════
+       2. Migrations
+  ══════════════════════════════════════════════════════ -->
+  <h2 id="migrations">2. Migrations</h2>
+  <p>Migrations turn model changes into database changes. Two commands, always in this order:</p>
+  <ol class="steps">
+    <li><strong><code>python manage.py makemigrations</code></strong> — Django compares your models to the last migration and writes a new migration file describing the diff. <em>No DB change yet.</em></li>
+    <li><strong><code>python manage.py migrate</code></strong> — Django runs the unapplied migration files against the database, creating/altering tables.</li>
+  </ol>
+  <div class="callout info">
+    <div class="callout-title">Workflow rule of thumb</div>
+    Change a model → <code>makemigrations</code> → <code>migrate</code>. Commit the generated migration files to git — they are part of your code.
+    See the <a href="https://docs.djangoproject.com/en/5.1/topics/migrations/" target="_blank">Migrations docs</a>.
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       3. Relationships
+  ══════════════════════════════════════════════════════ -->
+  <h2>3. Relationships</h2>
+  <p>Real data is connected. Django models three kinds of relationships:</p>
+
+  <h3>ForeignKey — One-to-Many</h3>
+  <p>"A movie has one director; a director has many movies." The <code>ForeignKey</code> goes on the "many" side:</p>
+<pre><code>class Director(models.Model):
+    name = models.CharField(max_length=120)
+
+class Movie(models.Model):
+    title    = models.CharField(max_length=200)
+    director = models.ForeignKey(
+        Director,
+        on_delete=models.CASCADE,   # delete movies if director deleted
+        related_name='movies',      # director.movies.all()
+    )</code></pre>
+  <p>Access both directions:</p>
+<pre><code>movie.director              # the Director object (forward)
+director.movies.all()       # all that director's movies (reverse)</code></pre>
+
+  <div class="callout warn">
+    <div class="callout-title"><code>on_delete</code> is required</div>
+    Common choices: <code>CASCADE</code> (delete children too), <code>PROTECT</code> (block deletion),
+    <code>SET_NULL</code> (set FK to NULL — needs <code>null=True</code>).
+  </div>
+
+  <h3>ManyToManyField — Many-to-Many</h3>
+  <p>"A movie has many actors; an actor appears in many movies." Django creates a hidden join table for you:</p>
+<pre><code>class Actor(models.Model):
+    name = models.CharField(max_length=120)
+    age  = models.IntegerField()
+
+class Movie(models.Model):
+    title  = models.CharField(max_length=200)
+    actors = models.ManyToManyField(Actor, related_name='movies')</code></pre>
+<pre><code>movie.actors.add(actor)     # link
+movie.actors.all()          # actors in this movie
+actor.movies.all()          # movies for this actor (reverse)</code></pre>
+
+  <h3>OneToOneField — One-to-One</h3>
+  <p>"Each movie has exactly one detail page." Like a ForeignKey with <code>unique=True</code>:</p>
+<pre><code>class MovieDetail(models.Model):
+    movie    = models.OneToOneField(Movie, on_delete=models.CASCADE)
+    synopsis = models.TextField()
+    budget   = models.BigIntegerField(null=True)</code></pre>
+
+  <table>
+    <thead><tr><th>Relationship</th><th>Field</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td>One-to-Many</td><td><code>ForeignKey</code></td><td>Director → Movies</td></tr>
+      <tr><td>Many-to-Many</td><td><code>ManyToManyField</code></td><td>Movies ↔ Actors</td></tr>
+      <tr><td>One-to-One</td><td><code>OneToOneField</code></td><td>Movie → MovieDetail</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ══════════════════════════════════════════════════════
+       4. Core ORM ops
+  ══════════════════════════════════════════════════════ -->
+  <h2>4. Core ORM Operations</h2>
+  <p>These are the eight operations the training plan asks you to demonstrate. Run them in <code>python manage.py shell</code>. The SQL each generates is shown in comments.</p>
+
+  <h3>Create</h3>
+<pre><code># One step
+Movie.objects.create(title='Inception', release_year=2010, rating=8.8)
+# SQL: INSERT INTO movies_movie (title, release_year, rating) VALUES ('Inception', 2010, 8.8)
+
+# Two steps (build then save)
+m = Movie(title='Tenet', release_year=2020)
+m.save()
+# SQL: INSERT INTO movies_movie (title, release_year, rating) VALUES ('Tenet', 2020, 0.0)</code></pre>
+
+  <h3>Read — get / all / filter</h3>
+<pre><code>Movie.objects.all()
+# SQL: SELECT * FROM movies_movie
+
+Movie.objects.get(id=1)
+# SQL: SELECT * FROM movies_movie WHERE id = 1 LIMIT 2   ← fetches 2 to detect duplicates
+
+Movie.objects.filter(release_year=2010)
+# SQL: SELECT * FROM movies_movie WHERE release_year = 2010
+
+Movie.objects.filter(rating__gte=8.0)
+# SQL: SELECT * FROM movies_movie WHERE rating >= 8.0</code></pre>
+
+  <div class="callout warn">
+    <div class="callout-title"><code>get()</code> vs <code>filter()</code></div>
+    <code>get()</code> returns a single object and raises <code>DoesNotExist</code> / <code>MultipleObjectsReturned</code>.
+    <code>filter()</code> always returns a QuerySet (possibly empty) — safe for "zero or more" results.
+  </div>
+
+  <h3>Update</h3>
+<pre><code># Bulk update — efficient, one SQL UPDATE
+Movie.objects.filter(release_year=2010).update(rating=9.0)
+# SQL: UPDATE movies_movie SET rating = 9.0 WHERE release_year = 2010
+
+# Single object
+m = Movie.objects.get(id=1)
+m.rating = 9.5
+m.save()
+# SQL: UPDATE movies_movie SET rating = 9.5, ... WHERE id = 1</code></pre>
+
+  <h3>Delete</h3>
+<pre><code>Movie.objects.filter(rating__lt=2.0).delete()
+# SQL: DELETE FROM movies_movie WHERE rating < 2.0
+
+m = Movie.objects.get(id=99)
+m.delete()
+# SQL: DELETE FROM movies_movie WHERE id = 99</code></pre>
+
+  <h3>order_by / count / exists</h3>
+<pre><code>Movie.objects.order_by('-rating')
+# SQL: SELECT * FROM movies_movie ORDER BY rating DESC
+
+Movie.objects.count()
+# SQL: SELECT COUNT(*) FROM movies_movie
+
+Movie.objects.filter(release_year=2010).exists()
+# SQL: SELECT 1 FROM movies_movie WHERE release_year = 2010 LIMIT 1</code></pre>
+
+  <!-- ══════════════════════════════════════════════════════
+       5. Advanced Querying
+  ══════════════════════════════════════════════════════ -->
+  <h2 id="advanced">5. Advanced Querying</h2>
+  <p>The patterns below are used constantly in real codebases. Each one shows the ORM call, the SQL it generates, and the reason it exists.</p>
+
+  <!-- 5.1 Lazy QuerySets -->
+  <h3 id="lazy">5.1 QuerySets are Lazy</h3>
+<pre><code>qs = Movie.objects.filter(rating__gte=8)   # NO database hit yet — just builds a query object
+list(qs)                                    # NOW it executes: SELECT * FROM movies_movie WHERE rating >= 8
+qs[0]                                       # also executes (LIMIT 1)
+qs.exists()                                 # SELECT 1 ... LIMIT 1  (cheapest existence check)</code></pre>
+  <p>Laziness lets you chain and refine a query before paying the DB cost. Nothing hits the database until you iterate, slice, or call an evaluation method.</p>
+
+  <!-- 5.2 Field lookups -->
+  <h3 id="lookups">5.2 Field Lookups (<code>field__lookup</code>)</h3>
+  <p>The double-underscore syntax translates directly to SQL <code>WHERE</code> clauses. You can also traverse relationships with it.</p>
+<pre><code># Text search
+Movie.objects.filter(title__icontains='dark')
+# SQL: WHERE title LIKE '%dark%'   (case-insensitive)
+
+Movie.objects.filter(title__startswith='The')
+# SQL: WHERE title LIKE 'The%'
+
+# Numeric comparisons
+Movie.objects.filter(release_year__gte=2000)         # WHERE release_year >= 2000
+Movie.objects.filter(release_year__range=(2000, 2010)) # WHERE release_year BETWEEN 2000 AND 2010
+Movie.objects.filter(rating__in=[7.5, 8.0, 8.5])    # WHERE rating IN (7.5, 8.0, 8.5)
+
+# NULL checks
+Movie.objects.filter(budget__isnull=True)            # WHERE budget IS NULL
+
+# FK traversal — Django does the JOIN automatically
+Movie.objects.filter(director__name='Nolan')
+# SQL: SELECT movies_movie.* FROM movies_movie
+#      INNER JOIN movies_director ON movies_director.id = movies_movie.director_id
+#      WHERE movies_director.name = 'Nolan'</code></pre>
+
+  <!-- 5.3 Q objects -->
+  <h3 id="q-objects">5.3 Q Objects — OR, NOT, Complex Logic</h3>
+  <p>Normal <code>filter()</code> kwargs are always AND-ed. <code>Q</code> lets you express OR, NOT, and nested conditions.</p>
+<pre><code>from django.db.models import Q
+
+# OR
+Movie.objects.filter(Q(release_year=2010) | Q(rating__gt=8))
+# SQL: WHERE release_year = 2010 OR rating > 8
+
+# AND NOT
+Movie.objects.filter(Q(rating__gt=8) &amp; ~Q(release_year=2010))
+# SQL: WHERE rating > 8 AND NOT release_year = 2010
+
+# Complex nesting: (year=2010 OR year=2020) AND rating > 7
+Movie.objects.filter(
+    (Q(release_year=2010) | Q(release_year=2020)),
+    rating__gt=7,
+)
+# SQL: WHERE (release_year = 2010 OR release_year = 2020) AND rating > 7
+
+# Build conditions dynamically from API params
+conditions = Q()
+if search_term:
+    conditions &amp;= Q(title__icontains=search_term)
+if min_year:
+    conditions &amp;= Q(release_year__gte=min_year)
+Movie.objects.filter(conditions)</code></pre>
+
+  <!-- 5.4 Aggregations -->
+  <h3 id="aggregations">5.4 Aggregations and Annotations</h3>
+  <p><code>aggregate()</code> returns a single dict for the whole QuerySet. <code>annotate()</code> adds a per-row computed value.</p>
+<pre><code>from django.db.models import Avg, Count, Max, Min, Sum
+
+# aggregate() — one value for the whole table
+Movie.objects.aggregate(Avg('rating'))
+# SQL: SELECT AVG(rating) FROM movies_movie
+# Returns: {'rating__avg': 7.9}
+
+Movie.objects.aggregate(avg=Avg('rating'), total=Count('id'))
+# Returns: {'avg': 7.9, 'total': 142}
+
+# annotate() — one value per row
+Director.objects.annotate(movie_count=Count('movies'))
+# SQL: SELECT director.*, COUNT(movie.id) AS movie_count
+#      FROM movies_director
+#      LEFT OUTER JOIN movies_movie ON movies_movie.director_id = director.id
+#      GROUP BY director.id
+
+# Filter on an annotation → becomes a SQL HAVING clause
+Director.objects.annotate(
+    movie_count=Count('movies')
+).filter(movie_count__gte=3).order_by('-movie_count')
+# SQL: ... HAVING COUNT(movie.id) >= 3 ORDER BY movie_count DESC
+
+# Conditional count: count only highly-rated movies per director
+Director.objects.annotate(
+    good_movies=Count('movies', filter=Q(movies__rating__gte=8))
+)</code></pre>
+
+  <!-- 5.5 N+1 / select_related / prefetch_related -->
+  <h3 id="n-plus-one">5.5 The N+1 Problem — <code>select_related</code> &amp; <code>prefetch_related</code></h3>
+  <div class="callout key">
+    <div class="callout-title">The N+1 problem</div>
+    Looping over movies and accessing <code>movie.director.name</code> fires <strong>one query per movie</strong> — 1 for the list + N for each director.
+    These two methods fix it by fetching related data up front.
+  </div>
+<pre><code># BAD — N+1 queries: 1 for movies, then 1 per movie for director
+for movie in Movie.objects.all():
+    print(movie.director.name)   # fires a new SELECT each time!
+
+# GOOD — select_related: for ForeignKey / OneToOne → single SQL JOIN
+for movie in Movie.objects.select_related('director'):
+    print(movie.director.name)   # no extra query — director already loaded
+# SQL: SELECT movies_movie.*, movies_director.*
+#      FROM movies_movie
+#      INNER JOIN movies_director ON movies_director.id = movies_movie.director_id
+
+# GOOD — prefetch_related: for ManyToMany / reverse FK → 2 queries, joined in Python
+for movie in Movie.objects.prefetch_related('actors'):
+    print(movie.actors.all())    # no extra query per movie
+# SQL (query 1): SELECT * FROM movies_movie
+# SQL (query 2): SELECT * FROM movies_actor
+#                INNER JOIN movies_movie_actors ON ...
+#                WHERE movies_movie_actors.movie_id IN (1, 2, 3, ...)
+
+# Chain both
+Movie.objects.select_related('director').prefetch_related('actors')</code></pre>
+
+  <!-- 5.6 Multiple filter() — JOIN trap -->
+  <h3 id="filter-chain">5.6 Multiple <code>filter()</code> Calls — The JOIN Trap</h3>
+  <p>
+    For <strong>ManyToMany</strong> or <strong>reverse FK</strong> relationships, single vs. chained <code>filter()</code> produce different SQL.
+    This is one of the most common sources of unexpected bugs.
+  </p>
+<pre><code># SINGLE filter() → both conditions must match the SAME actor row
+Movie.objects.filter(actors__name='Tom', actors__age__gt=30)
+# SQL: SELECT DISTINCT movie.*
+#      FROM movies_movie
+#      JOIN movies_movie_actors ma ON ma.movie_id = movie.id
+#      JOIN movies_actor a ON a.id = ma.actor_id
+#      WHERE a.name = 'Tom' AND a.age > 30
+# → Only movies with an actor who is BOTH named Tom AND over 30
+
+# CHAINED filter() → each generates its own independent JOIN
+Movie.objects.filter(actors__name='Tom').filter(actors__age__gt=30)
+# SQL: SELECT DISTINCT movie.*
+#      FROM movies_movie
+#      JOIN ... a1 WHERE a1.name = 'Tom'
+#      JOIN ... a2 WHERE a2.age > 30
+# → Movies that have SOME actor named Tom AND SOME actor over 30 (can be different people)</code></pre>
+
+  <div class="callout warn">
+    <div class="callout-title">Rule of thumb</div>
+    Same related row must match? → single <code>filter()</code>. Each condition may match a different related row? → chain. For conditions on the model's own columns, both styles are identical.
+  </div>
+<pre><code># These three are all equivalent (all conditions are on Movie's own columns)
+Movie.objects.filter(release_year=2010, rating__gte=8.0)
+Movie.objects.filter(release_year=2010).filter(rating__gte=8.0)
+Movie.objects.filter(release_year=2010).filter(rating__gte=8.0).filter(director__name='Nolan')</code></pre>
+
+  <!-- 5.7 Multi-field order_by + NULLs -->
+  <h3 id="order-by">5.7 Multi-field <code>order_by()</code> and NULL Handling</h3>
+<pre><code># Multiple sort keys — evaluated left to right
+Movie.objects.order_by('-rating', 'title')
+# SQL: ORDER BY rating DESC, title ASC
+
+# Sort across a FK
+Movie.objects.order_by('director__name', '-release_year')
+# SQL: ORDER BY movies_director.name ASC, release_year DESC
+
+# NULL handling — use F() for portable, explicit control
+from django.db.models import F
+
+Movie.objects.order_by(F('budget').asc(nulls_last=True))
+# SQL: ORDER BY budget ASC NULLS LAST
+
+Movie.objects.order_by(F('rating').desc(nulls_first=True))
+# SQL: ORDER BY rating DESC NULLS FIRST
+
+# Clear any default ordering from Model.Meta
+Movie.objects.filter(rating__gte=8).order_by()
+# SQL: SELECT * FROM movies_movie WHERE rating >= 8   (no ORDER BY)</code></pre>
+
+  <!-- 5.8 F() expressions -->
+  <h3 id="f-expressions">5.8 <code>F()</code> Expressions — In-Database Column Operations</h3>
+  <p>An <code>F()</code> object represents the value of a column at query time — without loading it into Python. Use it to compare columns, do arithmetic in the DB, and avoid race conditions.</p>
+<pre><code>from django.db.models import F
+
+# Column-to-column comparison
+Movie.objects.filter(views__gt=F('budget'))
+# SQL: WHERE views > budget
+
+# Atomic increment — race-condition safe
+# BAD: read → Python increment → write (two requests can collide)
+m = Movie.objects.get(id=1); m.views += 1; m.save()
+
+# GOOD: single SQL UPDATE, increment happens atomically in the DB
+Movie.objects.filter(id=1).update(views=F('views') + 1)
+# SQL: UPDATE movies_movie SET views = views + 1 WHERE id = 1
+
+# Computed annotation (virtual column per row)
+from django.db.models import ExpressionWrapper, BigIntegerField
+Movie.objects.annotate(
+    profit=ExpressionWrapper(F('revenue') - F('budget'), output_field=BigIntegerField())
+).order_by('-profit')
+# SQL: SELECT *, (revenue - budget) AS profit FROM movies_movie ORDER BY profit DESC</code></pre>
+
+  <!-- 5.9 values() / values_list() -->
+  <h3 id="values">5.9 <code>values()</code> and <code>values_list()</code> — Projections</h3>
+  <p>Return dicts or tuples instead of model instances. Faster when you only need a few fields. Combining with <code>annotate()</code> gives you a <strong>GROUP BY</strong> query.</p>
+<pre><code># values() → list of dicts
+Movie.objects.filter(rating__gte=8).values('title', 'rating')
+# SQL: SELECT title, rating FROM movies_movie WHERE rating >= 8
+# Returns: [{'title': 'Inception', 'rating': 8.8}, ...]
+
+# Follow a FK with double underscore
+Movie.objects.values('title', 'director__name')
+# SQL: SELECT movies_movie.title, movies_director.name FROM ... JOIN ...
+
+# values_list() → list of tuples
+Movie.objects.values_list('id', 'title')
+# Returns: [(1, 'Inception'), (2, 'Tenet'), ...]
+
+# flat=True → plain list of one field (great for .filter(id__in=...))
+ids = Movie.objects.filter(rating__gte=8).values_list('id', flat=True)
+# Returns: [1, 3, 7, ...]
+
+# GROUP BY: values() before annotate()
+from django.db.models import Count, Avg
+
+Movie.objects.values('release_year').annotate(count=Count('id')).order_by('release_year')
+# SQL: SELECT release_year, COUNT(id) AS count
+#      FROM movies_movie GROUP BY release_year ORDER BY release_year ASC
+
+Movie.objects.values('director__name').annotate(avg_rating=Avg('rating')).order_by('-avg_rating')
+# SQL: SELECT movies_director.name, AVG(rating) AS avg_rating
+#      FROM movies_movie JOIN ... GROUP BY movies_director.name ORDER BY avg_rating DESC</code></pre>
+
+  <div class="callout info">
+    <div class="callout-title">values() before annotate() = GROUP BY</div>
+    The fields in <code>values()</code> become the <code>GROUP BY</code> columns. Always call <code>annotate()</code> <em>after</em> <code>values()</code> to aggregate per group.
+  </div>
+
+  <!-- 5.10 only() / defer() -->
+  <h3 id="only-defer">5.10 <code>only()</code> and <code>defer()</code> — Load Fewer Columns</h3>
+<pre><code># only() — SELECT just these columns (id always included)
+Movie.objects.only('title', 'rating')
+# SQL: SELECT id, title, rating FROM movies_movie
+# Accessing m.release_year on a result triggers a NEW query — avoid it
+
+# defer() — SELECT everything EXCEPT these columns
+Movie.objects.defer('synopsis')
+# SQL: SELECT id, title, release_year, rating, ... FROM movies_movie
+#      (synopsis omitted; accessing it later fires one extra query per object)
+
+# Combine with filter
+Movie.objects.filter(rating__gte=8).only('title', 'rating').order_by('-rating')</code></pre>
+
+  <div class="callout info">
+    <div class="callout-title">When to use only() / defer()</div>
+    Profile first. Use them only when a large column (<code>TextField</code>, <code>JSONField</code>, binary) is measurably slowing queries. Accessing a deferred field fires a separate SELECT per object — which makes things worse if you access it in a loop.
+  </div>
+
+  <!-- 5.11 distinct() -->
+  <h3 id="distinct">5.11 <code>distinct()</code> — Remove Duplicate Rows</h3>
+<pre><code># M2M filters return one row per matching child — distinct() collapses them
+Movie.objects.filter(actors__name__startswith='Tom').distinct()
+# SQL: SELECT DISTINCT movies_movie.* FROM movies_movie
+#      JOIN movies_movie_actors ma ON ...
+#      JOIN movies_actor a ON ...
+#      WHERE a.name LIKE 'Tom%'
+
+Director.objects.filter(movies__rating__gt=8).distinct()
+# SQL: SELECT DISTINCT movies_director.* FROM movies_director
+#      JOIN movies_movie m ON m.director_id = movies_director.id
+#      WHERE m.rating > 8</code></pre>
+
+  <!-- 5.12 get_or_create / update_or_create -->
+  <h3 id="get-or-create">5.12 <code>get_or_create()</code> and <code>update_or_create()</code></h3>
+  <p>Atomic fetch-or-insert and upsert operations. They avoid the check-then-create race condition that manual code would have.</p>
+<pre><code># get_or_create() → returns (object, was_created: bool)
+movie, created = Movie.objects.get_or_create(
+    title='Inception',           # lookup fields — used in the WHERE
+    defaults={                   # set ONLY on creation, not in the WHERE
+        'release_year': 2010,
+        'rating': 8.8,
+    }
+)
+# SQL (if found):   SELECT * FROM movies_movie WHERE title = 'Inception' LIMIT 1
+# SQL (if missing): INSERT INTO movies_movie (title, release_year, rating) VALUES (...)
+
+if created:
+    print('New movie added')
+else:
+    print('Found existing:', movie)</code></pre>
+
+  <div class="callout key">
+    <div class="callout-title">lookup vs defaults</div>
+    Fields outside <code>defaults</code> are the lookup key (the WHERE). Fields inside <code>defaults</code> are applied only on <strong>creation</strong>. Never put a search field inside <code>defaults</code>.
+  </div>
+
+<pre><code># update_or_create() — upsert: insert or update in one call
+movie, created = Movie.objects.update_or_create(
+    title='Inception',              # lookup
+    defaults={'rating': 9.0},       # applied on BOTH create and update
+)
+# SQL (if found):   UPDATE movies_movie SET rating = 9.0 WHERE title = 'Inception'
+# SQL (if missing): INSERT INTO movies_movie (title, rating) VALUES ('Inception', 9.0)</code></pre>
+
+  <!-- 5.13 bulk_create / bulk_update -->
+  <h3 id="bulk">5.13 <code>bulk_create()</code> and <code>bulk_update()</code></h3>
+  <p>Insert or update many rows in a single SQL statement instead of N separate ones.</p>
+<pre><code># bulk_create() — one INSERT for all rows
+movies = [
+    Movie(title='Oppenheimer', release_year=2023, rating=8.3),
+    Movie(title='Barbie',      release_year=2023, rating=6.9),
+    Movie(title='Dune Part 2', release_year=2024, rating=8.5),
+]
+Movie.objects.bulk_create(movies)
+# SQL: INSERT INTO movies_movie (title, release_year, rating)
+#      VALUES ('Oppenheimer', 2023, 8.3), ('Barbie', 2023, 6.9), ('Dune Part 2', 2024, 8.5)
+
+Movie.objects.bulk_create(movies, batch_size=500)          # split into batches
+Movie.objects.bulk_create(movies, ignore_conflicts=True)   # skip duplicate rows silently</code></pre>
+
+  <div class="callout warn">
+    <div class="callout-title">bulk_create() skips signals</div>
+    <code>pre_save</code> / <code>post_save</code> signals are <em>not</em> fired. Auto-increment PKs are set on most databases but not on older SQLite (&lt; 3.35).
+  </div>
+
+<pre><code># bulk_update() — one UPDATE for all rows; name the fields you changed
+movies = list(Movie.objects.filter(release_year=2023))
+for m in movies:
+    m.rating += 0.1
+
+Movie.objects.bulk_update(movies, fields=['rating'])
+# SQL: UPDATE movies_movie SET rating = CASE WHEN id=1 THEN 8.4 WHEN id=2 THEN 7.0 ... END
+#      WHERE id IN (1, 2, ...)
+
+Movie.objects.bulk_update(movies, fields=['rating', 'views'], batch_size=200)</code></pre>
+
+  <!-- 5.14 Subquery / OuterRef / Exists -->
+  <h3 id="subquery">5.14 <code>Subquery</code>, <code>OuterRef</code>, and <code>Exists</code></h3>
+  <p>Embed one QuerySet inside another. <code>OuterRef</code> links the inner query to the current outer row — a correlated subquery.</p>
+<pre><code>from django.db.models import OuterRef, Subquery, Exists
+
+# Annotate each Director with their most recent movie's title
+latest_movie = Movie.objects.filter(
+    director=OuterRef('pk')          # OuterRef('pk') = Director.id in the outer query
+).order_by('-release_year').values('title')[:1]
+
+directors = Director.objects.annotate(latest_title=Subquery(latest_movie))
+# SQL: SELECT director.*,
+#        (SELECT title FROM movies_movie
+#         WHERE director_id = director.id
+#         ORDER BY release_year DESC LIMIT 1) AS latest_title
+#      FROM movies_director
+
+# Filter using a subquery result
+high_rated = Movie.objects.filter(
+    director=OuterRef('pk')
+).order_by('-release_year').values('rating')[:1]
+
+Director.objects.annotate(
+    latest_rating=Subquery(high_rated)
+).filter(latest_rating__gt=8)
+
+# Exists — efficient boolean membership test (no data fetched)
+has_hit = Movie.objects.filter(director=OuterRef('pk'), rating__gt=9)
+Director.objects.filter(Exists(has_hit))
+# SQL: SELECT * FROM movies_director
+#      WHERE EXISTS (SELECT 1 FROM movies_movie
+#                    WHERE director_id = director.id AND rating > 9)</code></pre>
+
+  <!-- ══════════════════════════════════════════════════════
+       6. Seeing the SQL — str(query) and EXPLAIN
+  ══════════════════════════════════════════════════════ -->
+  <h2 id="explain">6. Seeing the SQL — <code>str(qs.query)</code> and <code>EXPLAIN</code></h2>
+
+  <p>
+    The ORM generates SQL for you, but you should be able to see and understand what it produces.
+    There are three tools for this, each suited to a different moment.
+  </p>
+
+  <h3>6.1 <code>str(queryset.query)</code> — quickest inspection</h3>
+  <p>Print the raw SQL of any unevaluated QuerySet directly in the shell. No configuration needed.</p>
+<pre><code>qs = Movie.objects.filter(rating__gte=8).order_by('-rating').select_related('director')
+print(str(qs.query))
+
+# Output (formatted for readability):
+# SELECT "movies_movie"."id", "movies_movie"."title", "movies_movie"."rating",
+#        "movies_director"."id", "movies_director"."name"
+# FROM "movies_movie"
+# INNER JOIN "movies_director" ON ("movies_movie"."director_id" = "movies_director"."id")
+# WHERE "movies_movie"."rating" >= 8.0
+# ORDER BY "movies_movie"."rating" DESC</code></pre>
+
+  <div class="callout warn">
+    <div class="callout-title">Limitation of str(qs.query)</div>
+    The output may not be 100% valid SQL — Django interpolates parameters in a simplified way.
+    Use <code>connection.queries</code> (below) for the exact executed statement.
+  </div>
+
+  <h3>6.2 <code>connection.queries</code> — see every query that ran</h3>
+  <p>Django logs every SQL statement executed in the current thread when <code>DEBUG = True</code> in <code>settings.py</code>.</p>
+<pre><code>from django.db import connection, reset_queries
+
+reset_queries()   # clear the log
+
+movies = list(Movie.objects.select_related('director').filter(rating__gte=8))
+
+# Inspect what was executed
+for q in connection.queries:
+    print(q['sql'])
+    print('time:', q['time'], 'sec')
+
+# Output:
+# SELECT "movies_movie".*, "movies_director".* FROM "movies_movie"
+#   INNER JOIN "movies_director" ON (...)
+#   WHERE "movies_movie"."rating" >= 8.0
+# time: 0.003 sec</code></pre>
+
+  <div class="callout info">
+    <div class="callout-title">Requires DEBUG = True</div>
+    <code>connection.queries</code> only accumulates entries when <code>settings.DEBUG = True</code>.
+    It's always available in the development shell. Never enable DEBUG in production.
+  </div>
+
+  <h3>6.3 <code>EXPLAIN</code> — understand how the database executes the query</h3>
+  <p>
+    <code>EXPLAIN</code> is a SQL command that shows the database's <em>execution plan</em>:
+    which indexes it uses, how it joins tables, and the estimated cost.
+    Use it when a query is slow and you want to know why.
+  </p>
+<pre><code>from django.db import connection
+
+# Build your ORM query
+qs = Movie.objects.filter(rating__gte=8).order_by('-rating').select_related('director')
+
+# Get the raw SQL and parameters
+sql, params = qs.query.sql_with_params()
+
+# Run EXPLAIN against the database
+with connection.cursor() as cursor:
+    cursor.execute('EXPLAIN ' + sql, params)
+    rows = cursor.fetchall()
+    for row in rows:
+        print(row)
+
+# PostgreSQL output (example):
+# ('Seq Scan on movies_movie  (cost=0.00..12.50 rows=50 width=120)',)
+# ('  Filter: (rating >= 8.0)',)
+# → "Seq Scan" means a full table scan — add an index on `rating` to fix this
+
+# SQLite output (example):
+# (5, 0, 0, 'SCAN TABLE movies_movie')
+# (5, 0, 0, 'USE TEMP B-TREE FOR ORDER BY')</code></pre>
+
+  <h3>6.4 <code>EXPLAIN ANALYZE</code> — run the query and measure actual time</h3>
+  <p><code>EXPLAIN ANALYZE</code> actually executes the query and reports real timing alongside the plan. Use on PostgreSQL; SQLite does not support it.</p>
+<pre><code>with connection.cursor() as cursor:
+    cursor.execute('EXPLAIN ANALYZE ' + sql, params)
+    for row in cursor.fetchall():
+        print(row[0])
+
+# PostgreSQL output:
+# Seq Scan on movies_movie  (cost=0.00..12.50 rows=50) (actual time=0.025..0.182 rows=48)
+#   Filter: (rating >= 8.0)
+#   Rows Removed by Filter: 94
+# Planning Time: 0.3 ms
+# Execution Time: 0.2 ms</code></pre>
+
+  <h3>Reading the EXPLAIN output</h3>
+  <table>
+    <thead><tr><th>Term</th><th>Meaning</th><th>When it's a problem</th></tr></thead>
+    <tbody>
+      <tr><td><code>Seq Scan</code></td><td>Full table scan — reads every row</td><td>On large tables; add an index</td></tr>
+      <tr><td><code>Index Scan</code></td><td>Uses an index to find rows</td><td>Usually good</td></tr>
+      <tr><td><code>Index Only Scan</code></td><td>Data fetched entirely from index</td><td>Best — no table access</td></tr>
+      <tr><td><code>Hash Join</code></td><td>Joins two sets by hashing one</td><td>Normal for larger joins</td></tr>
+      <tr><td><code>Nested Loop</code></td><td>For each row in A, scan B</td><td>Slow without an index on B</td></tr>
+      <tr><td><code>cost=X..Y</code></td><td>Estimated startup..total cost</td><td>High Y = slow query</td></tr>
+      <tr><td><code>rows=N</code></td><td>Estimated row count</td><td>Wrong estimate → bad plan</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout key">
+    <div class="callout-title">Workflow: debugging a slow query</div>
+    1. <code>str(qs.query)</code> — confirm the ORM is generating what you expect.<br>
+    2. <code>connection.queries</code> — count how many queries ran (spot N+1).<br>
+    3. <code>EXPLAIN</code> — find Seq Scans on large tables; add <code>db_index=True</code> to the field.
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       Quick Check
+  ══════════════════════════════════════════════════════ -->
+  <h2>Quick Check</h2>
+  <div class="quiz" data-quiz-id="models-orm-full"></div>
+  <script type="application/json" data-quiz-data="models-orm-full">
+  [
+    {
+      "q": "Which field type models 'a movie has many actors and an actor has many movies'?",
+      "options": [
+        "ForeignKey placed on the Movie model    ",
+        "OneToOneField linking the two models     ",
+        "ManyToManyField on either of the models  ",
+        "IntegerField storing a count of actors   "
+      ],
+      "answer": 2,
+      "explain": "ManyToManyField models a many-to-many relationship and creates a hidden join table automatically."
+    },
+    {
+      "q": "What SQL does Movie.objects.filter(release_year=2010).exists() generate?",
+      "options": [
+        "SELECT COUNT(*) FROM movies_movie WHERE release_year = 2010  ",
+        "SELECT 1 FROM movies_movie WHERE release_year = 2010 LIMIT 1 ",
+        "SELECT * FROM movies_movie WHERE release_year = 2010         ",
+        "SELECT EXISTS(SELECT * FROM movies_movie) WHERE year = 2010  "
+      ],
+      "answer": 1,
+      "explain": "exists() uses SELECT 1 ... LIMIT 1 — the cheapest way to test presence without fetching any data."
+    },
+    {
+      "q": "filter(actors__name='Tom', actors__age__gt=30) vs filter(…name='Tom').filter(…age__gt=30) — what differs for ManyToMany?",
+      "options": [
+        "Single filter: same actor must satisfy both; chained: independent JOINs  ",
+        "Chained filter: same actor must satisfy both; single: independent JOINs   ",
+        "Both produce identical SQL for ManyToMany relationships                   ",
+        "Chained filter raises a database error because of the double JOIN         "
+      ],
+      "answer": 0,
+      "explain": "A single filter() requires the same related row to match both conditions. Each chained filter() creates a new independent JOIN, so different actors can satisfy each condition."
+    },
+    {
+      "q": "What does Movie.objects.values('release_year').annotate(count=Count('id')) produce?",
+      "options": [
+        "A single integer count of all movies                      ",
+        "One dict per movie with release_year and count fields     ",
+        "A GROUP BY query counting movies per release year         ",
+        "An annotation added to each Director object in the DB    "
+      ],
+      "answer": 2,
+      "explain": "values() sets the GROUP BY columns; annotate() after values() aggregates per group. This produces: SELECT release_year, COUNT(id) FROM movies_movie GROUP BY release_year."
+    },
+    {
+      "q": "Why use Movie.objects.filter(id=1).update(views=F('views') + 1) instead of m.views += 1; m.save()?",
+      "options": [
+        "F() makes update() return the new value to Python           ",
+        "F() avoids a race condition by doing the increment in SQL   ",
+        "F() is the only way to update a single row by primary key   ",
+        "F() automatically fires post_save signals on the instance   "
+      ],
+      "answer": 1,
+      "explain": "The Python approach reads the value, increments in Python, then writes back — two concurrent requests can both read the same old value and write the same result. F() does the increment atomically inside a single SQL UPDATE."
+    },
+    {
+      "q": "Which tool shows you the SQL Django actually executed, with real timing?",
+      "options": [
+        "str(qs.query) in the shell gives the exact executed SQL    ",
+        "connection.queries after evaluation shows executed SQL      ",
+        "EXPLAIN ANALYZE runs the query and reports actual timings   ",
+        "makemigrations --sql prints the generated query log        "
+      ],
+      "answer": 2,
+      "explain": "EXPLAIN ANALYZE (PostgreSQL) executes the query and reports actual row counts and timing per step. connection.queries shows executed statements; str(qs.query) shows an approximation before execution."
+    },
+    {
+      "q": "get_or_create(title='X', defaults={'rating': 8}) — what is the role of 'defaults'?",
+      "options": [
+        "Fields used in the WHERE clause to find the existing row    ",
+        "Fields applied ONLY when creating the new row              ",
+        "Fields that override values whether or not the row exists   ",
+        "Fields that become part of the unique key constraint       "
+      ],
+      "answer": 1,
+      "explain": "defaults is applied only on creation. The lookup fields (outside defaults) form the WHERE clause."
+    },
+    {
+      "q": "A 'Seq Scan' in EXPLAIN output on a large table usually means what?",
+      "options": [
+        "Django is using prefetch_related to load related objects      ",
+        "The query is reading every row because there is no usable index",
+        "The database is running the query in sequence, not parallel   ",
+        "select_related generated a sequential JOIN instead of a hash  "
+      ],
+      "answer": 1,
+      "explain": "Seq Scan = full table scan. It reads every row from disk. On large tables this is slow. The fix is to add db_index=True to the filtered field, then run makemigrations + migrate."
+    }
+  ]
+  </script>
+
+  <h2>Primary Source</h2>
+  <p>
+    Apply these models directly in the
+    <a href="../reference/internal-django-course-pack.html"><strong>IMDb Assignment Pack</strong></a>:
+    start with the <a href="../reference/internal-django-course-pack.html#data-model">IMDb Data Model</a>, then work through
+    <a href="../reference/internal-django-course-pack.html#a1">Assignment 1</a> →
+    <a href="../reference/internal-django-course-pack.html#a2">Contd-1</a> →
+    <a href="../reference/internal-django-course-pack.html#a3">Contd-2</a> →
+    <a href="../reference/internal-django-course-pack.html#a4">Contd-3</a>.
+    Keep the <a href="../reference/orm-cheatsheet.html">ORM cheatsheet</a> open while practicing.
+    Full QuerySet API: <a href="https://docs.djangoproject.com/en/5.1/ref/models/querysets/" target="_blank">docs.djangoproject.com/en/5.1/ref/models/querysets/</a>.
+  </p>
+
+  <div class="ask-agent">
+    <strong>Questions?</strong> Ask — "Show me the EXPLAIN output for a slow annotate query",
+    "When does a Seq Scan become a problem?",
+    "How do I add an index to a field in Django?",
+    "What's the difference between Subquery and Exists?",
+    "Why does my distinct() break with order_by() on PostgreSQL?"
+  </div>
+
+  <h2>What's Next</h2>
+  <p>
+    Next: <strong><a href="0004-building-apis.html">Building APIs</a></strong> — connect these models to HTTP endpoints,
+    return JSON, and meet Django REST Framework.
+  </p>
+
+  <footer class="lesson-footer">
+    <div class="lesson-nav">
+      <a href="0002-django-project-structure.html">← Module 2: Project Structure</a>
+    </div>
+    <div class="lesson-nav">
+      Module 3 of 6 &nbsp;|&nbsp;
+      <a href="0004-building-apis.html">Next: Building APIs →</a>
+    </div>
+  </footer>
+
+</div>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

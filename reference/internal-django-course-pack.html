@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reference — IMDb Assignment Pack</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <style>
+    .pack-note {
+      background: var(--info-bg);
+      border: 1px solid #bfdbfe;
+      border-radius: var(--radius);
+      padding: 0.8rem 1rem;
+      margin: 0 0 1.4rem;
+      font-family: var(--font-sans);
+      font-size: 0.9rem;
+      color: #1e3a8a;
+    }
+    .assignment-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 2.2rem;
+    }
+    .assignment-head .src {
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      color: var(--muted);
+    }
+    .compact li { margin-bottom: 0.25rem; }
+    .toc { font-family: var(--font-sans); font-size: 0.9rem; }
+    .toc a { text-decoration: none; }
+    .toc a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+<div class="lesson-wrap">
+
+  <header class="lesson-header">
+    <div class="lesson-meta">
+      <span class="badge">IMDb Pack</span>
+      <span>Django Backend Training</span>
+      <span>Assignments Reference</span>
+    </div>
+    <h1 class="lesson-title">IMDb Assignment Pack</h1>
+    <p class="lesson-subtitle">The IMDb data model and every task you need to implement — structured for doing, not just reading.</p>
+  </header>
+
+  <div class="pack-note">
+    Self-contained reference. All IMDb assignment tasks below are consolidated here so the training stays usable
+    independently. Write models in <code>models.py</code> and task functions in <code>utils.py</code>, both inside the <code>imdb</code> app.
+    Use the <strong>exact</strong> file, class, function, and field names shown.
+  </div>
+
+  <!-- ── TOC ── -->
+  <h2 id="contents">Contents</h2>
+  <ul class="toc compact">
+    <li><a href="#data-model">The IMDb Data Model</a></li>
+    <li><a href="#a1">Assignment 1 — IMDb (models, populate, basic ORM)</a></li>
+    <li><a href="#a2">Assignment 2 — IMDb Contd-1 (filtering &amp; lookups)</a></li>
+    <li><a href="#a3">Assignment 3 — IMDb Contd-2 (aggregation &amp; annotation)</a></li>
+    <li><a href="#a4">Assignment 4 — IMDb Contd-3 (optimization &amp; bulk ops)</a></li>
+    <li><a href="#guidelines">Coding Guidelines</a></li>
+  </ul>
+
+  <!-- ── Data model ── -->
+  <h2 id="data-model">The IMDb Data Model</h2>
+  <p>All assignments share these five entities. Design these models first (Assignment 1, Task 1).</p>
+  <table>
+    <thead><tr><th>Entity</th><th>Fields</th><th>Relationships</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Movie</strong></td>
+        <td><code>name</code> (≤100), <code>movie_id</code> (≤100, unique), <code>release_date</code>, <code>box_office_collection_in_crores</code> (float)</td>
+        <td>One <strong>Director</strong> (required); many <strong>Actors</strong> via Cast</td>
+      </tr>
+      <tr>
+        <td><strong>Actor</strong></td>
+        <td><code>actor_id</code> (≤100, unique), <code>name</code> (≤100)</td>
+        <td>Many <strong>Movies</strong> via Cast</td>
+      </tr>
+      <tr>
+        <td><strong>Director</strong></td>
+        <td><code>name</code> (unique)</td>
+        <td>Directs many <strong>Movies</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Cast</strong></td>
+        <td><code>role</code> (≤50), <code>is_debut_movie</code> (bool, default <code>False</code>)</td>
+        <td>Links a <strong>Movie</strong> ↔ <strong>Actor</strong> (an actor may have multiple roles)</td>
+      </tr>
+      <tr>
+        <td><strong>Rating</strong></td>
+        <td><code>rating_one_count</code> … <code>rating_five_count</code> (each int, default <code>0</code>)</td>
+        <td>One per <strong>Movie</strong></td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="callout info">
+    <div class="callout-title">Modelling hint</div>
+    <code>Cast</code> is an explicit through-model for the Movie↔Actor many-to-many (it carries <code>role</code> and <code>is_debut_movie</code>).
+    Prefer reverse relations / related fields over multiple manual queries.
+  </div>
+
+  <!-- ── Assignment 1 ── -->
+  <div class="assignment-head">
+    <h2 id="a1" style="margin:0;border:none;">Assignment 1 — IMDb</h2>
+    <span class="src">source: django_assignment_002</span>
+  </div>
+  <p>Build the schema, populate it, and perform basic ORM operations.</p>
+  <ol class="task-list">
+    <li>
+      <p class="task-desc"><strong>Write the models.</strong> Define Movie, Actor, Director, Cast, Rating with the fields and relationships in the table above.</p>
+    </li>
+    <li>
+      <p class="task-desc"><strong>Populate the database</strong> from the given dictionaries (actors, movies, directors, ratings).</p>
+      <span class="task-fn">populate_database(actors_list, movies_list, directors_list, movie_rating_list)</span>
+    </li>
+    <li>
+      <p class="task-desc">Count the distinct number of movies a given actor acted in.</p>
+      <span class="task-fn">get_no_of_distinct_movies_actor_acted(actor_id)</span>
+      <div class="task-out">Returns: integer (e.g. <code>4</code>)</div>
+    </li>
+    <li>
+      <p class="task-desc">Return all movies directed by a given director.</p>
+      <span class="task-fn">get_movies_directed_by_director(director_obj)</span>
+      <div class="task-out">Returns: list of Movie objects</div>
+    </li>
+    <li>
+      <p class="task-desc">Return the average rating of a movie (return <code>0</code> if it has no rating).</p>
+      <span class="task-fn">get_average_rating_of_movie(movie_obj)</span>
+      <div class="task-out">Returns: float (e.g. <code>4.5</code>)</div>
+    </li>
+    <li>
+      <p class="task-desc">Delete the rating object associated with a movie.</p>
+      <span class="task-fn">delete_movie_rating(movie_obj)</span>
+    </li>
+    <li>
+      <p class="task-desc">Get all distinct actors who acted in a given list of movies.</p>
+      <span class="task-fn">get_all_actor_objects_acted_in_given_movies(movie_objs)</span>
+      <div class="task-out">Returns: list of Actor objects</div>
+    </li>
+    <li>
+      <p class="task-desc">Update the director for a given movie.</p>
+      <span class="task-fn">update_director_for_given_movie(movie_obj, director_obj)</span>
+    </li>
+    <li>
+      <p class="task-desc">Get all distinct movies that have an actor whose name contains "john".</p>
+      <span class="task-fn">get_distinct_movies_acted_by_actor_whose_name_contains_john()</span>
+    </li>
+    <li>
+      <p class="task-desc">Remove all actors from a given movie — <em>without</em> deleting the actor rows.</p>
+      <span class="task-fn">remove_all_actors_from_given_movie(movie_obj)</span>
+    </li>
+    <li>
+      <p class="task-desc">Get all rating objects for a list of movies (ignore movies with no rating).</p>
+      <span class="task-fn">get_all_rating_objects_for_given_movies(movie_objs)</span>
+    </li>
+  </ol>
+
+  <!-- ── Assignment 2 ── -->
+  <div class="assignment-head">
+    <h2 id="a2" style="margin:0;border:none;">Assignment 2 — IMDb Contd-1</h2>
+    <span class="src">source: django_assignment_003</span>
+  </div>
+  <p>Reuse the same models. Practice field lookups, date filters, and complex conditions.</p>
+  <ol class="task-list">
+    <li>
+      <p class="task-desc">Return complete movie info (cast &amp; crew, box office, release) for a list of movie titles.</p>
+      <span class="task-fn">get_movies_by_given_movie_names(movie_names)</span>
+    </li>
+    <li>
+      <p class="task-desc">Movies released in May, June &amp; July, between 2005 and 2010.</p>
+      <span class="task-fn">get_movies_released_in_summer_in_given_years()</span>
+    </li>
+    <li>
+      <p class="task-desc">Movie names having at least one actor whose name ends with "smith" (case-insensitive).</p>
+      <span class="task-fn">get_movie_names_with_actor_name_ending_with_smith()</span>
+    </li>
+    <li>
+      <p class="task-desc">Movie names with at least 1000 and at most 3000 five-star ratings.</p>
+      <span class="task-fn">get_movie_names_with_ratings_in_given_range()</span>
+    </li>
+    <li>
+      <p class="task-desc">21st-century movies (year &gt; 2000) with ≥ 500 five-star OR ≥ 1000 four-star ratings.</p>
+      <span class="task-fn">get_movie_names_with_ratings_above_given_minimum()</span>
+    </li>
+    <li>
+      <p class="task-desc">Director names who directed at least one movie released in year 2000.</p>
+      <span class="task-fn">get_movie_directors_in_given_year()</span>
+    </li>
+    <li>
+      <p class="task-desc">Actor names who debuted in the 21st century.</p>
+      <span class="task-fn">get_actor_names_debuted_in_21st_century()</span>
+    </li>
+    <li>
+      <p class="task-desc">Director names who directed movies containing "big" <em>as well as</em> movies released in May.</p>
+      <span class="task-fn">get_director_names_containing_big_as_well_as_movie_in_may()</span>
+    </li>
+    <li>
+      <p class="task-desc">Director names who directed movies containing "big" <em>and</em> released in May.</p>
+      <span class="task-fn">get_director_names_containing_big_and_movie_in_may()</span>
+    </li>
+    <li>
+      <p class="task-desc">Reset all rating counts (five-star down to one-star) to 0 for movies released in year 2000.</p>
+      <span class="task-fn">reset_ratings_for_movies_in_this_year()</span>
+    </li>
+  </ol>
+
+  <!-- ── Assignment 3 ── -->
+  <div class="assignment-head">
+    <h2 id="a3" style="margin:0;border:none;">Assignment 3 — IMDb Contd-2</h2>
+    <span class="src">source: django_assignment_004</span>
+  </div>
+  <p>Focus on aggregation and annotation. Many tasks return Model instances with extra annotated attributes.</p>
+  <ol class="task-list">
+    <li>
+      <p class="task-desc">Average <code>box_office_collection_in_crores</code> across all movies (round to 3 dp).</p>
+      <span class="task-fn">get_average_box_office_collections()</span>
+    </li>
+    <li>
+      <p class="task-desc">Distinct actor count for each movie → Movie instances with <code>actors_count</code>.</p>
+      <span class="task-fn">get_movies_with_distinct_actors_count()</span>
+    </li>
+    <li>
+      <p class="task-desc">Male &amp; female actor counts per movie → Movie instances with <code>male_actors_count</code>, <code>female_actors_count</code>.</p>
+      <span class="task-fn">get_male_and_female_actors_count_for_each_movie()</span>
+    </li>
+    <li>
+      <p class="task-desc">Distinct role count per movie → Movie instances with <code>roles_count</code>.</p>
+      <span class="task-fn">get_roles_count_for_each_movie()</span>
+    </li>
+    <li>
+      <p class="task-desc">For each role, the number of distinct actors who played it → dict {role: count}.</p>
+      <span class="task-fn">get_role_frequency()</span>
+    </li>
+    <li>
+      <p class="task-desc">Role cast frequency, ordered by most recently released movie first → list of (role, frequency).</p>
+      <span class="task-fn">get_role_frequency_in_order()</span>
+    </li>
+    <li>
+      <p class="task-desc">Per actor: total movies and distinct roles → Actor instances with <code>movies_count</code>, <code>roles_count</code>.</p>
+      <span class="task-fn">get_no_of_movies_and_distinct_roles_for_each_actor()</span>
+    </li>
+    <li>
+      <p class="task-desc">Movies with at least 40 actors → Movie instances with <code>actors_count</code>.</p>
+      <span class="task-fn">get_movies_with_atleast_forty_actors()</span>
+    </li>
+    <li>
+      <p class="task-desc">Average number of actors across all movies (round to 3 dp; 0 if no movies).</p>
+      <span class="task-fn">get_average_no_of_actors_for_all_movies()</span>
+    </li>
+  </ol>
+
+  <!-- ── Assignment 4 ── -->
+  <div class="assignment-head">
+    <h2 id="a4" style="margin:0;border:none;">Assignment 4 — IMDb Contd-3</h2>
+    <span class="src">source: django_assignment_005</span>
+  </div>
+  <p>Efficient population, bulk operations, and optimized related-object queries.</p>
+  <ol class="task-list">
+    <li>
+      <p class="task-desc">Efficiently populate the database from the given dictionaries.</p>
+      <span class="task-fn">populate_database(actors_list, movies_list, directors_list, movie_rating_list)</span>
+    </li>
+    <li>
+      <p class="task-desc">Remove all actors from a given movie (don't delete actor objects).</p>
+      <span class="task-fn">remove_all_actors_from_given_movie(movie_object)</span>
+    </li>
+    <li>
+      <p class="task-desc">Get all ratings for a given list of movies.</p>
+      <span class="task-fn">get_all_rating_objects_for_given_movies(movie_objs)</span>
+      <div class="task-out">Returns: list of Rating instances</div>
+    </li>
+    <li>
+      <p class="task-desc">Get movie details (dicts) given a list of movie names.</p>
+      <span class="task-fn">get_movies_by_given_movie_names(movie_names)</span>
+    </li>
+    <li>
+      <p class="task-desc">Get unique actor objects who acted in given movie objects.</p>
+      <span class="task-fn">get_all_actor_objects_acted_in_given_movies(movie_objs)</span>
+    </li>
+    <li>
+      <p class="task-desc">Get details of movies that have at least 5 female actors (ignore male cast in the result).</p>
+      <span class="task-fn">get_female_cast_details_from_movies_having_more_than_five_female_cast()</span>
+    </li>
+    <li>
+      <p class="task-desc">For each actor, return all their movies released in year ≥ 2000 → list of dicts.</p>
+      <span class="task-fn">get_actor_movies_released_in_year_greater_than_or_equal_to_2000()</span>
+    </li>
+    <li>
+      <p class="task-desc">Reset all ratings of all movies released in a given year.</p>
+      <span class="task-fn">reset_ratings_for_movies_in_given_year(year)</span>
+    </li>
+  </ol>
+
+  <!-- ── Guidelines ── -->
+  <h2 id="guidelines">Coding Guidelines</h2>
+  <ul class="compact">
+    <li>Write models in <code>models.py</code>; write all task functions in <code>utils.py</code> — both inside the <code>imdb</code> app.</li>
+    <li>Use the exact file, class, function, and field names given in each task.</li>
+    <li>Prefer reverse relations and relation-related fields over multiple manual queries.</li>
+    <li>You may reuse the models from the previous assignment in each continuation.</li>
+    <li>Run all <code>python3 manage.py ...</code> commands from the folder containing <code>manage.py</code>.</li>
+  </ul>
+
+  <h2 id="quick-links">Quick Links</h2>
+  <ul class="compact">
+    <li><a href="../lessons/0003-models-and-orm.html">Module 3: Models &amp; ORM</a></li>
+    <li><a href="../lessons/0006-wrap-up-and-learning-path.html">Module 6: Wrap Up &amp; Hands-on Plan</a></li>
+    <li><a href="orm-cheatsheet.html">ORM Cheatsheet</a></li>
+    <li><a href="django-cheatsheet.html">Django Cheatsheet</a></li>
+  </ul>
+
+  <footer class="lesson-footer">
+    <div class="lesson-nav">
+      <span>IMDb Assignment Pack</span>
+    </div>
+    <div class="lesson-nav">
+      Reference document for IMDb assignments
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lesson 01 — Introduction to Django</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body>
+<div class="lesson-wrap">
+
+  <!-- ── Header ─────────────────────────────────────────────── -->
+  <header class="lesson-header">
+    <div class="lesson-meta">
+      <span class="badge">Module 1 / 6</span>
+      <span>Django Backend Training</span>
+      <span>⏱ ~15 min</span>
+      <span>Beginner</span>
+    </div>
+    <h1 class="lesson-title">Introduction to Django</h1>
+    <p class="lesson-subtitle">What it is, why it exists, and how a request travels through it.</p>
+  </header>
+
+  <!-- ── Course map ─────────────────────────────────────────── -->
+  <nav class="course-map">
+    <div class="course-map-title">Course Map — Django Backend Training</div>
+    <ol>
+      <li class="current"><a href="0001-introduction-to-django.html">Introduction to Django</a> <span>15 min</span></li>
+      <li><a href="0002-django-project-structure.html">Django Project Structure</a> <span>10 min</span></li>
+      <li><a href="0003-models-and-orm.html">Models &amp; ORM</a> <span>40 min</span></li>
+      <li><a href="0004-building-apis.html">Building APIs</a> <span>35 min</span></li>
+      <li><a href="0005-openapi-swagger.html">OpenAPI / Swagger</a> <span>15 min</span></li>
+      <li><a href="0006-wrap-up-and-learning-path.html">Wrap Up &amp; Learning Path</a> <span>5 min</span></li>
+    </ol>
+  </nav>
+
+  <!-- ── 1. What is Django? ──────────────────────────────────── -->
+  <h2>1. What is Django?</h2>
+
+  <p>
+    <strong>Django</strong> is a free, open-source <em>web framework</em> written in Python.
+    It was released in 2005 by <a href="https://www.djangoproject.com/foundation/" target="_blank">the Django Software Foundation</a>
+    and is named after jazz guitarist <em>Django Reinhardt</em>.
+  </p>
+
+  <div class="callout key">
+    <div class="callout-title">One-sentence definition</div>
+    Django is a <strong>"batteries included"</strong> Python web framework that handles the hard parts of building a web
+    backend — routing, database access, authentication, validation — so you can focus on your application logic.
+  </div>
+
+  <p>
+    The official motto is <em>"The web framework for perfectionists with deadlines."</em>
+    It is used by Instagram, Pinterest, Disqus, Mozilla, and NASA, among others.
+  </p>
+
+  <!-- ── 2. Why Django? ─────────────────────────────────────── -->
+  <h2>2. Why Django?</h2>
+
+  <table>
+    <thead>
+      <tr><th>Problem</th><th>Django's Answer</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Writing SQL for every query</td><td>ORM — Python objects instead of SQL strings</td></tr>
+      <tr><td>Routing URLs to code</td><td><code>urls.py</code> — declarative URL patterns</td></tr>
+      <tr><td>Validating incoming data</td><td>Forms &amp; Serializers (via DRF)</td></tr>
+      <tr><td>Managing database schema</td><td>Migrations — auto-generated, version-controlled</td></tr>
+      <tr><td>Building admin dashboards</td><td>Auto-generated Django Admin UI</td></tr>
+      <tr><td>Securing the app</td><td>CSRF, XSS, SQL injection protection built-in</td></tr>
+    </tbody>
+  </table>
+
+  <p>Compared to Flask (micro-framework), Django ships with everything wired up.
+  Compared to FastAPI, Django has a richer ecosystem and a mature ORM — though FastAPI has the edge on raw async performance.</p>
+
+  <!-- ── 3. Django Features ─────────────────────────────────── -->
+  <h2>3. Key Features</h2>
+
+  <div class="feature-grid">
+    <div class="feature-card">
+      <h4>ORM</h4>
+      <p>Map Python classes to database tables. Query with Python, not SQL.</p>
+    </div>
+    <div class="feature-card">
+      <h4>URL Routing</h4>
+      <p>Clean, readable URL patterns declared in <code>urls.py</code>.</p>
+    </div>
+    <div class="feature-card">
+      <h4>Migrations</h4>
+      <p>Auto-generated schema diffs keep your DB in sync with your models.</p>
+    </div>
+    <div class="feature-card">
+      <h4>Authentication</h4>
+      <p>Users, passwords, sessions, and permissions out of the box.</p>
+    </div>
+    <div class="feature-card">
+      <h4>Admin UI</h4>
+      <p>A full CRUD dashboard auto-generated from your models.</p>
+    </div>
+    <div class="feature-card">
+      <h4>Security</h4>
+      <p>CSRF, XSS, and SQL-injection protection enabled by default.</p>
+    </div>
+    <div class="feature-card">
+      <h4>Templating</h4>
+      <p>Server-side HTML via Django Template Language (not our focus here).</p>
+    </div>
+    <div class="feature-card">
+      <h4>DRF (add-on)</h4>
+      <p>Django REST Framework adds serializers, ViewSets, and API browsing.</p>
+    </div>
+  </div>
+
+  <!-- ── 4. MVT Architecture ────────────────────────────────── -->
+  <h2>4. MVT Architecture</h2>
+
+  <p>
+    Django follows <strong>MVT — Model, View, Template</strong>. It is similar to MVC (Model-View-Controller)
+    from other frameworks, but with different naming:
+  </p>
+
+  <table>
+    <thead>
+      <tr><th>MVT Layer</th><th>Responsibility</th><th>MVC Equivalent</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Model</strong></td>
+        <td>Data shape &amp; database access (ORM)</td>
+        <td>Model</td>
+      </tr>
+      <tr>
+        <td><strong>View</strong></td>
+        <td>Business logic — receives a request, returns a response</td>
+        <td>Controller</td>
+      </tr>
+      <tr>
+        <td><strong>Template</strong></td>
+        <td>HTML presentation layer (in REST APIs: replaced by JSON serializers)</td>
+        <td>View</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout info">
+    <div class="callout-title">REST API note</div>
+    In backend/API work, <strong>Views return JSON</strong> (via DRF Serializers), not HTML templates.
+    The "T" in MVT is mostly relevant for server-side rendered frontends.
+  </div>
+
+  <!-- ── 5. Request Lifecycle ───────────────────────────────── -->
+  <h2>5. Request Lifecycle</h2>
+
+  <p>Here is exactly what happens when a client sends an HTTP request to a Django app:</p>
+
+  <div class="arch-diagram">
+    <div class="arch-flow">
+
+      <div class="arch-node">
+        <div class="arch-box client">Frontend / Postman</div>
+        <span class="arch-label" style="margin-left:0.6rem">HTTP client</span>
+      </div>
+
+      <div class="arch-arrow">↓ <span style="font-family:var(--font-sans);font-size:0.75rem;color:var(--muted)">HTTP Request (GET /api/books/)</span></div>
+
+      <div class="arch-node">
+        <div class="arch-box layer">urls.py</div>
+        <span class="arch-label" style="margin-left:0.6rem">Route matching</span>
+      </div>
+
+      <div class="arch-arrow">↓ <span style="font-family:var(--font-sans);font-size:0.75rem;color:var(--muted)">Dispatches to matched View</span></div>
+
+      <div class="arch-node">
+        <div class="arch-box layer">View (views.py)</div>
+        <span class="arch-label" style="margin-left:0.6rem">Orchestrates logic</span>
+      </div>
+
+      <div class="arch-arrow">↓ <span style="font-family:var(--font-sans);font-size:0.75rem;color:var(--muted)">Calls business logic / queries</span></div>
+
+      <div class="arch-node">
+        <div class="arch-box layer">Business Logic</div>
+        <span class="arch-label" style="margin-left:0.6rem">Services / helpers</span>
+      </div>
+
+      <div class="arch-arrow">↓</div>
+
+      <div class="arch-node">
+        <div class="arch-box layer">Model (ORM)</div>
+        <span class="arch-label" style="margin-left:0.6rem">models.py</span>
+      </div>
+
+      <div class="arch-arrow">↓ <span style="font-family:var(--font-sans);font-size:0.75rem;color:var(--muted)">SQL query (generated)</span></div>
+
+      <div class="arch-node">
+        <div class="arch-box db">Database</div>
+        <span class="arch-label" style="margin-left:0.6rem">PostgreSQL / SQLite</span>
+      </div>
+
+      <div class="arch-arrow">↑ <span style="font-family:var(--font-sans);font-size:0.75rem;color:var(--muted)">Rows returned</span></div>
+
+      <div class="arch-node">
+        <div class="arch-box layer">Serializer / JSON</div>
+        <span class="arch-label" style="margin-left:0.6rem">DRF Serializer</span>
+      </div>
+
+      <div class="arch-arrow">↑ <span style="font-family:var(--font-sans);font-size:0.75rem;color:var(--muted)">HTTP 200 JSON Response</span></div>
+
+      <div class="arch-node">
+        <div class="arch-box client">Frontend / Postman</div>
+      </div>
+
+    </div>
+  </div>
+
+  <h3>Step-by-step walkthrough</h3>
+
+  <ol>
+    <li>
+      <strong>HTTP Request</strong> — A client (browser, Postman, mobile app) sends a request,
+      e.g. <code>GET /api/books/</code>.
+    </li>
+    <li>
+      <strong>urls.py</strong> — Django inspects the URL against patterns defined in <code>urls.py</code>
+      and dispatches to the matching view function or class.
+    </li>
+    <li>
+      <strong>View</strong> — The view receives a <code>request</code> object. It decides what to do:
+      validate input, call services, or query the database.
+    </li>
+    <li>
+      <strong>Business Logic</strong> — Complex logic lives in separate service functions (not
+      strictly enforced by Django, but a strong convention).
+    </li>
+    <li>
+      <strong>Model / ORM</strong> — The view or service calls <code>Book.objects.all()</code> or
+      similar. Django's ORM translates this to SQL and executes it.
+    </li>
+    <li>
+      <strong>Database</strong> — The database returns rows. The ORM converts them back to Python objects.
+    </li>
+    <li>
+      <strong>JSON Response</strong> — A DRF Serializer converts Python objects to JSON.
+      The view returns a <code>Response</code>, which Django turns into an HTTP response.
+    </li>
+  </ol>
+
+  <!-- ── 6. Django ORM ──────────────────────────────────────── -->
+  <h2>6. Django ORM — A First Look</h2>
+
+  <p>
+    The <strong>ORM (Object-Relational Mapper)</strong> is one of Django's most powerful features.
+    You define a Python class (a <em>Model</em>), and Django manages the SQL table for you.
+  </p>
+
+  <h3>Defining a Model</h3>
+<pre><code># models.py
+from django.db import models
+
+class Book(models.Model):
+    title  = models.CharField(max_length=200)
+    author = models.CharField(max_length=100)
+    pages  = models.IntegerField()
+
+    def __str__(self):
+        return self.title</code></pre>
+
+  <p>This creates a <code>books_book</code> table with columns <code>id</code>, <code>title</code>, <code>author</code>, <code>pages</code>. Django handles the primary key automatically.</p>
+
+  <h3>How ORM queries look</h3>
+<pre><code># Django ORM query style (example)
+Book.objects.filter(author='Tolkien')</code></pre>
+
+  <p>This is enough for Module 1: ORM queries are Python expressions on model objects. We go deeper in Module 3.</p>
+
+  <div class="callout key">
+    <div class="callout-title">Key insight</div>
+    You never write SQL directly. The ORM generates it for you, keeps your code database-agnostic,
+    and prevents SQL injection by design.
+  </div>
+
+  <!-- ── 7. REST APIs in Django ─────────────────────────────── -->
+  <h2>7. REST APIs in Django</h2>
+
+  <p>
+    Django ships with views that return HTML templates.
+    For REST APIs, we add <strong>Django REST Framework (DRF)</strong> — the de-facto standard.
+  </p>
+
+  <h3>The three building blocks</h3>
+
+  <table>
+    <thead>
+      <tr><th>Building block</th><th>File</th><th>Job</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Serializer</strong></td>
+        <td><code>serializers.py</code></td>
+        <td>Converts Model ↔ JSON. Also validates incoming data.</td>
+      </tr>
+      <tr>
+        <td><strong>View / ViewSet</strong></td>
+        <td><code>views.py</code></td>
+        <td>Handles the request, calls the serializer, returns a Response.</td>
+      </tr>
+      <tr>
+        <td><strong>Router / URLs</strong></td>
+        <td><code>urls.py</code></td>
+        <td>Maps URL patterns to views.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>A minimal API endpoint</h3>
+<pre><code># serializers.py
+from rest_framework import serializers
+from .models import Book
+
+class BookSerializer(serializers.ModelSerializer):
+    class Meta:
+        model  = Book
+        fields = ['id', 'title', 'author', 'pages']</code></pre>
+
+<pre><code># views.py
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from .models import Book
+from .serializers import BookSerializer
+
+@api_view(['GET'])
+def book_list(request):
+    books = Book.objects.all()
+    serializer = BookSerializer(books, many=True)
+    return Response(serializer.data)</code></pre>
+
+<pre><code># urls.py
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('api/books/', views.book_list),
+]</code></pre>
+
+  <p>A <code>GET /api/books/</code> now returns a JSON array of all books. That is the full loop.</p>
+
+  <!-- ── Key Takeaways ──────────────────────────────────────── -->
+  <h2>Key Takeaways</h2>
+
+  <div class="callout key">
+    <div class="callout-title">Remember these three things</div>
+    <ul style="margin:0;padding-left:1.4rem">
+      <li><strong>MVT:</strong> Model handles data, View handles logic, Template (Serializer in REST) handles output.</li>
+      <li><strong>Views return JSON</strong> in backend apps — not HTML. The "Template" is replaced by a DRF Serializer.</li>
+      <li><strong>ORM abstracts SQL</strong> — write Python, get safe, portable database queries.</li>
+    </ul>
+  </div>
+
+  <!-- ── Quiz ──────────────────────────────────────────────── -->
+  <h2>Quick Check</h2>
+
+  <div class="quiz" data-quiz-id="intro-django"></div>
+
+  <script type="application/json" data-quiz-data="intro-django">
+  [
+    {
+      "q": "In Django's MVT, which layer is responsible for handling an HTTP request and returning a response?",
+      "options": [
+        "Model  — it stores and retrieves data",
+        "View   — it receives request, runs logic",
+        "Template — it renders the output HTML",
+        "Router — it matches URLs to patterns"
+      ],
+      "answer": 1,
+      "explain": "The View is Django's equivalent of the Controller in MVC. It receives the request object, runs business logic, and returns a Response."
+    },
+    {
+      "q": "What is the main benefit of Django ORM in this module?",
+      "options": [
+        "It lets you write direct SQL in every view",
+        "It avoids SQL by using Python query syntax",
+        "It replaces URLs and routing completely",
+        "It only works with template-based projects"
+      ],
+      "answer": 1,
+      "explain": "At this stage, the key idea is that ORM lets you work with database data using Python syntax instead of writing raw SQL."
+    },
+    {
+      "q": "In a Django REST API, what does a Serializer primarily do?",
+      "options": [
+        "Maps URL patterns to view functions in urls.py",
+        "Translates Python objects to JSON (and back)",
+        "Executes raw SQL queries against the database",
+        "Generates database migrations automatically"
+      ],
+      "answer": 1,
+      "explain": "A DRF Serializer converts Model instances → JSON for responses, and JSON → validated Python data for writes. It also handles input validation."
+    },
+    {
+      "q": "In the Django request lifecycle, what is the role of urls.py?",
+      "options": [
+        "Stores database connection credentials     ",
+        "Matches an incoming URL to the right view  ",
+        "Converts query results into JSON responses ",
+        "Applies migrations to the database schema  "
+      ],
+      "answer": 1,
+      "explain": "urls.py contains URL patterns. Django checks the incoming URL path against these patterns and dispatches the request to the matching view."
+    }
+  ]
+  </script>
+
+  <!-- ── Primary Source ─────────────────────────────────────── -->
+  <h2>Primary Source</h2>
+  <p>
+    Read <a href="https://docs.djangoproject.com/en/5.1/intro/overview/" target="_blank">
+    <strong>Django at a glance</strong> — official Django docs</a>.
+    It is the most authoritative, up-to-date overview and takes about 5 minutes to read.
+    It covers the same topics we walked through here from the source itself.
+  </p>
+
+  <!-- ── Ask the Agent ─────────────────────────────────────── -->
+  <div class="ask-agent">
+    <strong>Questions?</strong> Ask your agent anything that felt unclear — "Why does Django use MVT instead of MVC?",
+    "When would I use <code>get()</code> instead of <code>filter()</code>?", "How is DRF different from plain Django views?"
+    Your agent is your teacher and is here to help.
+  </div>
+
+  <!-- ── Next Lesson ────────────────────────────────────────── -->
+  <h2>What's Next</h2>
+  <p>
+    Next lesson: <strong><a href="0002-django-project-structure.html">Django Project Structure</a></strong> —
+    what every file in a Django project does (<code>manage.py</code>, <code>settings.py</code>, <code>urls.py</code>,
+    <code>models.py</code>, <code>views.py</code>, migrations), and the difference between a <em>project</em> and an <em>app</em>.
+  </p>
+
+  <!-- ── References ────────────────────────────────────────── -->
+  <h2>References</h2>
+  <ul>
+    <li><a href="https://docs.djangoproject.com/en/5.1/" target="_blank">Django 5.1 Official Documentation</a></li>
+    <li><a href="https://www.django-rest-framework.org/" target="_blank">Django REST Framework</a></li>
+    <li><a href="https://docs.djangoproject.com/en/5.1/topics/db/queries/" target="_blank">Making queries — Django ORM docs</a></li>
+    <li><a href="https://realpython.com/get-started-with-django-1/" target="_blank">Real Python: Django Getting Started</a></li>
+  </ul>
+
+  <!-- ── Footer ────────────────────────────────────────────── -->
+  <footer class="lesson-footer">
+    <div class="lesson-nav">
+      <a href="../reference/django-cheatsheet.html">Reference: Django Cheatsheet</a>
+    </div>
+    <div class="lesson-nav">
+      Module 1 of 6 &nbsp;|&nbsp;
+      <a href="0002-django-project-structure.html">Next: Project Structure →</a>
+    </div>
+  </footer>
+
+</div>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

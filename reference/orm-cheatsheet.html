@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reference — Django ORM Cheatsheet</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <style>
+    html { font-size: 14px; }
+    body { padding: 1.5rem 1rem 3rem; }
+    h2   { margin-top: 1.75rem; font-size: 1.1rem; }
+    pre  { padding: 0.75rem 1rem; font-size: 0.8rem; margin: 0.5rem 0 1rem; }
+    p    { margin-bottom: 0.6rem; }
+    table { font-size: 0.84rem; }
+    td, th { padding: 0.4rem 0.75rem; }
+    .ref-header {
+      background: var(--accent); color: #fff;
+      padding: 0.85rem 1.25rem; border-radius: var(--radius); margin-bottom: 1.5rem;
+    }
+    .ref-header h1 { font-family: var(--font-sans); font-size: 1.3rem; font-weight: 700; }
+    .ref-header p { font-size: 0.83rem; opacity: 0.8; margin: 0; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+    @media (max-width: 620px) { .two-col { grid-template-columns: 1fr; } }
+    .ref-section {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 0.9rem 1rem;
+    }
+    .ref-section h3 {
+      font-family: var(--font-sans); font-size: 0.82rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.07em; color: var(--accent);
+      border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; margin: 0 0 0.6rem;
+    }
+  </style>
+</head>
+<body>
+<div class="lesson-wrap">
+
+  <div class="ref-header">
+    <h1>Django ORM Cheatsheet</h1>
+    <p>Quick reference for Module 3 &amp; Bonus Module 7 — Models &amp; Advanced ORM. Print-friendly.</p>
+  </div>
+
+  <!-- ── Model definition ── -->
+  <h2>Defining a Model</h2>
+<pre><code>from django.db import models
+
+class Movie(models.Model):
+    title        = models.CharField(max_length=200)
+    release_year = models.IntegerField()
+    rating       = models.FloatField(default=0.0)
+    created_at   = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title
+# Table: movies_movie  | auto pk: id</code></pre>
+
+  <div class="two-col">
+
+    <div class="ref-section">
+      <h3>Common Field Types</h3>
+<pre><code>CharField(max_length=n)
+TextField()
+IntegerField()
+BigIntegerField()
+FloatField()
+DecimalField(max_digits, decimal_places)
+BooleanField(default=False)
+DateField() / DateTimeField()
+EmailField() / URLField()
+UUIDField(default=uuid.uuid4)</code></pre>
+    </div>
+
+    <div class="ref-section">
+      <h3>Common Field Options</h3>
+<pre><code>null=True        # NULL allowed in DB
+blank=True       # empty allowed in forms
+default=value
+unique=True
+choices=[...]
+db_index=True
+auto_now_add=True   # set on create
+auto_now=True       # set on every save</code></pre>
+    </div>
+
+    <div class="ref-section">
+      <h3>Relationships</h3>
+<pre><code># One-to-Many (FK on 'many' side)
+director = models.ForeignKey(
+    Director,
+    on_delete=models.CASCADE,
+    related_name='movies')
+
+# Many-to-Many
+actors = models.ManyToManyField(
+    Actor, related_name='movies')
+
+# One-to-One
+movie = models.OneToOneField(
+    Movie, on_delete=models.CASCADE)</code></pre>
+    </div>
+
+    <div class="ref-section">
+      <h3>on_delete options</h3>
+<pre><code>CASCADE     # delete children too
+PROTECT     # block deletion
+SET_NULL    # set FK null (needs null=True)
+SET_DEFAULT
+DO_NOTHING</code></pre>
+      <h3>Traversing relations</h3>
+<pre><code>movie.director           # forward FK
+director.movies.all()    # reverse (related_name)
+movie.actors.all()       # M2M forward
+movie.actors.add(actor)  # link M2M</code></pre>
+    </div>
+
+    <div class="ref-section">
+      <h3>Migrations</h3>
+<pre><code>python manage.py makemigrations
+python manage.py migrate
+python manage.py sqlmigrate app 0001
+python manage.py showmigrations</code></pre>
+    </div>
+
+    <div class="ref-section">
+      <h3>Create / Update / Delete</h3>
+<pre><code>Movie.objects.create(title='X', ...)
+m = Movie(title='X'); m.save()
+
+Movie.objects.filter(...).update(rating=9)
+m.rating = 9; m.save()
+
+Movie.objects.filter(...).delete()
+m.delete()</code></pre>
+    </div>
+
+    <div class="ref-section">
+      <h3>Read</h3>
+<pre><code>Movie.objects.all()
+Movie.objects.get(id=1)      # one; raises
+Movie.objects.filter(year=2010)
+Movie.objects.exclude(year=2010)
+Movie.objects.first() / .last()
+Movie.objects.order_by('-rating')
+Movie.objects.count()
+Movie.objects.filter(...).exists()
+Movie.objects.values('title')      # dicts
+Movie.objects.values_list('id', flat=True)</code></pre>
+    </div>
+
+    <div class="ref-section">
+      <h3>Field Lookups (field__lookup)</h3>
+<pre><code>exact / iexact
+contains / icontains
+startswith / endswith
+gt / gte / lt / lte
+in=[...]
+range=(a, b)
+isnull=True
+year / month / day  (dates)
+director__name='Nolan'   # follow FK</code></pre>
+    </div>
+
+    <div class="ref-section">
+      <h3>Q Objects &amp; F Expressions</h3>
+<pre><code>from django.db.models import Q, F
+
+filter(Q(a=1) | Q(b=2))    # OR
+filter(Q(a=1) & ~Q(b=2))   # AND NOT
+
+# Operate on column values in-DB
+Movie.objects.update(
+    views=F('views') + 1)</code></pre>
+    </div>
+
+    <div class="ref-section">
+      <h3>Aggregation &amp; Annotation</h3>
+<pre><code>from django.db.models import (
+    Count, Avg, Sum, Max, Min)
+
+Movie.objects.aggregate(Avg('rating'))
+# {'rating__avg': 7.9}
+
+Director.objects.annotate(
+    num=Count('movies')
+).filter(num__gte=3)</code></pre>
+    </div>
+
+    <div class="ref-section">
+      <h3>Query Optimization (N+1)</h3>
+<pre><code># FK / OneToOne → SQL JOIN
+Movie.objects.select_related('director')
+
+# M2M / reverse FK → 2nd query
+Movie.objects.prefetch_related('actors')</code></pre>
+      <p style="font-size:0.8rem;margin:0">Use when looping over related objects to avoid one query per row.</p>
+    </div>
+
+    <div class="ref-section">
+      <h3>QuerySets are lazy</h3>
+<pre><code>qs = Movie.objects.filter(...)  # no DB hit
+list(qs)        # executes now
+qs[0]           # executes now
+qs.exists()     # executes now
+# Chainable before evaluation:
+qs.filter(...).order_by(...)[:10]</code></pre>
+    </div>
+
+  </div>
+
+  <!-- ── Advanced queries ── -->
+  <h2>Advanced Queries — <a href="../lessons/0003-models-and-orm.html#advanced">Lesson 03 §5–6</a></h2>
+  <div class="two-col">
+
+    <div class="ref-section">
+      <h3>Multiple filter() — the JOIN trap</h3>
+<pre><code># Single filter → both conditions on SAME related row
+Movie.objects.filter(
+    actors__name='Tom', actors__age__gt=30)
+
+# Chained filters → independent JOINs
+# (different actors can satisfy each)
+Movie.objects.filter(actors__name='Tom')\
+             .filter(actors__age__gt=30)
+
+# Safe to chain on the model's own fields:
+Movie.objects.filter(release_year=2010)\
+             .filter(rating__gte=8.0)</code></pre>
+    </div>
+
+    <div class="ref-section">
+      <h3>Multi-field order_by + NULLs</h3>
+<pre><code># Primary sort, then tie-breaker
+Movie.objects.order_by('-rating', 'title')
+
+# NULL handling (portable)
+from django.db.models import F
+Movie.objects.order_by(F('budget').asc(nulls_last=True))
+Movie.objects.order_by(F('rating').desc(nulls_first=True))
+
+# Clear inherited Meta ordering
+Movie.objects.filter(...).order_by()</code></pre>
+    </div>
+
+    <div class="ref-section">
+      <h3>F() — column references &amp; arithmetic</h3>
+<pre><code>from django.db.models import F
+
+# Compare two columns
+Movie.objects.filter(views__gt=F('budget'))
+
+# Atomic increment (no race condition)
+Movie.objects.filter(id=1).update(
+    views=F('views') + 1)
+
+# Computed annotation
+from django.db.models import ExpressionWrapper, BigIntegerField
+Movie.objects.annotate(
+    profit=ExpressionWrapper(
+        F('revenue') - F('budget'),
+        output_field=BigIntegerField()))</code></pre>
+    </div>
+
+    <div class="ref-section">
+      <h3>values() / values_list() + GROUP BY</h3>
+<pre><code># List of dicts (projection)
+Movie.objects.values('title', 'rating')
+
+# Flat list of a single field
+ids = Movie.objects.values_list('id', flat=True)
+
+# GROUP BY: values() before annotate()
+from django.db.models import Count, Avg
+Movie.objects.values('release_year')\
+             .annotate(count=Count('id'))\
+             .order_by('release_year')
+
+Movie.objects.values('director__name')\
+             .annotate(avg=Avg('rating'))</code></pre>
+    </div>
+
+    <div class="ref-section">
+      <h3>annotate() + filter (HAVING)</h3>
+<pre><code>from django.db.models import Count, Avg, Q
+
+# Per-row count; filter on it → HAVING clause
+Director.objects.annotate(
+    n=Count('movies')
+).filter(n__gte=3).order_by('-n')
+
+# Conditional count (only good movies)
+Director.objects.annotate(
+    good=Count('movies',
+        filter=Q(movies__rating__gte=8)))</code></pre>
+    </div>
+
+    <div class="ref-section">
+      <h3>only() / defer()</h3>
+<pre><code># Load ONLY these columns (others trigger extra query)
+Movie.objects.only('title', 'rating')
+
+# Load everything EXCEPT these columns
+Movie.objects.defer('synopsis')
+
+# Safe pattern: only() fields you actually use
+for m in Movie.objects.only('title'):
+    print(m.title)   # no extra query
+    # m.release_year → extra query!</code></pre>
+    </div>
+
+    <div class="ref-section">
+      <h3>distinct()</h3>
+<pre><code># M2M filter can return duplicate parent rows
+# → distinct() adds SELECT DISTINCT
+Movie.objects.filter(
+    actors__name__startswith='Tom'
+).distinct()
+
+# Also useful after prefetch + annotation
+Director.objects.filter(
+    movies__rating__gt=8
+).distinct()</code></pre>
+    </div>
+
+    <div class="ref-section">
+      <h3>get_or_create / update_or_create</h3>
+<pre><code># Returns (object, was_created: bool)
+movie, created = Movie.objects.get_or_create(
+    title='Inception',           # lookup (WHERE)
+    defaults={'release_year': 2010, 'rating': 8.8})
+
+# Upsert — defaults applied on create AND update
+movie, created = Movie.objects.update_or_create(
+    title='Inception',
+    defaults={'rating': 9.0})</code></pre>
+    </div>
+
+    <div class="ref-section">
+      <h3>bulk_create / bulk_update</h3>
+<pre><code># One INSERT for all rows (skips signals!)
+Movie.objects.bulk_create([
+    Movie(title='Dune', release_year=2021),
+    Movie(title='Dune 2', release_year=2024),
+], batch_size=500, ignore_conflicts=True)
+
+# One UPDATE for all rows (name changed fields)
+for m in movies: m.rating += 0.1
+Movie.objects.bulk_update(movies, ['rating'])</code></pre>
+    </div>
+
+    <div class="ref-section">
+      <h3>Subquery / OuterRef / Exists</h3>
+<pre><code>from django.db.models import OuterRef, Subquery, Exists
+
+# Annotate each Director with their latest movie title
+latest = Movie.objects.filter(
+    director=OuterRef('pk')
+).order_by('-release_year').values('title')[:1]
+
+Director.objects.annotate(latest_title=Subquery(latest))
+
+# Efficient membership filter
+has_hit = Movie.objects.filter(
+    director=OuterRef('pk'), rating__gt=9)
+Director.objects.filter(Exists(has_hit))</code></pre>
+    </div>
+
+  </div>
+
+  <footer class="lesson-footer">
+    <div class="lesson-nav">
+      <a href="../lessons/0003-models-and-orm.html">← Module 3: Models &amp; ORM</a>
+    </div>
+    <div class="lesson-nav">
+      <a href="../lessons/0003-models-and-orm.html#advanced">Lesson 03 §5: Advanced ORM →</a>
+      &nbsp;|&nbsp;
+      <a href="django-cheatsheet.html">Django Cheatsheet →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>
