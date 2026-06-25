@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <title>Lesson 02 — Django Project Structure</title>
-  <link rel="stylesheet" href="../assets/styles.css?v=1" />
+  <link rel="stylesheet" href="../assets/styles.css?v=2" />
 </head>
 <body>
 <div class="lesson-wrap">
@@ -69,21 +69,86 @@
   </div>
 
   <div class="filetree">
-<span class="dir">imdb_project/</span>                    <span class="cmt"># PROJECT ROOT (outer folder)</span>
-├── <span class="file">manage.py</span>                    <span class="cmt"># command-line entry point</span>
-├── <span class="dir">imdb_project/</span>                <span class="cmt"># CONFIG PACKAGE (inner folder)</span>
-│   ├── <span class="file">settings.py</span>              <span class="cmt"># global config: apps, DB, middleware</span>
-│   ├── <span class="file">urls.py</span>                  <span class="cmt"># root URL router</span>
-│   ├── <span class="file">wsgi.py</span>                  <span class="cmt"># WSGI server entry point</span>
-│   └── <span class="file">asgi.py</span>                  <span class="cmt"># ASGI server entry point</span>
-└── <span class="dir">movies/</span>                      <span class="cmt"># APP (feature module)</span>
-    ├── <span class="file">models.py</span>                <span class="cmt"># data models / ORM tables</span>
-    ├── <span class="file">views.py</span>                 <span class="cmt"># request handling logic</span>
-    ├── <span class="file">urls.py</span>                  <span class="cmt"># app-level routes</span>
-    ├── <span class="file">admin.py</span>                 <span class="cmt"># admin registration</span>
-    ├── <span class="file">apps.py</span>                  <span class="cmt"># app metadata</span>
-    ├── <span class="dir">migrations/</span>              <span class="cmt"># schema history</span>
-    └── <span class="file">tests.py</span>                 <span class="cmt"># tests</span>
+    <span class="ft-section">project root</span>
+    <div class="ft-row">
+      <span class="ft-path"><span class="dir">imdb_project/</span></span>
+      <span class="ft-dots"></span>
+      <span class="ft-desc">project root folder</span>
+    </div>
+    <div class="ft-row">
+      <span class="ft-path">├── <span class="file">manage.py</span></span>
+      <span class="ft-dots"></span>
+      <span class="ft-desc">CLI entry point — run, migrate, shell</span>
+    </div>
+
+    <span class="ft-section">config package (same name as project)</span>
+    <div class="ft-row">
+      <span class="ft-path">├── <span class="dir">imdb_project/</span></span>
+      <span class="ft-dots"></span>
+      <span class="ft-desc">Django config package</span>
+    </div>
+    <div class="ft-row">
+      <span class="ft-path">│   ├── <span class="file">settings.py</span></span>
+      <span class="ft-dots"></span>
+      <span class="ft-desc">apps, database, middleware, secret key</span>
+    </div>
+    <div class="ft-row">
+      <span class="ft-path">│   ├── <span class="file">urls.py</span></span>
+      <span class="ft-dots"></span>
+      <span class="ft-desc">root URL router — delegates to apps</span>
+    </div>
+    <div class="ft-row">
+      <span class="ft-path">│   ├── <span class="file">wsgi.py</span></span>
+      <span class="ft-dots"></span>
+      <span class="ft-desc">WSGI server entry point</span>
+    </div>
+    <div class="ft-row">
+      <span class="ft-path">│   └── <span class="file">asgi.py</span></span>
+      <span class="ft-dots"></span>
+      <span class="ft-desc">ASGI server entry point (async)</span>
+    </div>
+
+    <span class="ft-section">app — one per feature module</span>
+    <div class="ft-row">
+      <span class="ft-path">└── <span class="dir">movies/</span></span>
+      <span class="ft-dots"></span>
+      <span class="ft-desc">the "movies" feature app</span>
+    </div>
+    <div class="ft-row">
+      <span class="ft-path">&nbsp;&nbsp;&nbsp;&nbsp;├── <span class="file">models.py</span></span>
+      <span class="ft-dots"></span>
+      <span class="ft-desc">database tables as Python classes</span>
+    </div>
+    <div class="ft-row">
+      <span class="ft-path">&nbsp;&nbsp;&nbsp;&nbsp;├── <span class="file">views.py</span></span>
+      <span class="ft-dots"></span>
+      <span class="ft-desc">request → response logic</span>
+    </div>
+    <div class="ft-row">
+      <span class="ft-path">&nbsp;&nbsp;&nbsp;&nbsp;├── <span class="file">urls.py</span></span>
+      <span class="ft-dots"></span>
+      <span class="ft-desc">app-level URL routes</span>
+    </div>
+    <div class="ft-row">
+      <span class="ft-path">&nbsp;&nbsp;&nbsp;&nbsp;├── <span class="file">admin.py</span></span>
+      <span class="ft-dots"></span>
+      <span class="ft-desc">register models in the admin panel</span>
+    </div>
+    <div class="ft-row">
+      <span class="ft-path">&nbsp;&nbsp;&nbsp;&nbsp;├── <span class="file">apps.py</span></span>
+      <span class="ft-dots"></span>
+      <span class="ft-desc">app metadata &amp; configuration</span>
+    </div>
+    <div class="ft-row">
+      <span class="ft-path">&nbsp;&nbsp;&nbsp;&nbsp;├── <span class="dir">migrations/</span></span>
+      <span class="ft-dots"></span>
+      <span class="ft-desc">versioned schema change history</span>
+    </div>
+    <div class="ft-row">
+      <span class="ft-path">&nbsp;&nbsp;&nbsp;&nbsp;└── <span class="file">tests.py</span></span>
+      <span class="ft-dots"></span>
+      <span class="ft-desc">unit &amp; integration tests</span>
+    </div>
   </div>
 
   <h3>Path → purpose (quick map)</h3>
