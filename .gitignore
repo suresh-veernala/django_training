@@ -1,4 +1,7 @@
 .agents
-.content_preparation_references
 .specstory
 .idea
+env*
+.venv
+venv
+.cursorindexingignore

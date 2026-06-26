@@ -60,12 +60,12 @@
   <table>
     <thead><tr><th>Duration</th><th>Block</th><th>Reinforces</th></tr></thead>
     <tbody>
-      <tr><td>10 min</td><td><a href="#b1">Environment Setup</a></td><td>Module 2</td></tr>
-      <tr><td>40 min</td><td><a href="#b2">Django Tutorial – Part 1</a></td><td>Modules 1–2</td></tr>
-      <tr><td>1 hr 30 min</td><td><a href="#b3">IMDb Assignments</a></td><td>Module 3</td></tr>
-      <tr><td>50 min</td><td><a href="#b4">Build REST APIs</a></td><td>Module 4</td></tr>
-      <tr><td>30 min</td><td><a href="#b5">OpenAPI Specification</a></td><td>Module 5</td></tr>
-      <tr><td>—</td><td><a href="#b6">Advanced IMDb Assignments</a></td><td>Module 3 (deep)</td></tr>
+      <tr><td>20 min</td><td><a href="#b1">Environment Setup</a></td><td>Module 2</td></tr>
+      <tr><td>35 min</td><td><a href="#b2">Django Tutorial – Part 1</a></td><td>Modules 1–2</td></tr>
+      <tr><td>1 hr 15 min</td><td><a href="#b3">IMDb Assignment 1</a></td><td>Module 3</td></tr>
+      <tr><td>40 min</td><td><a href="#b4">IMDb Query Practice</a></td><td>Module 3 (deeper)</td></tr>
+      <tr><td>40 min</td><td><a href="#b5">Build REST APIs</a></td><td>Module 4</td></tr>
+      <tr><td>30 min</td><td><a href="#b6">OpenAPI Specification</a></td><td>Module 5</td></tr>
     </tbody>
   </table>
 
@@ -73,35 +73,44 @@
   <h2>Part 3 — What To Do In Each Block</h2>
 
   <!-- Block 1 -->
-  <h3 id="b1">10 min · Environment Setup</h3>
-  <p>Goal: a running Django dev server before anything else.</p>
+  <h3 id="b1">20 min · Environment Setup</h3>
+  <p>Goal: a clean Python environment with only the basic packages needed for this training.</p>
   <ol class="steps">
-    <li>Confirm Python: <code>python3 --version</code></li>
-    <li>Create a virtual environment: <code>python3 -m venv venv</code></li>
-    <li>Activate it: <code>source venv/bin/activate</code> (macOS/Linux)</li>
-    <li>Install dependencies: <code>pip install -r requirements.txt</code></li>
+    <li>Create a practice folder: <code>mkdir imdb &amp;&amp; cd imdb</code></li>
+    <li>Confirm Python is available: <code>python3 --version</code></li>
+    <li>Create a virtual environment: <code>python3 -m venv .venv</code></li>
+    <li>Activate it: <code>source .venv/bin/activate</code> (macOS/Linux)</li>
+    <li>Upgrade the installer: <code>python -m pip install --upgrade pip</code></li>
+    <li>Install the basic packages: <code>python -m pip install "Django&gt;=5.1,&lt;5.2" djangorestframework</code></li>
+    <li>Save the package list: <code>python -m pip freeze &gt; requirements.txt</code></li>
     <li>Verify Django: <code>python -m django --version</code></li>
-    <li>Run the server: <code>python3 manage.py runserver</code> and open the local URL</li>
   </ol>
-  <div class="callout warn">
-    <div class="callout-title">If you hit a host error</div>
-    Add <code>"*"</code> to <code>ALLOWED_HOSTS</code> in <code>settings.py</code> for local development, and always run <code>manage.py</code> commands from the folder that contains it.
+  <div class="callout key">
+    <div class="callout-title">Keep the install small</div>
+    Start with <code>Django</code> and <code>djangorestframework</code>. Do not add database drivers, Swagger generators, or deployment packages until a task actually needs them.
   </div>
 
   <!-- Block 2 -->
-  <h3 id="b2">40 min · Django Tutorial – Part 1</h3>
-  <p>Goal: build a project + app end to end and serve your first response. Focus areas:</p>
-  <ul class="steps">
-    <li><strong>Create a project</strong> — <code>django-admin startproject</code> (see <a href="0002-django-project-structure.html">Module 2</a>).</li>
-    <li><strong>Create an app</strong> — <code>python3 manage.py startapp</code>, then register it in <code>INSTALLED_APPS</code>.</li>
-    <li><strong>URL routing</strong> — wire the root <code>urls.py</code> to the app's <code>urls.py</code> via <code>include()</code>.</li>
-    <li><strong>Views</strong> — write a view that returns a response.</li>
-    <li><strong>Run the application</strong> — confirm the route works in the browser.</li>
-  </ul>
-  <p>Primary source: <a href="https://docs.djangoproject.com/en/3.0/intro/tutorial01/" target="_blank">Writing your first Django app, Part 1</a>.</p>
+  <h3 id="b2">35 min · Django Tutorial – Part 1</h3>
+  <p>Goal: create the project before running any <code>manage.py</code> commands.</p>
+  <ol class="steps">
+    <li><strong>Create the project</strong> — <code>django-admin startproject imdb .</code> (the dot keeps <code>manage.py</code> in the current folder).</li>
+    <li><strong>Check the project</strong> — confirm you now have <code>manage.py</code> and an <code>imdb/</code> folder.</li>
+    <li><strong>Create the app</strong> — <code>python manage.py startapp movies</code>.</li>
+    <li><strong>Register apps</strong> — add <code>rest_framework</code> and <code>movies</code> to <code>INSTALLED_APPS</code>.</li>
+    <li><strong>Write one view</strong> — return a simple response from <code>movies/views.py</code>.</li>
+    <li><strong>Wire URLs</strong> — create <code>movies/urls.py</code>, then include it from <code>imdb/urls.py</code>.</li>
+    <li><strong>Initialize the database</strong> — <code>python manage.py migrate</code>.</li>
+    <li><strong>Run the server</strong> — <code>python manage.py runserver</code> and open the local URL.</li>
+  </ol>
+  <p>Primary source: <a href="https://docs.djangoproject.com/en/5.1/intro/tutorial01/" target="_blank">Writing your first Django app, Part 1</a>.</p>
+  <div class="callout warn">
+    <div class="callout-title">If a command fails</div>
+    Check two things first: the virtual environment is active, and you are in the folder that contains <code>manage.py</code>.
+  </div>
 
   <!-- Block 3 -->
-  <h3 id="b3">1 hr 30 min · IMDb Assignments (core)</h3>
+  <h3 id="b3">1 hr 15 min · IMDb Assignment 1</h3>
   <p>Goal: model the IMDb domain and perform CRUD + basic querying with the ORM. Work in order:</p>
   <ol class="steps">
     <li><strong>Design the models</strong> — Movie, Actor, Director, Cast, Rating. See the <a href="../reference/internal-django-course-pack.html#data-model">IMDb Data Model</a>.</li>
@@ -115,7 +124,20 @@
   </div>
 
   <!-- Block 4 -->
-  <h3 id="b4">50 min · Build REST APIs</h3>
+  <h3 id="b4">40 min · IMDb Query Practice</h3>
+  <p>Goal: strengthen ORM fluency before using the queries inside API views. Continue in this order:</p>
+  <ol class="steps">
+    <li><strong>IMDb Contd-1</strong> — filtering, field lookups, date queries, and complex conditions. <a href="../reference/internal-django-course-pack.html#a2">Tasks →</a></li>
+    <li><strong>Pick 2 aggregation tasks</strong> from IMDb Contd-2 if time allows. <a href="../reference/internal-django-course-pack.html#a3">Tasks →</a></li>
+    <li><strong>Inspect one query</strong> — print or log the generated SQL for a query you wrote.</li>
+  </ol>
+  <div class="callout info">
+    <div class="callout-title">Explain with SQL</div>
+    When a query feels confusing, inspect the generated SQL and explain it in plain English before moving on.
+  </div>
+
+  <!-- Block 5 -->
+  <h3 id="b5">40 min · Build REST APIs</h3>
   <p>Goal: connect your IMDb models to HTTP endpoints that return JSON (see <a href="0004-building-apis.html">Module 4</a>). Implement 2–3 endpoints:</p>
   <ol class="steps">
     <li><span class="method get">GET</span> <code>/movies/&lt;movie_id&gt;/</code> — return complete movie details.</li>
@@ -124,8 +146,8 @@
   </ol>
   <p>For each: write the URL, the view, query with the ORM, and return a JSON response (plain Django or DRF — both are valid, see Module 4).</p>
 
-  <!-- Block 5 -->
-  <h3 id="b5">30 min · OpenAPI Specification</h3>
+  <!-- Block 6 -->
+  <h3 id="b6">30 min · OpenAPI Specification</h3>
   <p>Goal: document the APIs you just built and view them in Swagger UI (see <a href="0005-openapi-swagger.html">Module 5</a>).</p>
   <ol class="steps">
     <li>Describe the document basics: <code>info</code>, <code>host</code>/<code>basePath</code>, <code>schemes</code>.</li>
@@ -134,18 +156,12 @@
     <li>Render the spec in <a href="https://editor.swagger.io/" target="_blank">Swagger UI</a> and verify the examples.</li>
   </ol>
 
-  <!-- Block 6 -->
-  <h3 id="b6">Advanced IMDb Assignments</h3>
-  <p>Goal: deepen ORM skill with filtering, aggregation, and optimization. Continue the IMDb track:</p>
+  <h3>Stretch After The 4 Hours</h3>
+  <p>Goal: deepen ORM skill with aggregation and optimization after the main hands-on path is complete:</p>
   <ul class="steps">
-    <li><strong>IMDb Contd-1</strong> — field lookups, date filters, complex conditions. <a href="../reference/internal-django-course-pack.html#a2">Tasks →</a></li>
     <li><strong>IMDb Contd-2</strong> — aggregation &amp; annotation (counts per movie/actor/role). <a href="../reference/internal-django-course-pack.html#a3">Tasks →</a></li>
     <li><strong>IMDb Contd-3</strong> — efficient population, bulk ops, related-object queries. <a href="../reference/internal-django-course-pack.html#a4">Tasks →</a></li>
   </ul>
-  <div class="callout info">
-    <div class="callout-title">Explain with SQL</div>
-    For optimization tasks, inspect the generated SQL and reason about "order of N" — why <code>select_related</code> / <code>prefetch_related</code> reduce query counts.
-  </div>
 
   <!-- ════════ PART 4: OUTCOME + REFERENCES ════════ -->
   <h2>Part 4 — Expected Outcome</h2>
@@ -153,9 +169,10 @@
   <ul>
     <li>✅ Completed Django Tutorial – Part 1</li>
     <li>✅ Modelled the IMDb schema and completed Assignment 1</li>
+    <li>✅ Practiced IMDb filtering/lookups before using them in views</li>
     <li>✅ Built 2–3 REST APIs on the IMDb models</li>
     <li>✅ Written an OpenAPI spec and rendered it in Swagger UI</li>
-    <li>✅ Started the advanced IMDb assignments (Contd-1/2/3)</li>
+    <li>✅ Know exactly where to continue: IMDb Contd-2/3</li>
   </ul>
 
   <h2>Assignments Reference</h2>
