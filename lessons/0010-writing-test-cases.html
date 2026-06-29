@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Lesson 10 — Testing with pytest</title>
+  <link rel="stylesheet" href="../assets/styles.css?v=2" />
+  <style>
+    /* ── Three-column case grid ── */
+    .case-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin: 1rem 0 1.5rem;
+    }
+    .case-card {
+      border-radius: var(--radius);
+      padding: 0.9rem 1rem;
+      border-left: 4px solid;
+      font-size: 0.9rem;
+    }
+    .case-card h4 {
+      font-family: var(--font-sans);
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+    .case-card p { margin: 0; color: var(--muted); font-size: 0.88rem; }
+    .case-card.normal { background: #f0fdf4; border-color: #16a34a; }
+    .case-card.normal h4 { color: #15803d; }
+    .case-card.edge   { background: #fefce8; border-color: #ca8a04; }
+    .case-card.edge h4 { color: #92400e; }
+    .case-card.error  { background: #fef2f2; border-color: #dc2626; }
+    .case-card.error h4 { color: #b91c1c; }
+
+    /* ── Case badge list ── */
+    .case-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.45rem; }
+    .case-list li {
+      display: flex; align-items: center; gap: 0.6rem;
+      font-size: 0.93rem; padding: 0.45rem 0.8rem;
+      border-radius: var(--radius); background: var(--surface);
+      border: 1px solid var(--border);
+    }
+    .badge {
+      font-size: 0.68rem; font-weight: 700; padding: 2px 7px;
+      border-radius: 20px; flex-shrink: 0;
+      font-family: var(--font-sans);
+    }
+    .badge.normal { background: #dcfce7; color: #15803d; }
+    .badge.edge   { background: #fef9c3; color: #854d0e; }
+    .badge.error  { background: #fee2e2; color: #b91c1c; }
+
+    /* ── AAA steps ── */
+    .aaa-row {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 1rem; margin: 1rem 0 1.5rem;
+    }
+    .aaa-step {
+      border-radius: var(--radius);
+      padding: 1rem 1.1rem;
+      border-top: 3px solid;
+    }
+    .aaa-step .step-num {
+      font-family: var(--font-sans); font-size: 0.7rem;
+      font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+      margin-bottom: 0.3rem;
+    }
+    .aaa-step h4 { font-family: var(--font-sans); font-size: 1.05rem; font-weight: 700; margin-bottom: 0.35rem; }
+    .aaa-step p  { font-size: 0.88rem; color: var(--muted); margin: 0; }
+    .aaa-step.arrange { background: #f0fdf4; border-color: #16a34a; }
+    .aaa-step.arrange .step-num, .aaa-step.arrange h4 { color: #15803d; }
+    .aaa-step.act     { background: #eff6ff; border-color: #2563eb; }
+    .aaa-step.act .step-num, .aaa-step.act h4 { color: #1d4ed8; }
+    .aaa-step.assert  { background: #fdf4ff; border-color: #9333ea; }
+    .aaa-step.assert .step-num, .aaa-step.assert h4 { color: #7e22ce; }
+
+    /* ── Side-by-side compare ── */
+    .compare {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 1rem; margin: 1rem 0 1.5rem;
+    }
+    .compare-label {
+      font-family: var(--font-sans); font-size: 0.72rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      padding: 0.3rem 0.7rem; border-radius: 4px 4px 0 0;
+      display: inline-block;
+    }
+    .compare-label.bad  { background: #fee2e2; color: #b91c1c; }
+    .compare-label.good { background: #dcfce7; color: #15803d; }
+    .compare-col pre { margin-top: 0; border-radius: 0 var(--radius) var(--radius) var(--radius); }
+
+    /* ── Section divider ── */
+    .part-header {
+      display: flex; align-items: center; gap: 0.9rem;
+      margin: 3rem 0 1.5rem; padding-top: 1rem;
+      border-top: 2px solid var(--border);
+    }
+    .part-badge {
+      background: var(--accent); color: #fff;
+      font-family: var(--font-sans); font-size: 0.72rem; font-weight: 700;
+      padding: 0.3rem 0.8rem; border-radius: 99px;
+      letter-spacing: 0.05em; white-space: nowrap;
+    }
+    .part-header h2 { margin: 0; border: none; padding: 0; font-size: 1.35rem; }
+
+    /* ── Table of contents ── */
+    .toc {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1rem 1.3rem;
+      margin: 1.5rem 0;
+    }
+    .toc p { margin: 0 0 0.5rem; font-family: var(--font-sans); font-size: 0.78rem;
+      font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+    .toc ol { margin: 0; padding-left: 1.2rem; }
+    .toc li { margin: 0.2rem 0; font-size: 0.93rem; font-family: var(--font-sans); }
+
+    @media (max-width: 640px) {
+      .case-grid, .aaa-row, .compare { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="lesson-wrap">
+
+<a href="../index.html" class="home-btn">← Home</a>
+
+<header class="lesson-header">
+  <div class="lesson-meta">
+    <span class="lesson-number badge">Lesson 10</span>
+    <span class="lesson-tag">Testing Track</span>
+  </div>
+  <h1 class="lesson-title">Testing with pytest</h1>
+  <p class="lesson-subtitle">
+    Write clear test cases, reuse setup with fixtures, run one test across
+    many inputs, and generate model data with Factory Boy — all in one lesson.
+  </p>
+  <div class="callout key" style="margin-top: 1rem;">
+    <div class="callout-title">After this lesson you will be able to</div>
+    <ul style="margin: 0; padding-left: 1.2rem;">
+      <li>Identify normal, edge, and error cases for any function</li>
+      <li>Structure every test with Arrange–Act–Assert and name it clearly</li>
+      <li>Assert exceptions with <code>pytest.raises</code></li>
+      <li>Configure pytest for Django with <code>pytest.ini</code></li>
+      <li>Generate Django model data in one line with <code>DjangoModelFactory</code></li>
+      <li>Extract shared setup into <code>@pytest.fixture</code> and <code>conftest.py</code></li>
+      <li>Run one test across many inputs with <code>@pytest.mark.parametrize</code></li>
+    </ul>
+  </div>
+</header>
+
+  <nav class="course-map">
+    <div class="course-map-title">Course Map — Django Backend Training</div>
+    <ol>
+      <li><a href="0001-introduction-to-django.html">Introduction to Django</a> <span>15 min</span></li>
+      <li><a href="0002-django-project-structure.html">Django Project Structure</a> <span>10 min</span></li>
+      <li><a href="0003-models-and-orm.html">Models &amp; ORM</a> <span>40 min</span></li>
+      <li><a href="0004-building-apis.html">Building APIs</a> <span>35 min</span></li>
+      <li><a href="0005-openapi-swagger.html">OpenAPI / Swagger</a> <span>15 min</span></li>
+      <li><a href="0006-wrap-up-and-learning-path.html">Wrap Up &amp; Learning Path</a> <span>5 min</span></li>
+      <li><a href="0007-clean-architecture.html">Clean Architecture</a> <span>20 min</span></li>
+      <li><a href="0008-backend-code-guide.html">Backend Code Guide</a> <span>25 min</span></li>
+      <li><a href="0009-dsu.html">DSU — Django Swagger Utils</a> <span>25 min</span></li>
+      <li class="current"><a href="0010-writing-test-cases.html">Testing with pytest</a> <span>40 min</span></li>
+      <li><a href="0011-mocking.html">Mocking — Test in Isolation</a> <span>30 min</span></li>
+    </ol>
+  </nav>
+
+<main class="lesson-content">
+
+<div class="toc">
+  <p>In this lesson</p>
+  <ol>
+    <li><a href="#why">Why write tests?</a></li>
+    <li><a href="#basics">pytest basics &amp; naming rules</a></li>
+    <li><a href="#cases">Step 1 — List your cases</a></li>
+    <li><a href="#aaa">Step 2 — Write each test (AAA)</a></li>
+    <li><a href="#exceptions">Asserting exceptions</a></li>
+    <li><a href="#django">Django setup</a></li>
+    <li><a href="#factoryboy">Part B — Factory Boy: test data without noise</a></li>
+    <li><a href="#fixtures">Part C — Fixtures: reuse your Arrange code</a></li>
+    <li><a href="#parametrize">Part D — Parametrize: one test, many inputs</a></li>
+    <li><a href="#reference">Quick reference</a></li>
+  </ol>
+</div>
+
+
+<!-- ══════════════════════════════════════════════
+     SECTION 1 — WHY TESTS?
+     ══════════════════════════════════════════════ -->
+<section id="why">
+  <h2>Why write tests?</h2>
+
+  <p>
+    In the org's codebase you build Clean Architecture interactors, presenters, and adapters.
+    Tests give you three things that matter on a real team:
+  </p>
+
+  <ol>
+    <li><strong>Confidence your code works.</strong> "It works on my machine" is not a reliable signal — a test suite is.</li>
+    <li><strong>Safety when refactoring.</strong> Reorganise an interactor and immediately know if you broke a contract.</li>
+    <li><strong>Documentation through examples.</strong> A well-named test is a one-line spec of what the code <em>should</em> do.</li>
+  </ol>
+
+  <div class="callout">
+    <div class="callout-title">Note on terminology</div>
+    "Testing" in this course always means <em>automated</em> testing — code the machine runs without human input.
+    It does not prove your code is correct under all conditions; it reports whether the conditions you
+    thought of are handled correctly. Source: NxtWave Unit Tests guide
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+     SECTION 2 — PYTEST BASICS
+     ══════════════════════════════════════════════ -->
+<section id="basics">
+  <h2>pytest basics &amp; naming rules</h2>
+
+  <p>Install pytest and the Django plugin (already present in most org projects):</p>
+
+<pre><code>pip install pytest pytest-django</code></pre>
+
+  <p>pytest discovers tests by following three naming rules. Break any one of them and your test is silently skipped.</p>
+
+  <ol>
+    <li><strong>File:</strong> name starts or ends with <code>test</code> — e.g. <code>test_movies.py</code></li>
+    <li><strong>Class:</strong> name starts with <code>Test</code> and has no <code>__init__</code> — e.g. <code>class TestGetMovie</code></li>
+    <li><strong>Function:</strong> name starts with <code>test_</code> — e.g. <code>def test_returns_movie_details_for_valid_id()</code></li>
+  </ol>
+
+  <div class="callout warn">
+    <div class="callout-title">Silent failure trap</div>
+    Writing <code>def check_prime()</code> instead of <code>def test_check_prime()</code> gives you
+    <strong>0 tests collected</strong> with no error message. pytest just skips it.
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+     SECTION 3 — LIST CASES
+     ══════════════════════════════════════════════ -->
+<section id="cases">
+  <h2>Step 1 — List your cases before writing a single line</h2>
+
+  <p>
+    Before touching code, make a list of <em>every scenario</em> the function must handle.
+    Group them into three kinds:
+  </p>
+
+  <div class="case-grid">
+    <div class="case-card normal">
+      <h4>Normal cases</h4>
+      <p>The happy path — inputs that should work and return a value.</p>
+    </div>
+    <div class="case-card edge">
+      <h4>Edge cases</h4>
+      <p>Boundary values — zero, empty lists, None, floats where int is expected.</p>
+    </div>
+    <div class="case-card error">
+      <h4>Error cases</h4>
+      <p>Inputs that should raise an exception or trigger an error path.</p>
+    </div>
+  </div>
+
+  <h3>Example — <code>get_movie_rating(movie_id)</code></h3>
+
+  <ul class="case-list">
+    <li><span class="badge normal">normal</span> Returns rating for a valid movie ID that exists in the DB</li>
+    <li><span class="badge normal">normal</span> Returns a float value (not an integer)</li>
+    <li><span class="badge edge">edge</span> Returns 0 when the movie has no ratings yet</li>
+    <li><span class="badge edge">edge</span> Handles a movie with exactly one rating</li>
+    <li><span class="badge error">error</span> Raises <code>MovieDoesNotExistException</code> for an invalid ID</li>
+    <li><span class="badge error">error</span> Raises an exception when <code>movie_id</code> is <code>None</code></li>
+  </ul>
+
+  <div class="callout">
+    <div class="callout-title">The org rule</div>
+    Write this list first — as a comment block at the top of your test file.
+    It forces you to think about the contract before touching any code.
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+     SECTION 4 — AAA PATTERN
+     ══════════════════════════════════════════════ -->
+<section id="aaa">
+  <h2>Step 2 — Write each test: Arrange · Act · Assert</h2>
+
+  <p>
+    Every test in the org's codebase follows this three-part structure. Follow it even
+    when it feels mechanical — it makes failures much easier to diagnose.
+  </p>
+
+  <div class="aaa-row">
+    <div class="aaa-step arrange">
+      <div class="step-num">Step 1</div>
+      <h4>Arrange</h4>
+      <p>Create all objects, data, and mocks needed <em>before</em> calling the function.</p>
+    </div>
+    <div class="aaa-step act">
+      <div class="step-num">Step 2</div>
+      <h4>Act</h4>
+      <p>Call the function under test. Store the return value in a variable.</p>
+    </div>
+    <div class="aaa-step assert">
+      <div class="step-num">Step 3</div>
+      <h4>Assert</h4>
+      <p>Verify the result is what you expected using <code>assert</code>.</p>
+    </div>
+  </div>
+
+  <h3>A complete example</h3>
+
+<pre><code><span style="color:#8b949e"># imdb/tests/test_get_movie.py</span>
+<span style="color:#ff7b72">import</span> pytest
+<span style="color:#ff7b72">from</span> imdb.interactors.get_movie_interactor <span style="color:#ff7b72">import</span> GetMovieInteractor
+<span style="color:#ff7b72">from</span> imdb.exceptions <span style="color:#ff7b72">import</span> MovieDoesNotExistException
+
+
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_get_movie_with_valid_id_returns_movie_dto</span>():
+    <span style="color:#8b949e"># Arrange</span>
+    movie_id = 1
+    interactor = GetMovieInteractor(movie_id=movie_id)
+
+    <span style="color:#8b949e"># Act</span>
+    result = interactor.execute()
+
+    <span style="color:#8b949e"># Assert</span>
+    assert result.movie_id == movie_id</code></pre>
+
+  <h3>Naming — the three-part formula</h3>
+
+  <p>A good test name reads like a sentence: <strong>method · scenario · expected result</strong>.</p>
+
+<pre><code><span style="color:#8b949e"># Bad — says nothing about scenario or outcome</span>
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_movie</span>(): ...
+
+<span style="color:#8b949e"># Good</span>
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_get_movie_with_valid_id_returns_movie_dto</span>(): ...
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_get_movie_with_invalid_id_raises_not_found_exception</span>(): ...
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_create_movie_with_duplicate_title_raises_validation_error</span>(): ...</code></pre>
+
+  <div class="callout info">
+    <div class="callout-title">Tests are documentation</div>
+    When a PR shows 12 passing tests, a reviewer can read the names and understand every
+    scenario the feature handles — without opening the implementation.
+  </div>
+
+  <h3>Common assert patterns</h3>
+
+<pre><code><span style="color:#8b949e"># Equality</span>
+assert dto.movie_id == 42
+
+<span style="color:#8b949e"># Boolean / None</span>
+assert result is True
+assert result is not None
+
+<span style="color:#8b949e"># Length</span>
+assert len(results) == 3
+
+<span style="color:#8b949e"># Membership</span>
+assert movie_id in [dto.movie_id for dto in results]</code></pre>
+
+  <div class="callout">
+    <div class="callout-title">One assert per test (usually)</div>
+    If a test has 5 asserts, the first failure hides the rest. Split into separate functions
+    so every failure is visible. Exception: asserting multiple fields on a single returned object is fine.
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+     SECTION 5 — ASSERTING EXCEPTIONS
+     ══════════════════════════════════════════════ -->
+<section id="exceptions">
+  <h2>Asserting exceptions with <code>pytest.raises</code></h2>
+
+  <p>
+    For error-case tests, never use a bare <code>try/except</code>. Use
+    <code>pytest.raises()</code> — it is a context manager that passes only if the
+    specified exception is raised inside the <code>with</code> block.
+  </p>
+
+<pre><code><span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_get_movie_with_invalid_id_raises_exception</span>():
+    <span style="color:#8b949e"># Arrange</span>
+    INVALID_MOVIE_ID = -999
+    interactor = GetMovieInteractor(movie_id=INVALID_MOVIE_ID)
+
+    <span style="color:#8b949e"># Act &amp; Assert</span>
+    <span style="color:#ff7b72">with</span> pytest.raises(MovieDoesNotExistException):
+        interactor.execute()</code></pre>
+
+  <p>If you also need to check the exception message:</p>
+
+<pre><code><span style="color:#ff7b72">with</span> pytest.raises(MovieDoesNotExistException) <span style="color:#ff7b72">as</span> exc_info:
+    interactor.execute()
+assert str(exc_info.value) == <span style="color:#a5d6ff">"Movie with id -999 does not exist"</span></code></pre>
+
+  <div class="callout warn">
+    <div class="callout-title">Don't use bare try/except in tests</div>
+    <code>try: call() except MyException: assert True</code> will pass even if the wrong
+    exception is raised. <code>pytest.raises</code> checks the exact exception type.
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+     SECTION 6 — DJANGO SETUP
+     ══════════════════════════════════════════════ -->
+<section id="django">
+  <h2>Django setup — <code>pytest.ini</code> and <code>@pytest.mark.django_db</code></h2>
+
+  <p>Create <code>pytest.ini</code> in the project root (next to <code>manage.py</code>):</p>
+
+<pre><code>[pytest]
+python_files = test*.py
+DJANGO_SETTINGS_MODULE = imdb.settings.local</code></pre>
+
+  <p>
+    Any test that reads or writes the database must be decorated with
+    <code>@pytest.mark.django_db</code>:
+  </p>
+
+<pre><code><span style="color:#ff7b72">import</span> pytest
+
+<span style="color:#ffa657">@pytest.mark.django_db</span>
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_get_movie_with_valid_id_returns_movie_dto</span>():
+    <span style="color:#8b949e"># Arrange — creates a real DB row</span>
+    <span style="color:#ff7b72">from</span> imdb.tests.factories <span style="color:#ff7b72">import</span> MovieFactory
+    movie = MovieFactory()
+
+    <span style="color:#8b949e"># Act</span>
+    <span style="color:#ff7b72">from</span> imdb.interactors <span style="color:#ff7b72">import</span> GetMovieInteractor
+    result = GetMovieInteractor(movie_id=movie.id).execute()
+
+    <span style="color:#8b949e"># Assert</span>
+    assert result.movie_id == movie.id</code></pre>
+
+  <div class="callout">
+    <div class="callout-title">Each test gets a clean database</div>
+    pytest-django wraps every test in a transaction and rolls it back after.
+    Tests never pollute each other's state.
+  </div>
+
+  <h3>Running tests</h3>
+
+<pre><code><span style="color:#8b949e"># All tests</span>
+pytest
+
+<span style="color:#8b949e"># Specific file</span>
+pytest imdb/tests/test_get_movie.py
+
+<span style="color:#8b949e"># Specific function</span>
+pytest imdb/tests/test_get_movie.py::test_get_movie_with_valid_id_returns_movie_dto
+
+<span style="color:#8b949e"># Verbose (shows full name per result)</span>
+pytest -v</code></pre>
+
+  <p>Reading the output: a dot = pass, <code>F</code> = fail, <code>E</code> = error during setup.</p>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+     PART B — FACTORY BOY
+     ══════════════════════════════════════════════ -->
+<div class="part-header" id="factoryboy">
+  <span class="part-badge">Part B</span>
+  <h2>Factory Boy — test data without noise</h2>
+</div>
+
+<p>
+  The problem with creating test data manually is that it leaks irrelevant details into your tests.
+  If <code>Movie</code> has 12 required fields but you're testing rating logic,
+  you shouldn't have to specify all 12 every time.
+</p>
+
+<p>
+  <strong>Factory Boy</strong> defines sensible defaults for every model field once,
+  then lets you override only what matters for a given test.
+</p>
+
+<pre><code>pip install factory_boy</code></pre>
+
+<h3>DjangoModelFactory — the base class you always use</h3>
+
+<p>For Django models, always subclass <code>factory.django.DjangoModelFactory</code> — not plain <code>factory.Factory</code>.
+It calls <code>Model.objects.create()</code> and handles DB saving correctly.</p>
+
+<pre><code><span style="color:#8b949e"># imdb/tests/factories/movie_factory.py</span>
+<span style="color:#ff7b72">import</span> factory
+<span style="color:#ff7b72">from</span> factory.django <span style="color:#ff7b72">import</span> DjangoModelFactory
+<span style="color:#ff7b72">from</span> imdb.models <span style="color:#ff7b72">import</span> Movie
+
+<span style="color:#ff7b72">class</span> <span style="color:#79c0ff">MovieFactory</span>(DjangoModelFactory):
+    <span style="color:#ff7b72">class</span> <span style="color:#79c0ff">Meta</span>:
+        model = Movie
+
+    title  = factory.Sequence(<span style="color:#ff7b72">lambda</span> n: <span style="color:#a5d6ff">f"Movie {n}"</span>)   <span style="color:#8b949e"># unique on every call</span>
+    rating = <span style="color:#79c0ff">7.5</span>
+    year   = <span style="color:#79c0ff">2020</span></code></pre>
+
+<pre><code><span style="color:#8b949e"># Using it:</span>
+movie_object = MovieFactory()                       <span style="color:#8b949e"># title="Movie 0", rating=7.5</span>
+movie_object = MovieFactory()                       <span style="color:#8b949e"># title="Movie 1"  (auto-increments)</span>
+
+<span style="color:#8b949e"># Override only what matters for this test:</span>
+movie_object = MovieFactory(rating=<span style="color:#79c0ff">9.2</span>)
+movie_object = MovieFactory(title=<span style="color:#a5d6ff">"Inception"</span>, year=<span style="color:#79c0ff">2010</span>)</code></pre>
+
+<h3>Key factory declarations</h3>
+
+<table>
+  <thead>
+    <tr><th>Declaration</th><th>Purpose</th><th>Example</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>factory.Sequence</code></td>
+      <td>Unique value using auto-counter <code>n</code></td>
+      <td><code>title = factory.Sequence(lambda n: f"Movie {n}")</code></td>
+    </tr>
+    <tr>
+      <td><code>factory.LazyAttribute</code></td>
+      <td>Derive one field from another</td>
+      <td><code>email = factory.LazyAttribute(lambda o: f"{o.username}@example.com")</code></td>
+    </tr>
+    <tr>
+      <td><code>factory.SubFactory</code></td>
+      <td>Auto-create a related FK object</td>
+      <td><code>movie = factory.SubFactory(MovieFactory)</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>SubFactory — FK relationships</h3>
+
+<pre><code><span style="color:#ff7b72">class</span> <span style="color:#79c0ff">RatingFactory</span>(DjangoModelFactory):
+    <span style="color:#ff7b72">class</span> <span style="color:#79c0ff">Meta</span>:
+        model = Rating
+
+    <span style="color:#8b949e"># Creates a Movie automatically — no need to pass movie_id manually</span>
+    movie  = factory.SubFactory(MovieFactory)
+    score  = <span style="color:#79c0ff">8</span>
+    review = factory.Sequence(<span style="color:#ff7b72">lambda</span> n: <span style="color:#a5d6ff">f"Review {n}"</span>)
+
+<span style="color:#8b949e"># Creates a Rating AND its Movie in one call:</span>
+rating_object = RatingFactory()
+
+<span style="color:#8b949e"># Reuse an existing movie:</span>
+rating_object = RatingFactory(movie=existing_movie_object)</code></pre>
+
+<h3>create() vs build() vs create_batch()</h3>
+
+<table>
+  <thead>
+    <tr><th>Method</th><th>Saves to DB?</th><th>When to use</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>MovieFactory()</code> / <code>.create()</code></td><td>Yes</td><td>Tests that need a real DB row (requires <code>@pytest.mark.django_db</code>)</td></tr>
+    <tr><td><code>MovieFactory.build()</code></td><td>No</td><td>Tests that don't touch the DB — much faster</td></tr>
+    <tr><td><code>MovieFactory.create_batch(5)</code></td><td>Yes</td><td>Need multiple objects at once</td></tr>
+  </tbody>
+</table>
+
+
+<!-- ══════════════════════════════════════════════
+     PART C — FIXTURES
+     ══════════════════════════════════════════════ -->
+<div class="part-header" id="fixtures">
+  <span class="part-badge">Part C</span>
+  <h2>Fixtures — reuse your Arrange code</h2>
+</div>
+
+<p>
+  When multiple tests need the <em>same</em> setup, copy-pasting it is fragile.
+  One model field change breaks every test separately.
+  A <strong>fixture</strong> defines that setup once and injects it automatically.
+</p>
+
+<div class="compare">
+  <div class="compare-col">
+    <span class="compare-label bad">Repeated Arrange</span>
+<pre><code><span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_get_movie_title</span>():
+    <span style="color:#8b949e"># duplicated!</span>
+    movie = MovieFactory(title=<span style="color:#a5d6ff">"Inception"</span>)
+    result = GetMovieInteractor(movie.id).execute()
+    assert result.title == <span style="color:#a5d6ff">"Inception"</span>
+
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_get_movie_rating</span>():
+    <span style="color:#8b949e"># duplicated!</span>
+    movie = MovieFactory(title=<span style="color:#a5d6ff">"Inception"</span>)
+    result = GetMovieInteractor(movie.id).execute()
+    assert result.rating == <span style="color:#79c0ff">8.8</span></code></pre>
+  </div>
+  <div class="compare-col">
+    <span class="compare-label good">Fixture</span>
+<pre><code><span style="color:#ff7b72">import</span> pytest
+
+<span style="color:#ffa657">@pytest.fixture</span>
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">inception_movie</span>():
+    <span style="color:#ff7b72">return</span> MovieFactory(title=<span style="color:#a5d6ff">"Inception"</span>, rating=<span style="color:#79c0ff">8.8</span>)
+
+
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_get_movie_title</span>(inception_movie):
+    result = GetMovieInteractor(inception_movie.id).execute()
+    assert result.title == <span style="color:#a5d6ff">"Inception"</span>
+
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_get_movie_rating</span>(inception_movie):
+    result = GetMovieInteractor(inception_movie.id).execute()
+    assert result.rating == <span style="color:#79c0ff">8.8</span></code></pre>
+  </div>
+</div>
+
+<p>
+  pytest sees that <code>inception_movie</code> is a parameter name that matches a fixture.
+  It calls the fixture, gets the return value, and passes it as the argument.
+  A fresh object is created for every test — they never share state.
+</p>
+
+<h3>Shared fixtures — <code>conftest.py</code></h3>
+
+<p>
+  Fixtures defined in the same file are only available in that file.
+  To share a fixture across all tests in an app, put it in <code>conftest.py</code> —
+  pytest discovers it automatically, no import needed.
+</p>
+
+<div class="filetree">
+  <div class="ft-row"><span class="ft-path dir">imdb/tests/</span></div>
+  <div class="ft-row"><span class="ft-path">  ├── <span class="file">conftest.py</span></span><span class="ft-dots"></span><span class="ft-desc">shared fixtures for all test files here</span></div>
+  <div class="ft-row"><span class="ft-path">  ├── <span class="dir">factories/</span></span><span class="ft-dots"></span><span class="ft-desc">Factory Boy factories</span></div>
+  <div class="ft-row"><span class="ft-path">  ├── <span class="file">test_get_movie.py</span></span><span class="ft-dots"></span><span class="ft-desc">uses fixtures from conftest.py</span></div>
+  <div class="ft-row"><span class="ft-path">  └── <span class="file">test_create_movie.py</span></span><span class="ft-dots"></span><span class="ft-desc">also uses fixtures from conftest.py</span></div>
+</div>
+
+<pre><code><span style="color:#8b949e"># imdb/tests/conftest.py</span>
+<span style="color:#ff7b72">import</span> pytest
+<span style="color:#ff7b72">from</span> imdb.tests.factories <span style="color:#ff7b72">import</span> MovieFactory, ActorFactory
+
+<span style="color:#ffa657">@pytest.fixture</span>
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">movie_object</span>():          <span style="color:#8b949e"># org convention: _object suffix for model instances</span>
+    <span style="color:#ff7b72">return</span> MovieFactory()
+
+<span style="color:#ffa657">@pytest.fixture</span>
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">actor_object</span>():
+    <span style="color:#ff7b72">return</span> ActorFactory()</code></pre>
+
+<div class="callout warn">
+  <div class="callout-title">Naming convention</div>
+  The org names Django model instances with the <code>_object</code> suffix.
+  So your fixture is <code>movie_object</code>, not <code>movie</code>.
+</div>
+
+
+<!-- ══════════════════════════════════════════════
+     PART D — PARAMETRIZE
+     ══════════════════════════════════════════════ -->
+<div class="part-header" id="parametrize">
+  <span class="part-badge">Part D</span>
+  <h2>Parametrize — one test, many inputs</h2>
+</div>
+
+<p>
+  Sometimes you need to verify the same behaviour across many input values.
+  Adding a loop inside a test is bad practice — logic in tests hides bugs.
+  <code>@pytest.mark.parametrize</code> is the right tool.
+</p>
+
+<div class="compare">
+  <div class="compare-col">
+    <span class="compare-label bad">Loop in test</span>
+<pre><code><span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_invalid_ratings</span>():
+    invalid = [-1, 0, 10.1, 100]
+    <span style="color:#ff7b72">for</span> rating <span style="color:#ff7b72">in</span> invalid:
+        <span style="color:#8b949e"># first failure hides the rest</span>
+        <span style="color:#ff7b72">with</span> pytest.raises(ValidationError):
+            CreateMovieInteractor(
+                rating=rating
+            ).execute()</code></pre>
+  </div>
+  <div class="compare-col">
+    <span class="compare-label good">Parametrize</span>
+<pre><code><span style="color:#ffa657">@pytest.mark.parametrize</span>(<span style="color:#a5d6ff">"rating"</span>, [
+    -1, 0, 10.1, 100
+])
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_create_movie_with_invalid_rating_raises_error</span>(
+        rating):
+    <span style="color:#ff7b72">with</span> pytest.raises(ValidationError):
+        CreateMovieInteractor(
+            rating=rating
+        ).execute()
+<span style="color:#8b949e"># pytest runs this 4× — reports each
+# failure separately with its input value</span></code></pre>
+  </div>
+</div>
+
+<h3>Multiple parameters at once</h3>
+
+<pre><code><span style="color:#ffa657">@pytest.mark.parametrize</span>(<span style="color:#a5d6ff">"title, expected_slug"</span>, [
+    (<span style="color:#a5d6ff">"The Dark Knight"</span>, <span style="color:#a5d6ff">"the-dark-knight"</span>),
+    (<span style="color:#a5d6ff">"Inception"</span>,       <span style="color:#a5d6ff">"inception"</span>),
+    (<span style="color:#a5d6ff">"2001: A Space"</span>,   <span style="color:#a5d6ff">"2001-a-space"</span>),
+])
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_slugify_title_returns_expected_slug</span>(title, expected_slug):
+    result = slugify_title(title)
+    assert result == expected_slug</code></pre>
+
+<div class="callout info">
+  <div class="callout-title">What pytest reports</div>
+  Each parametrized run appears separately:
+  <code>test_slugify_title[The Dark Knight-the-dark-knight]</code>.
+  Failures are pinpointed to the exact input.
+</div>
+
+<h3>Putting it all together — Factory Boy + Fixtures + Parametrize</h3>
+
+<pre><code><span style="color:#8b949e"># imdb/tests/test_get_top_rated_movies.py</span>
+<span style="color:#ff7b72">import</span> pytest
+<span style="color:#ff7b72">from</span> imdb.tests.factories <span style="color:#ff7b72">import</span> MovieFactory
+<span style="color:#ff7b72">from</span> imdb.interactors <span style="color:#ff7b72">import</span> GetTopRatedMoviesInteractor
+
+
+<span style="color:#ffa657">@pytest.fixture</span>                              <span style="color:#8b949e"># Part C — fixture</span>
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">top_rated_movies</span>():
+    MovieFactory.create_batch(<span style="color:#79c0ff">3</span>, rating=<span style="color:#79c0ff">9.0</span>)  <span style="color:#8b949e"># Part B — factory</span>
+    MovieFactory.create_batch(<span style="color:#79c0ff">2</span>, rating=<span style="color:#79c0ff">5.0</span>)
+
+
+<span style="color:#ffa657">@pytest.mark.django_db</span>
+<span style="color:#ffa657">@pytest.mark.parametrize</span>(<span style="color:#a5d6ff">"min_rating, expected_count"</span>, [  <span style="color:#8b949e"># Part D — parametrize</span>
+    (<span style="color:#79c0ff">8.0</span>, <span style="color:#79c0ff">3</span>),
+    (<span style="color:#79c0ff">5.0</span>, <span style="color:#79c0ff">5</span>),
+    (<span style="color:#79c0ff">9.5</span>, <span style="color:#79c0ff">0</span>),
+])
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_returns_correct_count_for_various_thresholds</span>(
+        top_rated_movies, min_rating, expected_count):
+    results = GetTopRatedMoviesInteractor(min_rating=min_rating).execute()
+    assert len(results) == expected_count</code></pre>
+
+
+<!-- ══════════════════════════════════════════════
+     QUICK REFERENCE
+     ══════════════════════════════════════════════ -->
+<section id="reference">
+  <h2>Quick reference — what to use when</h2>
+
+  <table>
+    <thead>
+      <tr><th>Situation</th><th>Tool</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Multiple tests share the same Arrange code</td><td><code>@pytest.fixture</code></td></tr>
+      <tr><td>Fixture needed across multiple test files</td><td><code>conftest.py</code></td></tr>
+      <tr><td>Same test logic, different input values</td><td><code>@pytest.mark.parametrize</code></td></tr>
+      <tr><td>Test needs database access</td><td><code>@pytest.mark.django_db</code></td></tr>
+      <tr><td>Create a Django model with defaults</td><td><code>DjangoModelFactory</code></td></tr>
+      <tr><td>Field must be unique in DB</td><td><code>factory.Sequence</code></td></tr>
+      <tr><td>Field derived from another field</td><td><code>factory.LazyAttribute</code></td></tr>
+      <tr><td>Model has a ForeignKey</td><td><code>factory.SubFactory</code></td></tr>
+      <tr><td>Need multiple objects at once</td><td><code>create_batch(n)</code></td></tr>
+      <tr><td>Test doesn't hit the DB</td><td><code>ModelFactory.build()</code></td></tr>
+      <tr><td>Assert a function raises an exception</td><td><code>pytest.raises(MyException)</code></td></tr>
+    </tbody>
+  </table>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+     QUIZ
+     ══════════════════════════════════════════════ -->
+<section>
+  <h2>Check your understanding</h2>
+  <p>Answer from memory — don't scroll back up first.</p>
+  <div class="quiz" data-quiz-id="q10"></div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+     NEXT STEPS
+     ══════════════════════════════════════════════ -->
+<section>
+  <h2>What comes next</h2>
+  <ul>
+    <li>
+      <strong>Lesson 11 — Mocking:</strong>
+      When a test must isolate a unit from its collaborators (external APIs, other interactors),
+      stub them with <code>unittest.mock.patch</code> or <code>pytest-mock</code>.
+    </li>
+  </ul>
+
+  <div class="callout info">
+    <div class="callout-title">Primary sources</div>
+    <ul>
+      <li>NxtWave — Writing Tests with pytest (AAA, cases, fixing code)</li>
+      <li>NxtWave — More pytest features (exceptions, parametrize, fixtures)</li>
+      <li>NxtWave — Unit Tests overview</li>
+    </ul>
+  </div>
+
+  <div class="callout">
+    <div class="callout-title">Ask your teacher</div>
+    Anything unclear? Post a follow-up in this chat.
+    Common questions: "how do I factory a M2M field?", "can fixtures call other fixtures?",
+    "when should I use <code>build()</code> vs <code>create()</code>?"
+  </div>
+</section>
+
+</main>
+
+<footer class="lesson-footer">
+  <div class="lesson-nav">
+    <a href="0009-dsu.html">← Lesson 9: DSU</a>
+    <a href="../index.html">Course Home</a>
+  </div>
+</footer>
+
+<script src="../assets/quiz.js"></script>
+<script type="application/json" data-quiz-data="q10">
+[
+  {
+    "q": "What are the three parts of the Arrange–Act–Assert pattern?",
+    "options": [
+      "Set up objects / Call function / Verify result",
+      "Import module / Run code / Check logs",
+      "Create database / Query ORM / Return JSON",
+      "Write spec / Build views / Deploy app"
+    ],
+    "answer": 0,
+    "explain": "Arrange: set up objects and data. Act: call the function under test. Assert: verify the result matches expectations."
+  },
+  {
+    "q": "A function is named 'check_prime()'. pytest reports '0 tests collected'. What is wrong?",
+    "options": [
+      "The function name must start with test_ for pytest to discover it",
+      "The function has no return statement so pytest ignores it",
+      "The file must be named conftest.py to collect functions",
+      "There is no assert statement inside the function body"
+    ],
+    "answer": 0,
+    "explain": "pytest only discovers functions whose name starts with test_. Naming it check_prime means it is silently skipped — no error, just 0 tests collected."
+  },
+  {
+    "q": "How do you assert that a function raises a specific exception in pytest?",
+    "options": [
+      "with pytest.raises(MyException): call_function()",
+      "try: call_function() except MyException: assert True",
+      "assert call_function() raises MyException",
+      "pytest.expect_exception(MyException, call_function)"
+    ],
+    "answer": 0,
+    "explain": "pytest.raises() is a context manager. Any exception raised inside the with block is caught and the test passes. If no exception is raised, the test fails."
+  },
+  {
+    "q": "A fixture is defined in conftest.py. How does a test function access it?",
+    "options": [
+      "Add its name as a function argument — pytest injects it automatically",
+      "Import it at the top of the test file with from conftest import fixture",
+      "Call pytest.get_fixture(name) inside the test body",
+      "Decorate the test with @pytest.uses_fixture(name)"
+    ],
+    "answer": 0,
+    "explain": "pytest's dependency injection: if a test function has a parameter whose name matches a fixture, pytest calls that fixture and passes its return value. No import needed."
+  },
+  {
+    "q": "What is the difference between MovieFactory() and MovieFactory.build()?",
+    "options": [
+      "MovieFactory() saves to the database; build() creates an in-memory object only",
+      "build() saves to the database; MovieFactory() creates an in-memory object only",
+      "MovieFactory() creates the class; build() instantiates it with defaults",
+      "They are identical — both save to the database automatically"
+    ],
+    "answer": 0,
+    "explain": "create() (called by MovieFactory()) calls objects.create() and persists the row. build() creates the object in memory only — useful for tests that don't need the DB."
+  },
+  {
+    "q": "@pytest.mark.parametrize('rating', [-1, 0, 10.1, 100]) — how many tests run?",
+    "options": [
+      "4 — one separate test for each value in the list",
+      "1 — the list is passed as a single argument to the test",
+      "0 — parametrize requires a tuple, not a plain list",
+      "It depends on whether the previous test passed or failed"
+    ],
+    "answer": 0,
+    "explain": "Each item in the parametrize list becomes a separate test run. You'll see them as test_name[-1], test_name[0], etc. in the output."
+  },
+  {
+    "q": "Your Movie model has a unique 'title' field. Which factory declaration prevents IntegrityError?",
+    "options": [
+      "title = factory.Sequence(lambda n: f'Movie {n}')",
+      "title = 'Default Movie'",
+      "title = factory.LazyAttribute(lambda obj: 'Default Movie')",
+      "title = factory.UniqueField('Movie')"
+    ],
+    "answer": 0,
+    "explain": "factory.Sequence increments n for every new object (0, 1, 2…), guaranteeing unique values. A static string causes IntegrityError on the second factory call."
+  },
+  {
+    "q": "A RatingFactory needs a Movie FK. Which declaration creates the Movie automatically?",
+    "options": [
+      "movie = factory.SubFactory(MovieFactory)",
+      "movie = factory.LazyAttribute(lambda o: MovieFactory())",
+      "movie = MovieFactory.build()",
+      "movie_id = factory.Sequence(lambda n: n)"
+    ],
+    "answer": 0,
+    "explain": "SubFactory is the correct tool for FK relations. It also propagates the create/build strategy — so build() on the parent won't accidentally save the sub-object to the DB."
+  }
+]
+</script>
+
+</div>
+</body>
+</html>

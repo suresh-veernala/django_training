@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <title>Lesson 07 — Clean Architecture</title>
+  <link rel="stylesheet" href="../assets/styles.css?v=2" />
+  <style>
+    /* ── Layer cards for the four modules ── */
+    .module-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 1rem;
+      margin: 1.25rem 0 1.75rem;
+    }
+    .module-card {
+      border-radius: 8px;
+      border: 2px solid;
+      padding: 1rem 1.1rem 0.9rem;
+      position: relative;
+    }
+    .module-card .module-name {
+      font-family: var(--font-sans);
+      font-weight: 800;
+      font-size: 1rem;
+      margin-bottom: 0.25rem;
+    }
+    .module-card .module-role {
+      font-family: var(--font-sans);
+      font-size: 0.8rem;
+      margin-bottom: 0.5rem;
+      color: var(--muted);
+      font-style: italic;
+    }
+    .module-card p {
+      font-size: 0.85rem;
+      margin: 0;
+      line-height: 1.5;
+    }
+    .module-card.controller { border-color: #6b7fcc; background: #f0f4ff; }
+    .module-card.controller .module-name { color: #2d3a8c; }
+    .module-card.interactor { border-color: #2e7d52; background: #e8f5e9; }
+    .module-card.interactor .module-name { color: #0c4b33; }
+    .module-card.storage    { border-color: #c2773b; background: #fff7ed; }
+    .module-card.storage    .module-name { color: #7c3d0d; }
+    .module-card.presenter  { border-color: #7c3aed; background: #f5f0ff; }
+    .module-card.presenter  .module-name { color: #4c1d95; }
+
+    /* ── Volatility badge ── */
+    .vol-badge {
+      display: inline-block;
+      font-family: var(--font-sans);
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.1rem 0.45rem;
+      border-radius: 99px;
+      vertical-align: middle;
+      margin-left: 0.4rem;
+    }
+    .vol-badge.volatile     { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+    .vol-badge.stable       { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+
+    /* ── Dependency inversion diagram ── */
+    .dep-diagram {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      flex-wrap: wrap;
+      margin: 1.25rem 0;
+    }
+    .dep-box {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      padding: 0.6rem 1.2rem;
+      font-family: var(--font-sans);
+      font-size: 0.88rem;
+      font-weight: 600;
+      text-align: center;
+    }
+    .dep-box.bad-dep  { border-color: #dc2626; background: #fef2f2; color: #991b1b; }
+    .dep-box.iface    { border-color: #2e7d52; background: #e8f5e9; color: #0c4b33; }
+    .dep-box.impl     { border-color: #c2773b; background: #fff7ed; color: #7c3d0d; }
+    .dep-box.core     { border-color: #2d3a8c; background: #f0f4ff; color: #2d3a8c; }
+    .dep-arrow {
+      font-size: 1.4rem;
+      color: var(--muted);
+      padding: 0 0.5rem;
+      line-height: 1;
+    }
+    .dep-arrow.bad   { color: #dc2626; }
+    .dep-arrow.good  { color: #2e7d52; }
+
+    /* ── Strikethrough for "bad" pattern ── */
+    .crossed {
+      opacity: 0.55;
+      position: relative;
+    }
+    .crossed::after {
+      content: "";
+      position: absolute;
+      left: 0; right: 0;
+      top: 50%;
+      height: 2px;
+      background: #dc2626;
+    }
+
+    /* ── Folder tree for app structure ── */
+    .folder-comment { color: #8b949e; }
+  </style>
+</head>
+<body>
+<div class="lesson-wrap">
+
+  <a class="home-btn" href="../index.html">&#8592; Home</a>
+
+  <header class="lesson-header">
+    <div class="lesson-meta">
+      <span class="badge">Module 7</span>
+      <span>Django Backend Training</span>
+      <span>⏱ ~20 min</span>
+      <span>Architecture</span>
+    </div>
+    <h1 class="lesson-title">Clean Architecture</h1>
+    <p class="lesson-subtitle">How your org structures production Django code into four well-separated modules — and why this makes everything easier to test and change.</p>
+  </header>
+
+  <nav class="course-map">
+    <div class="course-map-title">Course Map — Django Backend Training</div>
+    <ol>
+      <li><a href="0001-introduction-to-django.html">Introduction to Django</a> <span>15 min</span></li>
+      <li><a href="0002-django-project-structure.html">Django Project Structure</a> <span>10 min</span></li>
+      <li><a href="0003-models-and-orm.html">Models &amp; ORM</a> <span>40 min</span></li>
+      <li><a href="0004-building-apis.html">Building APIs</a> <span>35 min</span></li>
+      <li><a href="0005-openapi-swagger.html">OpenAPI / Swagger</a> <span>15 min</span></li>
+      <li><a href="0006-wrap-up-and-learning-path.html">Wrap Up &amp; Learning Path</a> <span>5 min</span></li>
+      <li class="current"><a href="0007-clean-architecture.html">Clean Architecture</a> <span>20 min</span></li>
+      <li><a href="0008-backend-code-guide.html">Backend Code Guide</a> <span>25 min</span></li>
+      <li><a href="0009-dsu.html">DSU — Django Swagger Utils</a> <span>25 min</span></li>
+      <li><a href="0010-writing-test-cases.html">Testing with pytest</a> <span>40 min</span></li>
+      <li><a href="0011-mocking.html">Mocking — Test in Isolation</a> <span>30 min</span></li>
+    </ol>
+  </nav>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       PART 1 — THE PROBLEM
+  ════════════════════════════════════════════════════════════ -->
+  <h2>Why Does Structure Matter?</h2>
+
+  <p>Software has two values: <strong>behaviour</strong> (what it does) and <strong>structure</strong> (how easy it is to change). Behaviour gets all the attention, but structure is what keeps a codebase alive.</p>
+
+  <p>When different concerns — fetching a row from the DB, calculating a score, building a JSON response — are all tangled inside the same function, every change touches everything. A database swap forces you to edit business logic. A UI change ripples into ORM queries. Tests become slow, brittle, and hard to write.</p>
+
+  <div class="callout warn">
+    <div class="callout-title">The problem</div>
+    Django views that do <em>everything</em> — query the DB, run business logic, and format the response — are quick to write but painful to maintain. They are the most common source of spaghetti in Django projects.
+  </div>
+
+  <p>Clean Architecture solves this by splitting the code into <strong>four independent modules</strong>, each responsible for exactly one concern.</p>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       PART 2 — THE FOUR MODULES
+  ════════════════════════════════════════════════════════════ -->
+  <h2>The Four Modules</h2>
+
+  <p>Your org's Clean Architecture organises every feature into exactly four packages:</p>
+
+  <div class="module-grid">
+    <div class="module-card controller">
+      <div class="module-name">Controller</div>
+      <div class="module-role">The entry point</div>
+      <p>Receives the HTTP request, deserialises inputs (via DRF serializers / URL params), calls the Interactor, and returns the response.</p>
+    </div>
+    <div class="module-card interactor">
+      <div class="module-name">Interactor</div>
+      <div class="module-role">The brain</div>
+      <p>Implements all business rules. It knows <em>what</em> to do but not <em>how</em> data is stored or how the response is formatted.</p>
+    </div>
+    <div class="module-card storage">
+      <div class="module-name">Storage</div>
+      <div class="module-role">The database layer</div>
+      <p>Runs ORM queries — create, get, filter, update, delete. No business logic lives here.</p>
+    </div>
+    <div class="module-card presenter">
+      <div class="module-name">Presenter</div>
+      <div class="module-role">The response builder</div>
+      <p>Builds the JSON (or HTML) response that goes back to the client. No ORM queries live here.</p>
+    </div>
+  </div>
+
+  <p>Each module changes for a different reason. The Interactor changes when business rules change. The Storage changes when the database schema changes. The Presenter changes when the API contract changes. Because they change independently, they should live independently.</p>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       PART 3 — FLOW OF CONTROL (IMDb example)
+  ════════════════════════════════════════════════════════════ -->
+  <h2>Flow of Control</h2>
+
+  <p>Here is the official diagram from your org's training materials — read it left to right:</p>
+
+  <figure style="margin:1.25rem 0;text-align:center">
+    <img src="../assets/clean_arch_flow.png"
+         alt="Flow of Control in Clean Architecture"
+         style="max-width:100%;border-radius:8px;border:1px solid var(--border);" />
+  </figure>
+
+  <p>Walking through the arrows:</p>
+  <ol>
+    <li><strong>Frontend → Controller</strong>: the HTTP request arrives. The Controller parses it (URL params, request body) and calls the Interactor.</li>
+    <li><strong>Controller → Interactor</strong>: the Interactor receives plain Python values — no Django <code>request</code> object, no HTTP concepts.</li>
+    <li><strong>Interactor → Storage</strong>: the Interactor calls the storage interface to read or write data.</li>
+    <li><strong>Interactor → Presenter</strong>: once it has the data, the Interactor hands it to the presenter interface to be formatted.</li>
+    <li><strong>Presenter → Interactor → Controller → Frontend</strong>: the formatted response travels back up the chain.</li>
+  </ol>
+
+  <div class="callout key">
+    <div class="callout-title">Key insight</div>
+    The Interactor is in the centre. It orchestrates everything — but it never imports <code>HttpResponse</code>, never touches a Django model directly, and never builds a JSON dict. Those are responsibilities of the other modules.
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       PART 4 — VOLATILE vs STABLE
+  ════════════════════════════════════════════════════════════ -->
+  <h2>Volatile vs Stable Components</h2>
+
+  <p>Not all modules change at the same rate:</p>
+
+  <table>
+    <thead>
+      <tr><th>Module</th><th>Volatility</th><th>Why it changes</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Interactor</strong></td>
+        <td><span class="vol-badge stable">Stable</span></td>
+        <td>Business rules change rarely</td>
+      </tr>
+      <tr>
+        <td><strong>Storage</strong></td>
+        <td><span class="vol-badge volatile">Volatile</span></td>
+        <td>DB schema, ORM versions, caching changes</td>
+      </tr>
+      <tr>
+        <td><strong>Presenter</strong></td>
+        <td><span class="vol-badge volatile">Volatile</span></td>
+        <td>API contract, serializer fields, versioning</td>
+      </tr>
+      <tr>
+        <td><strong>Controller</strong></td>
+        <td><span class="vol-badge volatile">Volatile</span></td>
+        <td>URL routing, HTTP method, auth changes</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>A <strong>non-volatile component must never depend on a volatile one</strong>. If the stable Interactor imported from Storage directly, a DB change would force you to edit your business logic. Clean Architecture prevents this via Dependency Inversion.</p>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       PART 5 — DEPENDENCY INVERSION
+  ════════════════════════════════════════════════════════════ -->
+  <h2>Dependency Inversion with Python Abstract Classes</h2>
+
+  <p>The rule: <strong>stable modules define interfaces; volatile modules implement them</strong>.</p>
+
+  <h3>Step 1 — What "source code dependency" means</h3>
+  <p>When <code>Class A</code> imports and calls <code>Class B</code>, Package A is said to <em>depend on</em> Package B. If Package B changes, Package A may break.</p>
+
+  <figure style="margin:1.25rem 0;text-align:center">
+    <img src="../assets/source-code-dependency.png"
+         alt="Source Code Dependency: Class A depends on Class B"
+         style="max-width:640px;width:100%;border-radius:8px;border:1px solid var(--border);" />
+  </figure>
+
+  <h3>Step 2 — The problem in Clean Architecture</h3>
+  <p>Without any protection, the Interactor would directly depend on the Storage implementation. Since Storage is volatile (it changes with schema migrations, caching, etc.), this drags the stable Interactor into every storage-side change.</p>
+
+  <figure style="margin:1.25rem 0;text-align:center">
+    <img src="../assets/clean-arch-source-code-dependency.png"
+         alt="Problem: Interactor depends directly on Storage"
+         style="max-width:400px;width:100%;border-radius:8px;border:1px solid var(--border);" />
+    <figcaption style="font-family:var(--font-sans);font-size:0.8rem;color:var(--muted);margin-top:0.4rem">
+      Both are the same colour — both become volatile. This is the problem.
+    </figcaption>
+  </figure>
+
+  <h3>Step 3 — The generic fix: Dependency Inversion</h3>
+  <p>We add an <strong>Interface</strong> (abstract class) <em>inside</em> Package A. Class A now depends only on the Interface. Class B (in Package B) implements that Interface — so Package B now depends on Package A, not the other way around. The dependency has been inverted.</p>
+
+  <figure style="margin:1.25rem 0;text-align:center">
+    <img src="../assets/dependency-inversion.png"
+         alt="Dependency Inversion: Interface lives in Package A; Class B implements it"
+         style="max-width:640px;width:100%;border-radius:8px;border:1px solid var(--border);" />
+  </figure>
+
+  <h3>Step 4 — Applied to Clean Architecture</h3>
+  <p>The <code>StorageInterface</code> (abstract class) lives <em>inside the interactors package</em> — shown by the dashed box enclosing both. The concrete <code>Storage</code> lives outside and implements that interface. The Interactor only ever knows about the interface.</p>
+
+  <figure style="margin:1.25rem 0;text-align:center">
+    <img src="../assets/clean-arch-source-code-dependency-inversion.png"
+         alt="Clean Architecture: Interactor and StorageInterface in same package; Storage implements the interface"
+         style="max-width:640px;width:100%;border-radius:8px;border:1px solid var(--border);" />
+    <figcaption style="font-family:var(--font-sans);font-size:0.8rem;color:var(--muted);margin-top:0.4rem">
+      The dashed box is <code>interactors/</code>. Storage (outside) depends on the interface (inside) — not the reverse.
+    </figcaption>
+  </figure>
+
+  <p>The same pattern applies to the Presenter: a <code>PresenterInterface</code> also lives inside <code>interactors/presenters/</code>, and the concrete <code>Presenter</code> in the top-level <code>presenters/</code> package implements it.</p>
+
+  <h3>In Python — using Abstract Classes</h3>
+  <p>Python doesn't have interfaces like Java, but we use <strong>abstract base classes</strong> (ABC) from the standard library:</p>
+
+  <pre><code># interactors/storages/storage_interface.py  ← lives INSIDE interactors/
+from abc import ABC, abstractmethod
+
+class MovieStorageInterface(ABC):
+
+    @abstractmethod
+    def get_movie_by_id(self, movie_id: int):
+        pass
+
+    @abstractmethod
+    def get_movies_by_director(self, director_id: int):
+        pass</code></pre>
+
+  <pre><code># storages/movie_storage.py  ← the concrete implementation
+from imdb.interactors.storages.storage_interface import MovieStorageInterface
+from imdb.models import Movie
+
+class MovieStorage(MovieStorageInterface):
+
+    def get_movie_by_id(self, movie_id: int):
+        return Movie.objects.get(id=movie_id)
+
+    def get_movies_by_director(self, director_id: int):
+        return Movie.objects.filter(director_id=director_id)</code></pre>
+
+  <pre><code># interactors/get_movie_details_interactor.py
+from imdb.interactors.storages.storage_interface import MovieStorageInterface
+from imdb.interactors.presenters.presenter_interface import MoviePresenterInterface
+
+class GetMovieDetailsInteractor:
+
+    def __init__(self, storage: MovieStorageInterface,
+                 presenter: MoviePresenterInterface):
+        self.storage = storage
+        self.presenter = presenter
+
+    def get_movie_details(self, movie_id: int):
+        movie = self.storage.get_movie_by_id(movie_id)
+        return self.presenter.present_movie_details(movie)</code></pre>
+
+  <pre><code># views.py (Controller)
+from imdb.interactors.get_movie_details_interactor import GetMovieDetailsInteractor
+from imdb.storages.movie_storage import MovieStorage
+from imdb.presenters.movie_presenter import MoviePresenter
+
+def get_movie_details(request, movie_id):
+    storage = MovieStorage()
+    presenter = MoviePresenter()
+    interactor = GetMovieDetailsInteractor(storage=storage, presenter=presenter)
+    return interactor.get_movie_details(movie_id=movie_id)</code></pre>
+
+  <div class="callout info">
+    <div class="callout-title">Why this matters for testing</div>
+    In tests, you swap <code>MovieStorage</code> for a <code>MockStorage</code> that returns hardcoded data. Your business logic is tested in complete isolation from the database — no migrations, no DB fixtures, just fast unit tests.
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       PART 6 — APP STRUCTURE
+  ════════════════════════════════════════════════════════════ -->
+  <h2>App Structure</h2>
+
+  <p>Here is how an app using Clean Architecture looks on disk. Notice how interfaces live <em>inside</em> the <code>interactors/</code> package:</p>
+
+  <div class="filetree">
+    <span class="ft-section">imdb/</span>
+    <div class="ft-row"><span class="ft-path dir">├── interactors/</span><span class="ft-dots"></span><span class="ft-desc folder-comment">business logic + interface definitions</span></div>
+    <div class="ft-row"><span class="ft-path file">│   ├── get_movie_details_interactor.py</span><span class="ft-dots"></span><span class="ft-desc folder-comment">one interactor per use-case</span></div>
+    <div class="ft-row"><span class="ft-path dir">│   ├── storages/</span><span class="ft-dots"></span><span class="ft-desc folder-comment">storage INTERFACES (abstract classes)</span></div>
+    <div class="ft-row"><span class="ft-path file">│   │   └── storage_interface.py</span><span class="ft-dots"></span><span class="ft-desc"></span></div>
+    <div class="ft-row"><span class="ft-path dir">│   └── presenters/</span><span class="ft-dots"></span><span class="ft-desc folder-comment">presenter INTERFACES (abstract classes)</span></div>
+    <div class="ft-row"><span class="ft-path file">│       └── presenter_interface.py</span><span class="ft-dots"></span><span class="ft-desc"></span></div>
+    <div class="ft-row"><span class="ft-path dir">├── storages/</span><span class="ft-dots"></span><span class="ft-desc folder-comment">concrete storage implementations (ORM)</span></div>
+    <div class="ft-row"><span class="ft-path file">│   └── movie_storage.py</span><span class="ft-dots"></span><span class="ft-desc"></span></div>
+    <div class="ft-row"><span class="ft-path dir">├── presenters/</span><span class="ft-dots"></span><span class="ft-desc folder-comment">concrete presenter implementations</span></div>
+    <div class="ft-row"><span class="ft-path file">│   └── movie_presenter.py</span><span class="ft-dots"></span><span class="ft-desc"></span></div>
+    <div class="ft-row"><span class="ft-path file">├── views.py</span><span class="ft-dots"></span><span class="ft-desc folder-comment">controller — wires everything together</span></div>
+    <div class="ft-row"><span class="ft-path dir">├── models/</span><span class="ft-dots"></span><span class="ft-desc folder-comment">Django models (used only inside storages/)</span></div>
+    <div class="ft-row"><span class="ft-path dir">└── tests/</span><span class="ft-dots"></span><span class="ft-desc folder-comment">one sub-package per module</span></div>
+    <div class="ft-row"><span class="ft-path dir">    ├── interactors/</span><span class="ft-dots"></span><span class="ft-desc"></span></div>
+    <div class="ft-row"><span class="ft-path dir">    ├── storages/</span><span class="ft-dots"></span><span class="ft-desc"></span></div>
+    <div class="ft-row"><span class="ft-path dir">    ├── presenters/</span><span class="ft-dots"></span><span class="ft-desc"></span></div>
+    <div class="ft-row"><span class="ft-path dir">    └── views/</span><span class="ft-dots"></span><span class="ft-desc"></span></div>
+  </div>
+
+  <div class="callout">
+    <div class="callout-title">The key pattern</div>
+    There are <strong>two levels of storages/ and presenters/</strong>: the ones inside <code>interactors/</code> contain the <em>interfaces</em> (abstract classes). The top-level ones contain the <em>implementations</em>. The implementations depend on the interfaces, never the reverse.
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       PART 7 — ADVANTAGES
+  ════════════════════════════════════════════════════════════ -->
+  <h2>Why Your Org Chose This</h2>
+
+  <div class="feature-grid">
+    <div class="feature-card">
+      <h4>Testable in isolation</h4>
+      <p>Test the Interactor with a mock storage — no real DB needed. Tests run in milliseconds.</p>
+    </div>
+    <div class="feature-card">
+      <h4>Swap the database</h4>
+      <p>Swap Postgres for something else by writing a new Storage implementation. The Interactor doesn't notice.</p>
+    </div>
+    <div class="feature-card">
+      <h4>Independent development</h4>
+      <p>One engineer writes the Interactor while another writes the Storage — as long as both agree on the interface.</p>
+    </div>
+    <div class="feature-card">
+      <h4>Readable codebase</h4>
+      <p>New joiners know exactly where to look: business rule? <code>interactors/</code>. ORM query? <code>storages/</code>. Response shape? <code>presenters/</code>.</p>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       QUIZ
+  ════════════════════════════════════════════════════════════ -->
+  <div class="quiz" data-quiz-id="clean-arch">
+    <!-- Questions rendered by quiz.js -->
+  </div>
+  <script type="application/json" data-quiz-data="clean-arch">
+  [
+    {
+      "q": "You need to add a new business rule: movies with a rating below 5.0 cannot be returned. Which module do you edit?",
+      "options": [
+        "interactors/ — business rule belongs here",
+        "storages/    — filter it at the ORM query",
+        "presenters/  — hide it when building JSON",
+        "views.py     — reject it in the controller"
+      ],
+      "answer": 0,
+      "explain": "Business rules live exclusively in the Interactor. The Storage layer only fetches data; filtering by a business rule is not its responsibility."
+    },
+    {
+      "q": "The MovieStorageInterface (abstract class) is defined inside interactors/storages/. Which module imports from which?",
+      "options": [
+        "StorageImpl imports the interface from interactors/",
+        "Interactor imports StorageImpl from storages/       ",
+        "Interface imports StorageImpl for type checking    ",
+        "Controller imports the interface from interactors/ "
+      ],
+      "answer": 0,
+      "explain": "The concrete StorageImpl (volatile) depends on the interface (stable). The Interactor only imports the interface — never the concrete implementation."
+    },
+    {
+      "q": "You want to test GetMovieDetailsInteractor without touching the database. What do you inject?",
+      "options": [
+        "A MockStorage implementing MovieStorageInterface   ",
+        "An in-memory SQLite DB configured in settings.py  ",
+        "A DRF serializer that returns hardcoded JSON data  ",
+        "A Django TestCase that rolls back after each test  "
+      ],
+      "answer": 0,
+      "explain": "Because the Interactor depends on an interface, you can inject any mock that satisfies that interface. No real DB or Django test infrastructure needed."
+    },
+    {
+      "q": "Which module should contain ORM calls like Movie.objects.filter(director_id=...)?",
+      "options": [
+        "storages/        — the concrete storage implementation",
+        "interactors/     — centrally inside the business layer",
+        "presenters/      — alongside the response serialization",
+        "views.py         — in the controller for performance    "
+      ],
+      "answer": 0,
+      "explain": "ORM queries live exclusively in the concrete Storage implementation. The Interactor only calls methods on the StorageInterface — it never touches Django models directly."
+    },
+    {
+      "q": "The Presenter builds the JSON response dict. Which module is allowed to call Presenter methods?",
+      "options": [
+        "Interactor — it orchestrates Storage and Presenter",
+        "Controller — it returns the response to the client",
+        "Storage    — it combines data with the response   ",
+        "Models     — they prepare themselves for the API  "
+      ],
+      "answer": 0,
+      "explain": "The Interactor calls both Storage (for data) and Presenter (for formatting). The Controller only calls the Interactor — it does not call the Presenter directly."
+    }
+  ]
+  </script>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       NEXT STEPS
+  ════════════════════════════════════════════════════════════ -->
+  <h2>What to Do Next</h2>
+
+  <ol class="steps">
+    <li>
+      <strong>Browse a real app.</strong> Open any production app in your codebase. Locate the <code>interactors/</code>, <code>storages/</code>, <code>presenters/</code>, and <code>views.py</code>. Trace one full request from controller to storage and back.
+    </li>
+    <li>
+      <strong>Read the interface definitions.</strong> Find the abstract classes in <code>interactors/storages/</code> and <code>interactors/presenters/</code>. Notice that they contain no Django imports — pure Python ABCs.
+    </li>
+    <li>
+      <strong>Look at a test for an Interactor.</strong> Open <code>tests/interactors/</code> in any app. Notice there are no DB queries — just mocked storage and presenter objects passed in.
+    </li>
+  </ol>
+
+  <div class="callout info">
+    <div class="callout-title">Primary source</div>
+    <a href="https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html" target="_blank">The Clean Architecture — Robert C. Martin (Uncle Bob)</a> — the original article that defines the concepts. Your org's four-module split (Interactor / Storage / Presenter / Controller) is a focused, practical adaptation of this model.
+  </div>
+
+  <div class="ask-agent">
+    <strong>Questions?</strong> Ask your agent anything that's unclear — which module a piece of code belongs in, how to write a mock, how interfaces work in Python, or anything else. Your agent is your teacher.
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       FOOTER
+  ════════════════════════════════════════════════════════════ -->
+  <footer class="lesson-footer">
+    <div class="lesson-nav">
+      <a href="0006-wrap-up-and-learning-path.html">&#8592; Prev: Wrap Up &amp; Hands-on Plan</a>
+    </div>
+    <div>Lesson 7 · Clean Architecture</div>
+    <div class="lesson-nav">
+      <a href="0008-backend-code-guide.html">Next: Backend Code Guide &#8594;</a>
+    </div>
+  </footer>
+
+</div>
+
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

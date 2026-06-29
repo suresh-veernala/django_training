@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <title>Lesson 07b — Backend Code Guide</title>
+  <link rel="stylesheet" href="../assets/styles.css?v=2" />
+  <style>
+    /* ── Rule cards ── */
+    .rule-list {
+      list-style: none;
+      padding: 0;
+      margin: 0.75rem 0 1.5rem;
+    }
+    .rule-list li {
+      position: relative;
+      padding: 0.6rem 0.9rem 0.6rem 2.6rem;
+      border-left: 3px solid var(--border);
+      margin-bottom: 0.5rem;
+      background: var(--surface);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      font-size: 0.94rem;
+    }
+    .rule-list li::before {
+      content: "→";
+      position: absolute;
+      left: 0.75rem;
+      top: 0.62rem;
+      color: var(--accent-mid);
+      font-weight: 700;
+    }
+    .rule-list li.do::before  { content: "✓"; color: #16a34a; }
+    .rule-list li.dont::before { content: "✗"; color: #dc2626; }
+    .rule-list li.do  { border-left-color: #16a34a; }
+    .rule-list li.dont { border-left-color: #dc2626; }
+
+    /* ── Do / Don't columns ── */
+    .dd-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1rem 0 1.5rem;
+    }
+    @media (max-width: 640px) { .dd-grid { grid-template-columns: 1fr; } }
+    .dd-col-head {
+      font-family: var(--font-sans);
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 0.4rem;
+    }
+    .dd-col-head.do   { color: #16a34a; }
+    .dd-col-head.dont { color: #dc2626; }
+
+    /* ── Module pill ── */
+    .mpill {
+      display: inline-block;
+      font-family: var(--font-sans);
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.1rem 0.5rem;
+      border-radius: 99px;
+      border: 1px solid;
+      margin-right: 0.3rem;
+      vertical-align: middle;
+    }
+    .mpill.interactor { border-color: #2e7d52; background: #e8f5e9; color: #0c4b33; }
+    .mpill.storage    { border-color: #c2773b; background: #fff7ed; color: #7c3d0d; }
+    .mpill.presenter  { border-color: #7c3aed; background: #f5f0ff; color: #4c1d95; }
+    .mpill.adapter    { border-color: #2563eb; background: #eff6ff; color: #1e40af; }
+    .mpill.tests      { border-color: #475569; background: #f8fafc; color: #334155; }
+
+    /* ── Naming example row ── */
+    .naming-table td code { font-size: 0.83rem; }
+
+    /* ── Section anchor link ── */
+    h2 .anchor { font-size: 0.75rem; color: var(--muted); margin-left: 0.5rem; text-decoration: none; }
+    h3 .anchor { font-size: 0.7rem; color: var(--muted); margin-left: 0.4rem; text-decoration: none; }
+  </style>
+</head>
+<body>
+<div class="lesson-wrap">
+
+  <a class="home-btn" href="../index.html">&#8592; Home</a>
+
+  <header class="lesson-header">
+    <div class="lesson-meta">
+      <span class="badge">Module 8</span>
+      <span>Django Backend Training</span>
+      <span>⏱ ~25 min</span>
+      <span>Code Standards</span>
+    </div>
+    <h1 class="lesson-title">Backend Code Guide</h1>
+    <p class="lesson-subtitle">Your org's official rules for writing production-ready Clean Architecture code — naming, imports, typing, and per-module conventions you're expected to follow from day one.</p>
+  </header>
+
+  <nav class="course-map">
+    <div class="course-map-title">Course Map — Django Backend Training</div>
+    <ol>
+      <li><a href="0001-introduction-to-django.html">Introduction to Django</a> <span>15 min</span></li>
+      <li><a href="0002-django-project-structure.html">Django Project Structure</a> <span>10 min</span></li>
+      <li><a href="0003-models-and-orm.html">Models &amp; ORM</a> <span>40 min</span></li>
+      <li><a href="0004-building-apis.html">Building APIs</a> <span>35 min</span></li>
+      <li><a href="0005-openapi-swagger.html">OpenAPI / Swagger</a> <span>15 min</span></li>
+      <li><a href="0006-wrap-up-and-learning-path.html">Wrap Up &amp; Learning Path</a> <span>5 min</span></li>
+      <li><a href="0007-clean-architecture.html">Clean Architecture</a> <span>20 min</span></li>
+      <li class="current"><a href="0008-backend-code-guide.html">Backend Code Guide</a> <span>25 min</span></li>
+      <li><a href="0009-dsu.html">DSU — Django Swagger Utils</a> <span>25 min</span></li>
+      <li><a href="0010-writing-test-cases.html">Testing with pytest</a> <span>40 min</span></li>
+      <li><a href="0011-mocking.html">Mocking — Test in Isolation</a> <span>30 min</span></li>
+    </ol>
+  </nav>
+
+  <div class="callout info">
+    <div class="callout-title">Why this matters</div>
+    Code review feedback at your org is almost always about one of three things: wrong file placement, wrong naming, or wrong import style. This lesson maps all three. Read it before writing your first PR.
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       PART 1 — FULL APP STRUCTURE (BOILERPLATE)
+  ═══════════════════════════════════════════════════════ -->
+  <h2>Part 1 — The Complete App Structure</h2>
+
+  <p>In <a href="0007-clean-architecture.html">Lesson 7</a> you saw the four core folders. Production apps have more. Here is the full boilerplate:</p>
+
+  <div class="filetree">
+    <span class="ft-section">my_app/</span>
+    <div class="ft-row"><span class="ft-path file">├── app.py</span><span class="ft-dots"></span><span class="ft-desc">Django AppConfig</span></div>
+    <div class="ft-row"><span class="ft-path file">├── admin.py</span><span class="ft-dots"></span><span class="ft-desc">Django admin registrations</span></div>
+    <div class="ft-row"><span class="ft-path dir">├── api_specs/</span><span class="ft-dots"></span><span class="ft-desc">OpenAPI spec (api_spec.json)</span></div>
+    <div class="ft-row"><span class="ft-path dir">├── app_interfaces/</span><span class="ft-dots"></span><span class="ft-desc">ServiceInterface — what this app exposes to other apps</span></div>
+    <div class="ft-row"><span class="ft-path dir">├── adapters/</span><span class="ft-dots"></span><span class="ft-desc">Calls TO other apps — DTOs + ServiceAdapter</span></div>
+    <div class="ft-row"><span class="ft-path file">│   ├── dtos.py</span><span class="ft-dots"></span><span class="ft-desc">adapter-specific DTOs</span></div>
+    <div class="ft-row"><span class="ft-path file">│   └── service_adapter.py</span><span class="ft-dots"></span><span class="ft-desc">single ServiceAdapter class wiring all adapters</span></div>
+    <div class="ft-row"><span class="ft-path dir">├── constants/</span><span class="ft-dots"></span><span class="ft-desc">config, enums, exception_messages</span></div>
+    <div class="ft-row"><span class="ft-path dir">├── exceptions/</span><span class="ft-dots"></span><span class="ft-desc">custom_exceptions.py</span></div>
+    <div class="ft-row"><span class="ft-path dir">├── entities/</span><span class="ft-dots"></span><span class="ft-desc">pure data classes (no DB, no HTTP)</span></div>
+    <div class="ft-row"><span class="ft-path dir">├── interactors/</span><span class="ft-dots"></span><span class="ft-desc">business logic + interfaces</span></div>
+    <div class="ft-row"><span class="ft-path file">│   ├── post_interactor.py</span><span class="ft-dots"></span><span class="ft-desc">one interactor per entity (or per use-case)</span></div>
+    <div class="ft-row"><span class="ft-path dir">│   ├── mixins/</span><span class="ft-dots"></span><span class="ft-desc">validation_mixin.py — only if used in 3+ interactors</span></div>
+    <div class="ft-row"><span class="ft-path dir">│   ├── presenter_interfaces/</span><span class="ft-dots"></span><span class="ft-desc">ABC + DTOs for presenters</span></div>
+    <div class="ft-row"><span class="ft-path dir">│   └── storage_interfaces/</span><span class="ft-dots"></span><span class="ft-desc">ABC + DTOs for storages</span></div>
+    <div class="ft-row"><span class="ft-path dir">├── models/</span><span class="ft-dots"></span><span class="ft-desc">Django ORM models</span></div>
+    <div class="ft-row"><span class="ft-path dir">├── storages/</span><span class="ft-dots"></span><span class="ft-desc">concrete ORM implementations</span></div>
+    <div class="ft-row"><span class="ft-path dir">├── presenters/</span><span class="ft-dots"></span><span class="ft-desc">concrete response builders</span></div>
+    <div class="ft-row"><span class="ft-path dir">├── populate/</span><span class="ft-dots"></span><span class="ft-desc">data seeding utilities (wraps interactors)</span></div>
+    <div class="ft-row"><span class="ft-path dir">├── signals/</span><span class="ft-dots"></span><span class="ft-desc">Django signals</span></div>
+    <div class="ft-row"><span class="ft-path dir">├── utils/</span><span class="ft-dots"></span><span class="ft-desc">helpers used across 3+ files within this app</span></div>
+    <div class="ft-row"><span class="ft-path dir">└── tests/</span><span class="ft-dots"></span><span class="ft-desc">mirrors app structure</span></div>
+    <div class="ft-row"><span class="ft-path dir">    ├── common_fixtures/</span><span class="ft-dots"></span><span class="ft-desc">reusable mock objects for adapters, storages</span></div>
+    <div class="ft-row"><span class="ft-path dir">    ├── factories/</span><span class="ft-dots"></span><span class="ft-desc">models.py · storage_dtos.py · presenter_dtos.py</span></div>
+    <div class="ft-row"><span class="ft-path dir">    ├── interactors/</span><span class="ft-dots"></span><span class="ft-desc">one file per public method</span></div>
+    <div class="ft-row"><span class="ft-path dir">    ├── storages/</span><span class="ft-dots"></span><span class="ft-desc"></span></div>
+    <div class="ft-row"><span class="ft-path dir">    ├── presenters/</span><span class="ft-dots"></span><span class="ft-desc"></span></div>
+    <div class="ft-row"><span class="ft-path dir">    └── views/</span><span class="ft-dots"></span><span class="ft-desc">snapshot tests</span></div>
+  </div>
+
+  <h3>New folders vs Lesson 7</h3>
+  <table>
+    <thead><tr><th>Folder</th><th>Purpose (one sentence)</th></tr></thead>
+    <tbody>
+      <tr><td><code>adapters/</code></td><td>All code that <em>calls other apps</em>. DTOs are converted here so foreign types never enter your interactors.</td></tr>
+      <tr><td><code>app_interfaces/</code></td><td>The <code>ServiceInterface</code> class — what <em>other</em> apps can call on this app. The public API between Django apps.</td></tr>
+      <tr><td><code>constants/</code></td><td>Three files only: <code>config.py</code> (settings/thresholds), <code>enums.py</code> (all enums), <code>exception_messages.py</code> (error strings).</td></tr>
+      <tr><td><code>exceptions/</code></td><td>All custom exception classes for this app, in <code>custom_exceptions.py</code>.</td></tr>
+      <tr><td><code>populate/</code></td><td>Data seeding scripts that wrap interactors. Handle sheet parsing, field validation, and DTO construction here.</td></tr>
+      <tr><td><code>tests/factories/</code></td><td>Factory Boy model factories + DTO factories used in tests.</td></tr>
+      <tr><td><code>tests/common_fixtures/</code></td><td>Reusable mock objects (e.g. <code>auth_service_adapter_mocks.py</code>) shared across multiple test files.</td></tr>
+    </tbody>
+  </table>
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       PART 2 — MODULE RULES
+  ═══════════════════════════════════════════════════════ -->
+  <h2>Part 2 — Rules Per Module</h2>
+
+  <!-- INTERACTORS -->
+  <h3><span class="mpill interactor">Interactors</span> Key rules</h3>
+  <ul class="rule-list">
+    <li class="do">Pure CRUD (no logic) for a single entity → one interactor class with multiple methods is fine.</li>
+    <li class="do">When interactor A <em>calls</em> interactor B, wrap the call in a <code>try/except</code> inside A to handle B's exceptions.</li>
+    <li class="do">Group arguments into a DTO when a method takes <strong>more than 3 arguments</strong>.</li>
+    <li class="do">Pass sort/filter parameters to storage as structured DTOs (<code>SortBy</code>, <code>FilterBy</code> dataclasses — see below).</li>
+    <li class="do">DTOs used only within an interactor are defined at the top of <em>that interactor file</em>.</li>
+    <li class="dont">Never create a new <code>self.some_variable</code> just to pass state between private methods — pass it as an argument.</li>
+    <li class="dont">Never import or use Django models directly inside an interactor — that belongs in Storage.</li>
+  </ul>
+
+  <p>Sort and filter DTOs look like this — put them in <code>interactors/storage_interfaces/dtos.py</code>:</p>
+
+  <pre><code>import enum
+from dataclasses import dataclass
+
+class SortByEnum(enum.Enum):
+    TITLE  = "TITLE"
+    RATING = "RATING"
+
+class OrderByEnum(enum.Enum):
+    ASC  = "ASC"
+    DESC = "DESC"
+
+@dataclass
+class SortBy:
+    sort_by: SortByEnum
+    order:   OrderByEnum
+
+class FilterByEnum(enum.Enum):
+    GENRE  = "GENRE"
+    DECADE = "DECADE"
+
+@dataclass
+class FilterBy:
+    filter_by: FilterByEnum
+    value:     str</code></pre>
+
+  <!-- PRESENTERS -->
+  <h3><span class="mpill presenter">Presenters</span> Key rules</h3>
+  <ul class="rule-list">
+    <li class="do">DTO → dict conversion logic lives <em>exclusively</em> in Presenters — never in the Interactor.</li>
+    <li class="do">One presenter class (interface + implementation) per API endpoint.</li>
+    <li class="do">The return type of every presenter interface method must be <code>HttpResponse</code>.</li>
+    <li class="do">Exception messages for an API are defined as constants at the <em>top</em> of the presenter implementation class.</li>
+    <li class="do">If a storage DTO can be reused in the presenter without modification, reuse it — no need to duplicate.</li>
+    <li class="dont">Never put nested-structure building logic in the Interactor — nested dicts belong in the Presenter.</li>
+  </ul>
+
+  <!-- STORAGES -->
+  <h3><span class="mpill storage">Storages</span> Key rules</h3>
+  <ul class="rule-list">
+    <li class="do">When the storage interface grows large, split it into multiple interface classes <strong>after discussing with your RP</strong>.</li>
+    <li class="do">When splitting interfaces, split the corresponding <code>dtos.py</code> files into matching structure too.</li>
+    <li class="dont">Never put business logic or conditional branching into a Storage method — only ORM operations.</li>
+  </ul>
+
+  <!-- ADAPTERS -->
+  <h3><span class="mpill adapter">Adapters</span> Key rules (inter-app communication)</h3>
+
+  <p>An <strong>Adapter</strong> is what you write when your app needs to call a different Django app. It lives in <code>adapters/</code>.</p>
+
+  <ul class="rule-list">
+    <li class="do">DTO conversion and exception handling for the external call both live in the adapter file.</li>
+    <li class="dont">Never pass a DTO from App B directly into App A's interactors — always convert it in App A's adapter first.</li>
+    <li class="dont">Never let exceptions from App B bubble up into App A — catch and re-raise as App A's own exceptions in the adapter.</li>
+  </ul>
+
+  <div class="dd-grid">
+    <div>
+      <div class="dd-col-head dont">Wrong — using other app's DTO directly</div>
+      <pre><code># In app A's interactor — WRONG
+from auth_app.interfaces.dtos import UserDTO
+
+def do_something(self, user_dto: UserDTO):
+    # directly using another app's DTO
+    ...</code></pre>
+    </div>
+    <div>
+      <div class="dd-col-head do">Correct — adapter converts first</div>
+      <pre><code># In app A's adapter — CORRECT
+from auth_app.interfaces.service_interface import \
+    AuthServiceInterface
+
+class AuthServiceAdapter:
+    def get_user(self, user_id: int) -> LocalUserDTO:
+        external_dto = AuthServiceInterface().get_user(user_id)
+        return LocalUserDTO(
+            id=external_dto.id,
+            name=external_dto.full_name
+        )</code></pre>
+    </div>
+  </div>
+
+  <!-- TESTS -->
+  <h3><span class="mpill tests">Tests</span> Key rules</h3>
+  <ul class="rule-list">
+    <li class="do">Use class-based tests — group by endpoint or interactor method.</li>
+    <li class="do">For an interactor with multiple public methods, write a <strong>separate test file per method</strong>.</li>
+    <li class="do">Build test data with Factory Boy — never create model objects with raw <code>Model.objects.create()</code> in tests.</li>
+    <li class="dont">Don't repeat the class name in every test method name (e.g. <code>test_create_post_creates_post</code> inside <code>TestCreatePost</code>).</li>
+    <li class="dont">Don't define fixtures that are reused across multiple test classes in a local class — move them to <code>common_fixtures/</code>.</li>
+  </ul>
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       PART 3 — PYTHON CONVENTIONS
+  ═══════════════════════════════════════════════════════ -->
+  <h2>Part 3 — Python Conventions</h2>
+
+  <h3>Naming</h3>
+
+  <table class="naming-table">
+    <thead><tr><th>What you're creating</th><th>Naming rule</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td>Model instance</td><td>suffix <code>_object</code></td><td><code>post_object = PostFactory()</code></td></tr>
+      <tr><td>DTO instance</td><td>suffix <code>_dto</code></td><td><code>post_dto = PostDTO(...)</code></td></tr>
+      <tr><td>Factory class</td><td>suffix <code>Factory</code></td><td><code>class PostFactory</code></td></tr>
+      <tr><td>DTO class</td><td>suffix <code>DTO</code></td><td><code>class MovieDetailsDTO</code></td></tr>
+      <tr><td>Exception class</td><td>descriptive, ends <code>Exception</code></td><td><code>class InvalidMovieIdException</code></td></tr>
+      <tr><td>Enum values</td><td>SCREAMING_SNAKE_CASE</td><td><code>DRAMA = "DRAMA"</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Imports</h3>
+
+  <p>The rule is: <strong>import as late as possible, as absolute as possible</strong>.</p>
+
+  <ul class="rule-list">
+    <li class="do"><strong>Local imports</strong> (inside a method) are the default — they reduce circular dependency risk and make refactoring easier.</li>
+    <li class="do">Move to a <strong>global import</strong> only when the same thing is imported in multiple methods of the same file.</li>
+    <li class="do">Standard library packages (<code>os</code>, <code>uuid</code>, <code>json</code>, <code>datetime</code>) are always global, one per line.</li>
+    <li class="do">Use <strong>absolute paths</strong>: <code>from myapp.interactors.storage_interfaces.storage_interface import StorageInterface</code></li>
+    <li class="dont">Never use relative imports: <code>from .storage_interfaces.storage_interface import StorageInterface</code> ← forbidden.</li>
+    <li class="dont">Never import classes directly from third-party packages — import the module, then use <code>module.ClassName</code>.</li>
+  </ul>
+
+  <div class="dd-grid">
+    <div>
+      <div class="dd-col-head dont">Wrong</div>
+      <pre><code># relative import
+from .storages.storage_interface import SI
+
+# importing class directly from third-party
+from django.db.models import QuerySet
+
+# global import of something used once
+from movies.storages.movie_storage import MovieStorage
+class GetMovieInteractor:
+    def execute(self):
+        ...   # MovieStorage used only here</code></pre>
+    </div>
+    <div>
+      <div class="dd-col-head do">Correct</div>
+      <pre><code># absolute import
+from movies.storages.storage_interface import SI
+
+# import to module, access class via module
+from django.db import models
+qs: models.QuerySet = ...
+
+# local import (used in one method only)
+class GetMovieInteractor:
+    def execute(self):
+        from movies.storages.movie_storage \
+            import MovieStorage
+        ...</code></pre>
+    </div>
+  </div>
+
+  <h3>Typing</h3>
+
+  <ul class="rule-list">
+    <li class="do">All method signatures must have type annotations on every argument and the return type — including <code>private</code> methods.</li>
+    <li class="do">Instance variables declared in <code>__init__</code> must be typed: <code>self.storage: MovieStorageInterface</code></li>
+    <li class="dont">Don't annotate local variables inside methods — it adds noise without benefit.</li>
+  </ul>
+
+  <pre><code>class GetMovieDetailsInteractor:
+    def __init__(
+        self,
+        storage: MovieStorageInterface,    # ← typed
+        presenter: MoviePresenterInterface # ← typed
+    ) -> None:
+        self.storage: MovieStorageInterface   = storage    # ← typed
+        self.presenter: MoviePresenterInterface = presenter # ← typed
+
+    def get_movie_details(self, movie_id: int) -> HttpResponse:  # ← return typed
+        movie_dto = self.storage.get_movie_by_id(movie_id=movie_id)
+        # ↑ no type annotation for local variable — correct
+        return self.presenter.get_response_for_movie_details(movie_dto=movie_dto)</code></pre>
+
+  <h3>Raising Errors</h3>
+
+  <p>When an exception needs to carry data (e.g. the invalid ID), stringify it and include it in the <code>message</code> key:</p>
+
+  <pre><code># constants/exception_messages.py
+INVALID_MOVIE_ID = "Invalid movie_id: {movie_id}"
+
+# interactor
+from movies.constants.exception_messages import INVALID_MOVIE_ID
+from movies.exceptions.custom_exceptions import InvalidMovieIdException
+
+raise InvalidMovieIdException(
+    message=INVALID_MOVIE_ID.format(movie_id=movie_id)
+)</code></pre>
+
+  <h3>Enums</h3>
+
+  <ul class="rule-list">
+    <li class="do">All enums live in <code>constants/enums.py</code>. Group related enums together in the file.</li>
+    <li class="do">When <code>enums.py</code> grows too large, split into multiple files in <code>constants/</code> — group by entity.</li>
+  </ul>
+
+  <h3>API Spec — error responses</h3>
+
+  <p>Every possible error your API can raise must appear in the OpenAPI spec as a named response with a <code>res_status</code> enum field:</p>
+
+  <pre><code>{
+  "responses": {
+    "UpdateFeedbackFailureResponse": {
+      "description": "Update Feedback Failure Response",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "response":        { "type": "string" },
+          "http_status_code":{ "type": "integer" },
+          "res_status": {
+            "type": "string",
+            "enum": [
+              "INVALID_FEEDBACK_ID",
+              "DUPLICATE_ITEM_IDS",
+              "PERMISSION_DENIED"
+            ]
+          }
+        },
+        "required": ["response", "http_status_code", "res_status"]
+      }
+    }
+  }
+}</code></pre>
+
+  <div class="callout warn">
+    <div class="callout-title">Code review checkpoint</div>
+    Missing error responses in the spec is a common PR rejection reason. Every exception your interactor can raise must map to a named response entry in <code>api_spec.json</code>.
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       PART 4 — REFACTORING RULES
+  ═══════════════════════════════════════════════════════ -->
+  <h2>Part 4 — When to Split &amp; Refactor</h2>
+
+  <p>These are the signals your org uses to decide when a file has grown too big:</p>
+
+  <table>
+    <thead><tr><th>File / class</th><th>Action when it grows</th></tr></thead>
+    <tbody>
+      <tr><td>Interactor with multiple public methods</td><td>Split each public method into its own class (one file per use-case)</td></tr>
+      <tr><td>Storage interface class</td><td>Split into multiple interface classes — discuss with RP first</td></tr>
+      <tr><td>Mixin class &gt; 200 lines</td><td>Apply SRP + OCP — split into focused mixin classes</td></tr>
+      <tr><td><code>custom_exceptions.py</code></td><td>Split by entity into separate modules inside <code>exceptions/</code></td></tr>
+      <tr><td><code>constants/enums.py</code></td><td>Split by entity into multiple files inside <code>constants/</code></td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout key">
+    <div class="callout-title">The general rule</div>
+    "If a file/class is growing, split it into a module (folder)." This is the single refactoring principle behind all the specifics above.
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       QUIZ
+  ═══════════════════════════════════════════════════════ -->
+  <div class="quiz" data-quiz-id="code-guide">
+    <!-- Rendered by quiz.js -->
+  </div>
+  <script type="application/json" data-quiz-data="code-guide">
+  [
+    {
+      "q": "A variable holds a Movie model instance created by PostFactory. What should it be named?",
+      "options": [
+        "movie_object  — model instances end with _object",
+        "movie_dto     — DTO instances end with _dto       ",
+        "movie         — short names keep code readable    ",
+        "movie_factory — name matches the factory class    "
+      ],
+      "answer": 0,
+      "explain": "Your org's naming rule: instances from models or model factories end with _object. Instances from DTOs or DTO factories end with _dto."
+    },
+    {
+      "q": "Where should the logic for converting a MovieDTO to a JSON dict be written?",
+      "options": [
+        "Presenter    — DTO-to-dict conversion belongs here",
+        "Interactor   — it already has all the data        ",
+        "Storage      — it built the DTO from the ORM      ",
+        "api_wrapper  — the controller owns serialisation  "
+      ],
+      "answer": 0,
+      "explain": "The Presenter is exclusively responsible for converting DTOs to response dicts. The Interactor should never build JSON structures."
+    },
+    {
+      "q": "App A calls App B. App B raises InvalidUserException. Where must this be caught?",
+      "options": [
+        "In App A's adapter — re-raised as App A's own exception",
+        "In App A's interactor — inside the business logic      ",
+        "In App A's presenter — before building the response    ",
+        "In App B's interface — before it crosses the boundary  "
+      ],
+      "answer": 0,
+      "explain": "Exceptions from external apps must be caught and re-raised as your own app's exceptions in the Adapter. Interactors should never see foreign exception types."
+    },
+    {
+      "q": "An interactor method needs Movie model instances. Which import style is correct?",
+      "options": [
+        "Local import inside the storage method that fetches data",
+        "Global import of Movie at the top of the interactor file",
+        "Pass the Movie class in as a constructor argument        ",
+        "Import Movie at the top of the storage_interface file   "
+      ],
+      "answer": 0,
+      "explain": "Interactors must never import Django models. Model imports belong inside Storage methods. Interactors only talk to the storage via the interface."
+    },
+    {
+      "q": "An interactor method has 5 parameters. What should you do according to the guide?",
+      "options": [
+        "Group related params into a DTO and pass the DTO instead",
+        "Split the method into two separate interactor methods   ",
+        "Pass them as **kwargs and unpack inside the method body ",
+        "Add them as instance variables set before calling        "
+      ],
+      "answer": 0,
+      "explain": "When a method has more than 3 arguments, group related arguments into a DTO dataclass. This improves readability and makes future changes less disruptive."
+    }
+  ]
+  </script>
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       REFERENCE + NEXT
+  ═══════════════════════════════════════════════════════ -->
+  <h2>What to Do Next</h2>
+
+  <ol class="steps">
+    <li>
+      <strong>Open a production app</strong> and verify it matches the folder structure above. Find one folder or file that is named differently and understand why.
+    </li>
+    <li>
+      <strong>Find an interactor</strong>. Check: does it have type annotations on all methods? Are its imports local or global? Does it use DTOs for sort/filter?
+    </li>
+    <li>
+      <strong>Find an adapter</strong> in <code>adapters/</code>. Read how it converts an external DTO and re-raises exceptions. This is the pattern you'll copy.
+    </li>
+    <li>
+      <strong>Continue to <a href="0009-dsu.html">Lesson 9 — DSU</a></strong> where you'll see how all of this is scaffolded with DSU.
+    </li>
+  </ol>
+
+  <div class="callout info">
+    <div class="callout-title">Primary source</div>
+    <strong>Backend Style Guide</strong> — your org's full code guidelines document. When in doubt, refer here.
+  </div>
+
+  <div class="ask-agent">
+    <strong>Questions?</strong> Ask your agent — why local imports reduce circular dependencies, when exactly to use a mixin vs a utility function, how to structure nested API responses, or anything else. Your agent is your teacher.
+  </div>
+
+  <footer class="lesson-footer">
+    <div class="lesson-nav">
+      <a href="0007-clean-architecture.html">&#8592; Prev: Clean Architecture</a>
+    </div>
+    <div>Lesson 8 · Backend Code Guide</div>
+    <div class="lesson-nav">
+      <a href="0009-dsu.html">Next: DSU &#8594;</a>
+    </div>
+  </footer>
+
+</div>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

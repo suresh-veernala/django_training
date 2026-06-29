@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <title>Lesson 08 — DSU: Django Swagger Utils</title>
+  <link rel="stylesheet" href="../assets/styles.css?v=2" />
+  <style>
+    /* ── Control flow diagram ── */
+    .flow-row {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin: 1.25rem 0 1.5rem;
+    }
+    .flow-box {
+      border-radius: 8px;
+      padding: 0.5rem 1.1rem;
+      font-family: var(--font-sans);
+      font-size: 0.88rem;
+      font-weight: 600;
+      text-align: center;
+      min-width: 110px;
+    }
+    .flow-box.url      { background: #f0f4ff; border: 2px solid #6b7fcc; color: #2d3a8c; }
+    .flow-box.view     { background: #fff7ed; border: 2px solid #c2773b; color: #7c3d0d; }
+    .flow-box.valid    { background: #fdf4ff; border: 2px solid #a855f7; color: #6b21a8; }
+    .flow-box.wrapper  { background: #e8f5e9; border: 2px solid #2e7d52; color: #0c4b33; }
+    .flow-arrow {
+      font-size: 1.3rem;
+      color: var(--muted);
+      padding: 0 0.4rem;
+    }
+
+    /* ── kwargs key table ── */
+    .kwargs-key {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: 3px;
+      padding: 0.1em 0.4em;
+      white-space: nowrap;
+    }
+
+    /* ── MOCK / IMPL toggle badge ── */
+    .env-badge {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 0.2rem 0.7rem;
+      border-radius: 4px;
+      margin: 0 0.2rem;
+    }
+    .env-badge.mock { background: #fef9c3; border: 1px solid #fbbf24; color: #92400e; }
+    .env-badge.impl { background: #dcfce7; border: 1px solid #4ade80; color: #166534; }
+
+    /* ── Generated file explanation cards ── */
+    .gen-file {
+      display: flex;
+      gap: 0.9rem;
+      align-items: flex-start;
+      padding: 0.75rem 0.9rem;
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent-mid);
+      border-radius: var(--radius);
+      background: var(--surface);
+      margin-bottom: 0.65rem;
+    }
+    .gen-file-name {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: #0d3b66;
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: 3px;
+      padding: 0.15em 0.45em;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .gen-file-desc {
+      font-size: 0.9rem;
+      margin: 0;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+<div class="lesson-wrap">
+
+  <a class="home-btn" href="../index.html">&#8592; Home</a>
+
+  <header class="lesson-header">
+    <div class="lesson-meta">
+      <span class="badge">Module 9</span>
+      <span>Django Backend Training</span>
+      <span>⏱ ~25 min</span>
+      <span>DSU</span>
+    </div>
+    <h1 class="lesson-title">DSU — Django Swagger Utils</h1>
+    <p class="lesson-subtitle">Your org's internal framework for building APIs: scaffold an app, build views from an OpenAPI spec, handle requests and write presenters — all without boilerplate.</p>
+  </header>
+
+  <nav class="course-map">
+    <div class="course-map-title">Course Map — Django Backend Training</div>
+    <ol>
+      <li><a href="0001-introduction-to-django.html">Introduction to Django</a> <span>15 min</span></li>
+      <li><a href="0002-django-project-structure.html">Django Project Structure</a> <span>10 min</span></li>
+      <li><a href="0003-models-and-orm.html">Models &amp; ORM</a> <span>40 min</span></li>
+      <li><a href="0004-building-apis.html">Building APIs</a> <span>35 min</span></li>
+      <li><a href="0005-openapi-swagger.html">OpenAPI / Swagger</a> <span>15 min</span></li>
+      <li><a href="0006-wrap-up-and-learning-path.html">Wrap Up &amp; Learning Path</a> <span>5 min</span></li>
+      <li><a href="0007-clean-architecture.html">Clean Architecture</a> <span>20 min</span></li>
+      <li><a href="0008-backend-code-guide.html">Backend Code Guide</a> <span>25 min</span></li>
+      <li class="current"><a href="0009-dsu.html">DSU — Django Swagger Utils</a> <span>25 min</span></li>
+      <li><a href="0010-writing-test-cases.html">Testing with pytest</a> <span>40 min</span></li>
+      <li><a href="0011-mocking.html">Mocking — Test in Isolation</a> <span>30 min</span></li>
+    </ol>
+  </nav>
+
+
+  <!-- ════════════════════════════════════════════════
+       PART 1 — WHAT IS DSU
+  ════════════════════════════════════════════════ -->
+  <h2>What Is DSU?</h2>
+
+  <p><strong>Django Swagger Utils (DSU)</strong> is your org's internal library that sits on top of Django and makes building production-grade APIs faster. With DSU you can:</p>
+
+  <div class="feature-grid">
+    <div class="feature-card">
+      <h4>Scaffold instantly</h4>
+      <p>One command generates the full Clean Architecture folder structure — interactors, storages, presenters, all pre-wired.</p>
+    </div>
+    <div class="feature-card">
+      <h4>Build from OAS</h4>
+      <p>Write your OpenAPI spec → run <code>build</code> → DSU generates serializers, URLs, and view stubs automatically.</p>
+    </div>
+    <div class="feature-card">
+      <h4>Mock before implementing</h4>
+      <p>Generated views return dummy data by default so the frontend can develop in parallel without waiting for you.</p>
+    </div>
+    <div class="feature-card">
+      <h4>Clean request handling</h4>
+      <p>DSU validates, parses, and injects request data — no manual <code>json.loads</code> or <code>request.POST.get</code> ever.</p>
+    </div>
+  </div>
+
+  <div class="callout info">
+    <div class="callout-title">Where it comes from</div>
+    DSU is the <code>django-swagger-utils</code> package in your <code>requirements.txt</code>. It is maintained internally. Everything in this lesson is specific to your org's stack.
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════
+       PART 2 — SETTINGS FILES
+  ════════════════════════════════════════════════ -->
+  <h2>Multiple Settings Files</h2>
+
+  <p>A plain Django project has one <code>settings.py</code>. In your org's projects, there are several — each for a different purpose:</p>
+
+  <table>
+    <thead><tr><th>File</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>local.py</code></td><td>Local development — SQLite3, debug mode, relaxed auth</td></tr>
+      <tr><td><code>base_swagger_utils.py</code></td><td>All DSU configuration — the file DSU reads</td></tr>
+      <tr><td><code>alpha.py</code> / <code>beta.py</code></td><td>Staging environment settings</td></tr>
+      <tr><td><code>base_pg_db.py</code></td><td>Postgres database connection settings</td></tr>
+    </tbody>
+  </table>
+
+  <p>Tell Django which file to use by setting an environment variable in your terminal:</p>
+
+  <pre><code>export DJANGO_SETTINGS_MODULE=&lt;project_name&gt;.settings.local</code></pre>
+
+  <div class="callout warn">
+    <div class="callout-title">Common mistake</div>
+    If you get <em>"Could not import settings"</em> errors, check this environment variable first. It must point to a valid dotted module path.
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════
+       PART 3 — CREATING & REGISTERING AN APP
+  ════════════════════════════════════════════════ -->
+  <h2>Creating and Registering an App</h2>
+
+  <h3>Step 1 — Scaffold the app</h3>
+  <p>One command creates the entire Clean Architecture boilerplate:</p>
+
+  <pre><code>python manage.py create_cleanapp &lt;app_name&gt; -p &lt;project_name&gt;</code></pre>
+
+  <p>This generates every folder from the <a href="0008-backend-code-guide.html">Backend Code Guide</a> — <code>interactors/</code>, <code>storages/</code>, <code>presenters/</code>, <code>api_specs/</code>, <code>constants/</code>, and all the rest — with <code>__init__.py</code> files pre-created.</p>
+
+  <h3>Step 2 — Register the app in two places</h3>
+
+  <p>Unlike plain Django (where you only add to <code>INSTALLED_APPS</code>), DSU requires you to register in <code>base_swagger_utils.py</code> in two spots:</p>
+
+  <pre><code># base_swagger_utils.py
+
+# 1. Add to APPS list
+APPS = [
+    "movies",
+    "actors",
+]
+
+# 2. Add to SWAGGER_UTILS["APPS"]
+SWAGGER_UTILS = {
+    ...
+    "APPS": {
+        "movies": {},
+        "actors": {},
+    },
+    "HOST": os.environ.get('APIGATEWAY_ENDPOINT', '127.0.0.1:8000'),
+}</code></pre>
+
+  <div class="callout warn">
+    <div class="callout-title">Most common setup mistake</div>
+    Forgetting to add the app to <code>SWAGGER_UTILS["APPS"]</code> is the #1 cause of "endpoint not found" after running <code>build</code>. Always update both spots.
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════
+       PART 4 — BUILDING VIEWS FROM OAS
+  ════════════════════════════════════════════════ -->
+  <h2>Building Views from the OpenAPI Spec</h2>
+
+  <p>Once your OpenAPI spec is written, copy it to <code>&lt;app_name&gt;/api_specs/api_spec.json</code>, then run:</p>
+
+  <pre><code># Build one specific app
+python manage.py build -a &lt;app_name&gt;
+
+# Build all apps installed in the virtualenv
+python manage.py build -at</code></pre>
+
+  <p>DSU reads <code>api_spec.json</code> and generates a folder inside <code>views/</code> for every <code>operationId</code> in the spec:</p>
+
+  <div class="filetree">
+    <span class="ft-section">movies/views/</span>
+    <div class="ft-row"><span class="ft-path dir">├── get_movie_details/</span><span class="ft-dots"></span><span class="ft-desc">one folder per operationId</span></div>
+    <div class="ft-row"><span class="ft-path file">│   ├── __init__.py</span><span class="ft-dots"></span><span class="ft-desc">ENV_MOCK / ENV_IMPL toggle lives here</span></div>
+    <div class="ft-row"><span class="ft-path file">│   ├── api_wrapper.py</span><span class="ft-dots"></span><span class="ft-desc">← YOU write your logic here</span></div>
+    <div class="ft-row"><span class="ft-path file">│   ├── get_movie_details.py</span><span class="ft-dots"></span><span class="ft-desc">auto-generated — do not edit</span></div>
+    <div class="ft-row"><span class="ft-path file">│   ├── request_response_mocks.py</span><span class="ft-dots"></span><span class="ft-desc">sample request/response shapes</span></div>
+    <div class="ft-row"><span class="ft-path file">│   └── validator_class.py</span><span class="ft-dots"></span><span class="ft-desc">pre-request validations</span></div>
+    <div class="ft-row"><span class="ft-path dir">├── create_movie/</span><span class="ft-dots"></span><span class="ft-desc"></span></div>
+    <div class="ft-row"><span class="ft-path dir">└── delete_movie/</span><span class="ft-dots"></span><span class="ft-desc"></span></div>
+  </div>
+
+  <h3>What each generated file does</h3>
+
+  <div class="gen-file">
+    <span class="gen-file-name">api_wrapper.py</span>
+    <p class="gen-file-desc">The only file <strong>you edit</strong>. Write your business logic here: read request data, call the interactor, return the response.</p>
+  </div>
+  <div class="gen-file">
+    <span class="gen-file-name">get_movie_details.py</span>
+    <p class="gen-file-desc">Auto-generated by DSU. Parses the request and calls <code>api_wrapper</code>. <strong>Never edit this file</strong> — it will be overwritten on the next <code>build</code>.</p>
+  </div>
+  <div class="gen-file">
+    <span class="gen-file-name">request_response_mocks.py</span>
+    <p class="gen-file-desc">Sample request body and expected response shapes. Useful for seeing what DSU understood from your spec. Read-only reference.</p>
+  </div>
+  <div class="gen-file">
+    <span class="gen-file-name">validator_class.py</span>
+    <p class="gen-file-desc">Pre-execution validations (e.g. check if a resource exists before the main logic runs). Runs <em>before</em> <code>api_wrapper</code>.</p>
+  </div>
+  <div class="gen-file">
+    <span class="gen-file-name">__init__.py</span>
+    <p class="gen-file-desc">Contains <code>API_ENVIRONMENT</code> — the MOCK/IMPL toggle (see below).</p>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════
+       PART 5 — CONTROL FLOW
+  ════════════════════════════════════════════════ -->
+  <h2>Control Flow — How a Request Travels</h2>
+
+  <div class="flow-row">
+    <div class="flow-box url">urls.py</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box view">view file<br><small style="font-weight:400">(get_movie_details.py)</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box valid">validator_class.py</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box wrapper">api_wrapper.py</div>
+  </div>
+
+  <ol>
+    <li><strong>urls.py</strong> — the incoming URL is matched to a generated URL pattern and routed to the view file.</li>
+    <li><strong>View file</strong> (<code>get_movie_details.py</code>) — does basic parsing and forwards to <code>api_wrapper</code>.</li>
+    <li><strong>ValidatorClass</strong> — custom pre-execution checks run first.</li>
+    <li><strong>api_wrapper</strong> — receives fully validated, parsed data as <code>kwargs</code>. This is where your code lives.</li>
+  </ol>
+
+
+  <!-- ════════════════════════════════════════════════
+       PART 6 — MOCK vs IMPL
+  ════════════════════════════════════════════════ -->
+  <h2>MOCK vs IMPL — The API Environment Toggle</h2>
+
+  <p>By default, <code>build</code> sets every new view to <span class="env-badge mock">ENV_MOCK</span>. This means the view returns <strong>dummy data</strong> — your <code>api_wrapper</code> is never called. This is intentional: the frontend can start building against the API shape immediately, while you work on the real implementation.</p>
+
+  <p>When you are ready to wire in real logic, open <code>views/&lt;operation_id&gt;/__init__.py</code> and change the one line:</p>
+
+  <pre><code># views/get_movie_details/__init__.py
+
+API_ENVIRONMENT = "ENV_IMPL"  # was "ENV_MOCK"</code></pre>
+
+  <div class="callout warn">
+    <div class="callout-title">First debugging step</div>
+    If you've written logic in <code>api_wrapper.py</code> but it's never executing, check <code>__init__.py</code>. If it still says <code>ENV_MOCK</code>, DSU is returning dummy data and your wrapper is never called.
+  </div>
+
+  <p>Mock views are valuable during active development. A newbie developer might accidentally leave a view in MOCK mode — checking this is always the first step when an endpoint "doesn't seem to be running your code."</p>
+
+
+  <!-- ════════════════════════════════════════════════
+       PART 7 — HANDLING REQUESTS
+  ════════════════════════════════════════════════ -->
+  <h2>Handling the Request in api_wrapper</h2>
+
+  <p>When DSU calls your <code>api_wrapper</code>, all parsed and validated request data arrives as <code>kwargs</code>. The keys you'll use most:</p>
+
+  <table>
+    <thead><tr><th>Key</th><th>What it contains</th><th>Use this?</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="kwargs-key">kwargs['request_data']</span></td>
+        <td>Request body as a Python <code>OrderedDict</code> — parsed from JSON</td>
+        <td><strong>Yes — use this for the request body</strong></td>
+      </tr>
+      <tr>
+        <td><span class="kwargs-key">kwargs['path_params']</span></td>
+        <td>URL path parameters (e.g. <code>{"movie_id": "42"}</code>)</td>
+        <td><strong>Yes — use this for path params</strong></td>
+      </tr>
+      <tr>
+        <td><span class="kwargs-key">kwargs['request_query_params']</span></td>
+        <td>Query string parameters (e.g. <code>?include_cast=true</code>)</td>
+        <td><strong>Yes — use this for query params</strong></td>
+      </tr>
+      <tr>
+        <td><span class="kwargs-key">kwargs['user']</span></td>
+        <td>The authenticated Django <code>User</code> object</td>
+        <td>When you need the user's ID or auth info</td>
+      </tr>
+      <tr>
+        <td><span class="kwargs-key">kwargs['user_dto']</span></td>
+        <td>The user as a <code>UserDTO(user_id=...)</code></td>
+        <td>Preferred when passing to interactors</td>
+      </tr>
+      <tr>
+        <td><span class="kwargs-key">kwargs['request_object']</span></td>
+        <td>The full serialized request object (Python class)</td>
+        <td>Rarely — prefer <code>request_data</code> dict</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>A typical <code>api_wrapper</code> for creating a movie looks like this:</p>
+
+  <pre><code># views/create_movie/api_wrapper.py
+
+from django_swagger_utils.drf_server.utils.decorator.interface_decorator \
+    import validate_decorator
+from .validator_class import ValidatorClass
+
+
+@validate_decorator(validator_class=ValidatorClass)
+def api_wrapper(*args, **kwargs):
+    user         = kwargs['user']
+    request_data = kwargs['request_data']
+
+    title  = request_data['title']
+    rating = request_data['rating']
+
+    from movies.storages.movie_storage import MovieStorage
+    from movies.presenters.movie_presenter import JsonPresenter
+    from movies.interactors.create_movie_interactor import CreateMovieInteractor
+
+    storage    = MovieStorage()
+    presenter  = JsonPresenter()
+    interactor = CreateMovieInteractor(storage=storage, presenter=presenter)
+
+    return interactor.create_movie(
+        user_id=user.id,
+        title=title,
+        rating=rating
+    )</code></pre>
+
+  <div class="callout key">
+    <div class="callout-title">No raw request object</div>
+    DSU has already validated and deserialized the request before calling <code>api_wrapper</code>. You never need <code>json.loads(request.body)</code> or <code>request.POST.get()</code>. Everything arrives clean as Python dicts.
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════
+       PART 8 — SENDING RESPONSES
+  ════════════════════════════════════════════════ -->
+  <h2>Sending Responses</h2>
+
+  <p>There are two ways to send a response. DSU supports both but the Presenter pattern (using <code>HTTPResponseMixin</code>) is the org standard.</p>
+
+  <h3>Option A — Raw HttpResponse (acceptable for very simple cases)</h3>
+  <pre><code>from django.http import HttpResponse
+from raven.utils import json
+
+@validate_decorator(validator_class=ValidatorClass)
+def api_wrapper(*args, **kwargs):
+    ...
+    data     = json.dumps({'movie_id': movie.id})
+    response = HttpResponse(data, status=201)
+    return response</code></pre>
+
+  <h3>Option B — Presenter with HTTPResponseMixin (org standard)</h3>
+  <p>The Presenter builds the response. The <code>api_wrapper</code> just calls the interactor and returns whatever the presenter returns. See the next section for how to write a Presenter.</p>
+
+
+  <!-- ════════════════════════════════════════════════
+       PART 9 — WRITING PRESENTERS
+  ════════════════════════════════════════════════ -->
+  <h2>Writing Presenters — HTTPResponseMixin</h2>
+
+  <p>Presenters inherit from both your interface and <code>HTTPResponseMixin</code>. The mixin gives you pre-built response builders for every HTTP status. Error responses follow a three-field contract: <code>response</code>, <code>http_status_code</code>, <code>res_status</code>.</p>
+
+  <pre><code># movies/presenters/movie_presenter.py
+
+from django_swagger_utils.utils.http_response_mixin import HTTPResponseMixin
+from movies.interactors.presenter_interfaces.presenter_interface import \
+    MoviePresenterInterface
+
+
+INVALID_MOVIE_CONTENT = (
+    "Please send valid movie data",   # [0] human-readable message
+    "INVALID_MOVIE_CONTENT"           # [1] machine-readable enum
+)
+
+
+class JsonPresenter(MoviePresenterInterface, HTTPResponseMixin):
+
+    def get_response_for_create_movie(self, movie_id: int):
+        response = {"movie_id": movie_id}
+        return self.prepare_201_created_response(response)
+
+    def get_response_for_invalid_content(self):
+        failure_data = {
+            "response":        INVALID_MOVIE_CONTENT[0],
+            "http_status_code": 400,
+            "res_status":      INVALID_MOVIE_CONTENT[1],
+        }
+        return self.prepare_400_bad_request_response(failure_data)</code></pre>
+
+  <p>The error response the client receives looks like:</p>
+
+  <pre><code>{
+    "response":         "Please send valid movie data",
+    "http_status_code": 400,
+    "res_status":       "INVALID_MOVIE_CONTENT"
+}</code></pre>
+
+  <h3>HTTPResponseMixin helpers</h3>
+  <table>
+    <thead><tr><th>Method</th><th>Status</th><th>Use for</th></tr></thead>
+    <tbody>
+      <tr><td><code>prepare_200_success_response(data)</code></td><td>200</td><td>Successful GET / PUT</td></tr>
+      <tr><td><code>prepare_201_created_response(data)</code></td><td>201</td><td>Successful POST (resource created)</td></tr>
+      <tr><td><code>prepare_400_bad_request_response(data)</code></td><td>400</td><td>Validation failures</td></tr>
+      <tr><td><code>prepare_404_not_found_response(data)</code></td><td>404</td><td>Resource doesn't exist</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <div class="callout-title">Error response convention</div>
+    Every error response must have all three fields: <code>response</code> (human message), <code>http_status_code</code> (integer), <code>res_status</code> (SCREAMING_SNAKE_CASE enum). These must also appear in your <code>api_spec.json</code> — see the <a href="0008-backend-code-guide.html">Backend Code Guide</a>.
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════
+       PART 10 — MODELS IN MULTIPLE FILES
+  ════════════════════════════════════════════════ -->
+  <h2>Models in Multiple Files</h2>
+
+  <p>When an app has many models, keeping them all in one <code>models.py</code> leads to circular import errors and poor readability. DSU apps use a <code>models/</code> folder instead:</p>
+
+  <div class="filetree">
+    <span class="ft-section">movies/models/</span>
+    <div class="ft-row"><span class="ft-path file">├── __init__.py</span><span class="ft-dots"></span><span class="ft-desc">re-exports all models for external access</span></div>
+    <div class="ft-row"><span class="ft-path file">├── movie.py</span><span class="ft-dots"></span><span class="ft-desc">Movie model</span></div>
+    <div class="ft-row"><span class="ft-path file">├── actor.py</span><span class="ft-dots"></span><span class="ft-desc">Actor model</span></div>
+    <div class="ft-row"><span class="ft-path file">└── rating.py</span><span class="ft-dots"></span><span class="ft-desc">Rating model</span></div>
+  </div>
+
+  <p>The <code>__init__.py</code> re-exports everything so other files can import from <code>movies.models</code> as usual:</p>
+
+  <pre><code># movies/models/__init__.py
+
+from .movie  import Movie
+from .actor  import Actor
+from .rating import Rating
+
+__all__ = ["Movie", "Actor", "Rating"]</code></pre>
+
+  <div class="callout info">
+    <div class="callout-title">Why this works</div>
+    Any file that does <code>from movies.models import Movie</code> still works exactly as before — it resolves via <code>__init__.py</code>. The split is invisible to the rest of the codebase.
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════
+       QUIZ
+  ════════════════════════════════════════════════ -->
+  <div class="quiz" data-quiz-id="dsu">
+    <!-- Rendered by quiz.js -->
+  </div>
+  <script type="application/json" data-quiz-data="dsu">
+  [
+    {
+      "q": "You added a new operation to api_spec.json. What must you run before calling that endpoint?",
+      "options": [
+        "python manage.py build -a <app_name>          ",
+        "python manage.py create_cleanapp <app_name>   ",
+        "export DJANGO_SETTINGS_MODULE=settings.local  ",
+        "python manage.py migrate                      "
+      ],
+      "answer": 0,
+      "explain": "build reads the spec and regenerates URL routing, serializers, and view stubs. create_cleanapp is only run once. Settings and migrations are unrelated to spec changes."
+    },
+    {
+      "q": "You added code to api_wrapper.py but the endpoint still returns dummy data. What is the most likely cause?",
+      "options": [
+        "API_ENVIRONMENT is still 'ENV_MOCK' in __init__.py",
+        "The view file was overwritten by the last build run",
+        "SWAGGER_UTILS is missing the app in base settings  ",
+        "The validator_class is blocking your api_wrapper   "
+      ],
+      "answer": 0,
+      "explain": "ENV_MOCK makes DSU skip api_wrapper entirely and return generated dummy data. Change it to ENV_IMPL in views/<operation_id>/__init__.py."
+    },
+    {
+      "q": "Inside api_wrapper, where is the parsed JSON request body available?",
+      "options": [
+        "kwargs['request_data']         — a Python OrderedDict",
+        "kwargs['request_object']       — the raw serializer  ",
+        "args[0].body                   — the Django request  ",
+        "kwargs['request_query_params'] — query string values "
+      ],
+      "answer": 0,
+      "explain": "request_data is the recommended dict. request_object is the full serializer object (rarely used). args[0] is the raw Django request. request_query_params is for ?key=value query strings."
+    },
+    {
+      "q": "A presenter method for a resource-not-found case should return which response?",
+      "options": [
+        "self.prepare_404_not_found_response(failure_data)  ",
+        "self.prepare_400_bad_request_response(failure_data)",
+        "HttpResponse(json.dumps(data), status=404)         ",
+        "self.prepare_200_success_response(failure_data)    "
+      ],
+      "answer": 0,
+      "explain": "HTTPResponseMixin's prepare_404_not_found_response builds the correct 404 response. Never use raw HttpResponse in a Presenter — the mixin ensures the standard three-field error format."
+    },
+    {
+      "q": "You split Movie, Actor, Rating into separate files in models/. How do other files import Movie?",
+      "options": [
+        "from movies.models import Movie — via __init__.py re-export",
+        "from movies.models.movie import Movie — direct file import ",
+        "from movies import Movie — top-level package export        ",
+        "import movies.models; movies.models.Movie                  "
+      ],
+      "answer": 0,
+      "explain": "The models/__init__.py re-exports all classes, so from movies.models import Movie works exactly as with a single models.py. This is the preferred pattern."
+    }
+  ]
+  </script>
+
+
+  <!-- ════════════════════════════════════════════════
+       NEXT STEPS
+  ════════════════════════════════════════════════ -->
+  <h2>What to Do Next</h2>
+
+  <ol class="steps">
+    <li>
+      <strong>Find a real view folder</strong> in any production app. Open <code>__init__.py</code> and confirm whether it is MOCK or IMPL. Open <code>api_wrapper.py</code> and trace how it reads from <code>kwargs</code> and calls an interactor.
+    </li>
+    <li>
+      <strong>Find a real Presenter</strong>. Locate a class inheriting from <code>HTTPResponseMixin</code>. Find both a success method and an error method. Check the error method uses all three fields: <code>response</code>, <code>http_status_code</code>, <code>res_status</code>.
+    </li>
+    <li>
+      <strong>Check the settings</strong> in <code>base_swagger_utils.py</code>. Find both the <code>APPS</code> list and the <code>SWAGGER_UTILS["APPS"]</code> dict. Confirm every installed app appears in both.
+    </li>
+  </ol>
+
+  <div class="callout info">
+    <div class="callout-title">Primary source</div>
+    <strong>DSU — org training doc</strong> — the full reference document this lesson is based on.
+  </div>
+
+  <div class="ask-agent">
+    <strong>Questions?</strong> Ask your agent anything — how <code>validator_class</code> works, when to use <code>request_object</code> vs <code>request_data</code>, how DSU generates URLs from the spec, or anything else. Your agent is your teacher.
+  </div>
+
+  <footer class="lesson-footer">
+    <div class="lesson-nav">
+      <a href="0008-backend-code-guide.html">&#8592; Prev: Backend Code Guide</a>
+    </div>
+    <div>Lesson 9 · DSU — Django Swagger Utils</div>
+    <div class="lesson-nav">
+      <a href="../index.html">Home &#8594;</a>
+    </div>
+  </footer>
+
+</div>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Lesson 11 — Mocking: Test in Isolation</title>
+  <link rel="stylesheet" href="../assets/styles.css?v=2" />
+  <style>
+    /* ── Why-mock problem/solution cards ── */
+    .problem-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin: 1rem 0 1.5rem;
+    }
+    .problem-card {
+      border-radius: var(--radius);
+      padding: 0.9rem 1rem;
+      border-left: 4px solid;
+    }
+    .problem-card h4 { font-family: var(--font-sans); font-size: 0.92rem; font-weight: 700; margin-bottom: 0.35rem; }
+    .problem-card p  { margin: 0; font-size: 0.87rem; color: var(--muted); }
+    .problem-card.bad  { background: #fef2f2; border-color: #dc2626; }
+    .problem-card.bad h4  { color: #b91c1c; }
+    .problem-card.good { background: #f0fdf4; border-color: #16a34a; }
+    .problem-card.good h4 { color: #15803d; }
+
+    /* ── Three-tool cards ── */
+    .tool-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin: 1rem 0 1.5rem;
+    }
+    .tool-card {
+      border-radius: var(--radius);
+      padding: 0.9rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--accent-mid);
+    }
+    .tool-card h4 { font-family: var(--font-sans); font-size: 0.92rem; font-weight: 700; margin-bottom: 0.3rem; color: var(--accent); }
+    .tool-card p  { margin: 0; font-size: 0.87rem; color: var(--muted); line-height: 1.5; }
+
+    /* ── Part header ── */
+    .part-header {
+      display: flex; align-items: center; gap: 0.9rem;
+      margin: 3rem 0 1.5rem; padding-top: 1rem;
+      border-top: 2px solid var(--border);
+    }
+    .part-badge {
+      background: var(--accent); color: #fff;
+      font-family: var(--font-sans); font-size: 0.72rem; font-weight: 700;
+      padding: 0.3rem 0.8rem; border-radius: 99px;
+      letter-spacing: 0.05em; white-space: nowrap;
+    }
+    .part-header h2 { margin: 0; border: none; padding: 0; font-size: 1.35rem; }
+
+    /* ── Compare ── */
+    .compare {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 1rem; margin: 1rem 0 1.5rem;
+    }
+    .compare-label {
+      font-family: var(--font-sans); font-size: 0.72rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      padding: 0.3rem 0.7rem; border-radius: 4px 4px 0 0;
+      display: inline-block;
+    }
+    .compare-label.bad  { background: #fee2e2; color: #b91c1c; }
+    .compare-label.good { background: #dcfce7; color: #15803d; }
+    .compare-col pre { margin-top: 0; border-radius: 0 var(--radius) var(--radius) var(--radius); }
+
+    /* ── Patch target anatomy ── */
+    .target-anatomy {
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: var(--radius);
+      padding: 0.9rem 1.2rem;
+      margin: 1rem 0 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0;
+      flex-wrap: wrap;
+    }
+    .ta-part {
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+    .ta-dot { color: var(--muted); padding: 0 0.1rem; font-size: 1.1rem; }
+    .ta-mod  { background: #dbeafe; color: #1e40af; }
+    .ta-name { background: #fef9c3; color: #854d0e; }
+    .ta-legend { display: flex; gap: 1rem; margin-top: 0.6rem; width: 100%; font-size: 0.82rem; font-family: var(--font-sans); }
+    .ta-legend span { display: flex; align-items: center; gap: 0.35rem; }
+
+    /* ── TOC ── */
+    .toc {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1rem 1.3rem; margin: 1.5rem 0;
+    }
+    .toc p { margin: 0 0 0.5rem; font-family: var(--font-sans); font-size: 0.78rem;
+      font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+    .toc ol { margin: 0; padding-left: 1.2rem; }
+    .toc li { margin: 0.2rem 0; font-size: 0.93rem; font-family: var(--font-sans); }
+
+    @media (max-width: 640px) {
+      .problem-grid, .tool-grid, .compare { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="lesson-wrap">
+
+<a href="../index.html" class="home-btn">&#8592; Home</a>
+
+<header class="lesson-header">
+  <div class="lesson-meta">
+    <span class="lesson-number badge">Lesson 11</span>
+    <span class="lesson-tag">Testing Track</span>
+  </div>
+  <h1 class="lesson-title">Mocking — Test in Isolation</h1>
+  <p class="lesson-subtitle">
+    Replace unpredictable dependencies with controlled stand-ins so every test
+    runs reliably, fast, and without hitting a real database or external service.
+  </p>
+  <div class="callout key" style="margin-top: 1rem;">
+    <div class="callout-title">After this lesson you will be able to</div>
+    <ul style="margin: 0; padding-left: 1.2rem;">
+      <li>Explain why uncontrolled dependencies make tests unreliable</li>
+      <li>Create a <code>Mock()</code> object and set its <code>return_value</code></li>
+      <li>Use <code>side_effect</code> to force a mock to raise an exception</li>
+      <li>Assert that a mock was called with the right arguments</li>
+      <li>Patch a dependency that is <em>imported inside</em> a function with <code>@patch</code></li>
+      <li>Patch a single method on a class with <code>patch.object</code></li>
+      <li>Prevent misspelling bugs with <code>create_autospec</code></li>
+    </ul>
+  </div>
+</header>
+
+<nav class="course-map">
+  <div class="course-map-title">Course Map — Django Backend Training</div>
+  <ol>
+    <li><a href="0001-introduction-to-django.html">Introduction to Django</a> <span>15 min</span></li>
+    <li><a href="0002-django-project-structure.html">Django Project Structure</a> <span>10 min</span></li>
+    <li><a href="0003-models-and-orm.html">Models &amp; ORM</a> <span>40 min</span></li>
+    <li><a href="0004-building-apis.html">Building APIs</a> <span>35 min</span></li>
+    <li><a href="0005-openapi-swagger.html">OpenAPI / Swagger</a> <span>15 min</span></li>
+    <li><a href="0006-wrap-up-and-learning-path.html">Wrap Up &amp; Learning Path</a> <span>5 min</span></li>
+    <li><a href="0007-clean-architecture.html">Clean Architecture</a> <span>20 min</span></li>
+    <li><a href="0008-backend-code-guide.html">Backend Code Guide</a> <span>25 min</span></li>
+    <li><a href="0009-dsu.html">DSU — Django Swagger Utils</a> <span>25 min</span></li>
+    <li><a href="0010-writing-test-cases.html">Testing with pytest</a> <span>40 min</span></li>
+    <li class="current"><a href="0011-mocking.html">Mocking — Test in Isolation</a> <span>30 min</span></li>
+  </ol>
+</nav>
+
+<main class="lesson-content">
+
+<div class="toc">
+  <p>In this lesson</p>
+  <ol>
+    <li><a href="#why">Why mock?</a></li>
+    <li><a href="#mock-object">Part A — The Mock object</a></li>
+    <li><a href="#return-value">return_value: controlling what a mock returns</a></li>
+    <li><a href="#side-effect">side_effect: raising exceptions &amp; more</a></li>
+    <li><a href="#assertions">Assertions on mock calls</a></li>
+    <li><a href="#patch">Part B — patch(): replacing an imported dependency</a></li>
+    <li><a href="#patch-object">patch.object(): patching one method on a class</a></li>
+    <li><a href="#autospec">Pitfall: misspellings &amp; create_autospec</a></li>
+    <li><a href="#reference">Quick reference</a></li>
+  </ol>
+</div>
+
+
+<!-- ══════════════════════════════════════════════
+     SECTION 1 — WHY MOCK?
+     ══════════════════════════════════════════════ -->
+<section id="why">
+  <h2>Why mock?</h2>
+
+  <p>
+    Your interactors call storage methods that hit a database, other services, or external APIs.
+    When a test calls those things for real, several things go wrong:
+  </p>
+
+  <div class="problem-grid">
+    <div class="problem-card bad">
+      <h4>Tests fail randomly</h4>
+      <p>A share-price API returns a different number each time. Your hard-coded assertion breaks by tomorrow morning.</p>
+    </div>
+    <div class="problem-card bad">
+      <h4>Tests are slow</h4>
+      <p>Every HTTP round-trip adds seconds. A suite with 200 tests that each make one network call takes minutes.</p>
+    </div>
+    <div class="problem-card bad">
+      <h4>Hard-to-reach paths</h4>
+      <p>You cannot easily force <code>requests.get</code> to raise <code>TimeoutError</code> in a real network environment.</p>
+    </div>
+    <div class="problem-card bad">
+      <h4>Dirty side effects</h4>
+      <p>If your test calls a real write API, it modifies production or staging data every time the suite runs.</p>
+    </div>
+  </div>
+
+  <p>
+    <strong>Mocking solves all of these</strong> by replacing the real dependency with a fake that you control completely — returning the value you need, raising the exception you need, instantly.
+  </p>
+
+  <div class="callout">
+    <div class="callout-title">Source</div>
+    All concepts in this lesson come from the
+    NxtWave Mocking guide,
+    Mocking in Python, and
+    Using Patch.
+  </div>
+
+  <h3>Three tools, three situations</h3>
+
+  <div class="tool-grid">
+    <div class="tool-card">
+      <h4>Mock()</h4>
+      <p>The dependency is <strong>passed in as an argument</strong> to the function under test (e.g., an injected storage object).</p>
+    </div>
+    <div class="tool-card">
+      <h4>patch()</h4>
+      <p>The dependency is <strong>imported inside</strong> the function — you cannot replace it by passing an argument.</p>
+    </div>
+    <div class="tool-card">
+      <h4>patch.object()</h4>
+      <p>You want to replace <strong>one method</strong> on a real object/class while keeping the rest of it intact.</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+     PART A — MOCK OBJECT
+     ══════════════════════════════════════════════ -->
+<div class="part-header" id="mock-object">
+  <span class="part-badge">Part A</span>
+  <h2>The Mock object</h2>
+</div>
+
+<p>
+  <code>unittest.mock.Mock</code> creates an object that simulates any real object.
+  Its key property: <strong>it creates attributes and methods on-demand</strong> — access any
+  name on a Mock and it returns another Mock, never raising <code>AttributeError</code>.
+</p>
+
+<pre><code><span style="color:#ff7b72">from</span> unittest.mock <span style="color:#ff7b72">import</span> Mock
+
+storage_mock = Mock()
+
+<span style="color:#8b949e"># Access any attribute — always works:</span>
+storage_mock.get_movie_by_id     <span style="color:#8b949e"># &lt;Mock name='mock.get_movie_by_id'&gt;</span>
+storage_mock.get_movie_by_id()   <span style="color:#8b949e"># &lt;Mock name='mock.get_movie_by_id()'&gt;</span></code></pre>
+
+<p>
+  In your org's Clean Architecture tests, <strong>the storage interface is injected</strong> into
+  the interactor. That means you can just pass a <code>Mock()</code> straight in:
+</p>
+
+<pre><code><span style="color:#8b949e"># imdb/tests/test_get_movie_interactor.py</span>
+<span style="color:#ff7b72">from</span> unittest.mock <span style="color:#ff7b72">import</span> Mock
+<span style="color:#ff7b72">from</span> imdb.interactors.get_movie_interactor <span style="color:#ff7b72">import</span> GetMovieInteractor
+
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_get_movie_with_valid_id_returns_movie_dto</span>():
+    <span style="color:#8b949e"># Arrange</span>
+    storage_mock = Mock()
+    interactor = GetMovieInteractor(storage=storage_mock)
+
+    <span style="color:#8b949e"># Act — runs without hitting the real database</span>
+    result = interactor.execute(movie_id=1)
+
+    <span style="color:#8b949e"># Assert</span>
+    ...</code></pre>
+
+<div class="callout info">
+  <div class="callout-title">Why this works in Clean Architecture</div>
+  The interactor only knows the <em>interface</em>, not the implementation.
+  A Mock satisfies any interface because it accepts every attribute access and every call.
+  This is the main payoff of Dependency Inversion.
+</div>
+
+
+<!-- ══════════════════════════════════════════════
+     SECTION — RETURN VALUE
+     ══════════════════════════════════════════════ -->
+<section id="return-value">
+  <h2>return_value — controlling what a mock returns</h2>
+
+  <p>
+    By default, calling a mock method returns another Mock — not useful for assertions.
+    Set <code>return_value</code> to make the mock return exactly what you need:
+  </p>
+
+<pre><code><span style="color:#ff7b72">from</span> unittest.mock <span style="color:#ff7b72">import</span> Mock
+<span style="color:#ff7b72">from</span> imdb.tests.factories <span style="color:#ff7b72">import</span> MovieFactory
+
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_get_movie_returns_correct_title</span>():
+    <span style="color:#8b949e"># Arrange</span>
+    movie_object = MovieFactory.build(title=<span style="color:#a5d6ff">"Inception"</span>, movie_id=<span style="color:#79c0ff">1</span>)
+
+    storage_mock = Mock()
+    storage_mock.get_movie_by_id.return_value = movie_object  <span style="color:#8b949e"># pin the return value</span>
+
+    interactor = GetMovieInteractor(storage=storage_mock)
+
+    <span style="color:#8b949e"># Act</span>
+    result = interactor.execute(movie_id=<span style="color:#79c0ff">1</span>)
+
+    <span style="color:#8b949e"># Assert</span>
+    assert result.title == <span style="color:#a5d6ff">"Inception"</span></code></pre>
+
+  <div class="callout">
+    <div class="callout-title">The syntax rule</div>
+    <code>mock_obj.method_name.return_value = &lt;value&gt;</code> — always on the
+    <em>method attribute</em>, not on the mock itself.
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+     SECTION — SIDE EFFECT
+     ══════════════════════════════════════════════ -->
+<section id="side-effect">
+  <h2>side_effect — raising exceptions &amp; more</h2>
+
+  <p>
+    <code>side_effect</code> is more powerful than <code>return_value</code>.
+    You can use it to make a mock method <strong>raise an exception</strong>,
+    call another function, or return different values on consecutive calls.
+  </p>
+
+  <h3>Raising an exception (the most common case in your org's tests)</h3>
+
+<pre><code><span style="color:#ff7b72">import</span> pytest
+<span style="color:#ff7b72">from</span> unittest.mock <span style="color:#ff7b72">import</span> Mock
+<span style="color:#ff7b72">from</span> imdb.exceptions <span style="color:#ff7b72">import</span> MovieDoesNotExistException
+
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_get_movie_with_invalid_id_raises_exception</span>():
+    <span style="color:#8b949e"># Arrange</span>
+    storage_mock = Mock()
+    storage_mock.get_movie_by_id.side_effect = MovieDoesNotExistException
+
+    interactor = GetMovieInteractor(storage=storage_mock)
+
+    <span style="color:#8b949e"># Act &amp; Assert</span>
+    <span style="color:#ff7b72">with</span> pytest.raises(MovieDoesNotExistException):
+        interactor.execute(movie_id=<span style="color:#79c0ff">-999</span>)</code></pre>
+
+  <div class="callout warn">
+    <div class="callout-title">return_value vs side_effect</div>
+    If both are set, <code>side_effect</code> wins — it takes priority.
+    To clear a <code>side_effect</code> later, set it to <code>None</code>.
+  </div>
+
+  <h3>The iterable form — different outputs on each call</h3>
+
+<pre><code><span style="color:#8b949e"># First call returns a movie, second call raises the exception</span>
+storage_mock.get_movie_by_id.side_effect = [movie_object, MovieDoesNotExistException]
+
+storage_mock.get_movie_by_id(<span style="color:#79c0ff">1</span>)    <span style="color:#8b949e"># returns movie_object</span>
+storage_mock.get_movie_by_id(<span style="color:#79c0ff">99</span>)   <span style="color:#8b949e"># raises MovieDoesNotExistException</span></code></pre>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+     SECTION — ASSERTIONS
+     ══════════════════════════════════════════════ -->
+<section id="assertions">
+  <h2>Assertions — verifying the mock was called correctly</h2>
+
+  <p>
+    A Mock records every call made to it. After the Act step, you can assert
+    <em>how</em> the storage was called — verifying the interactor passed the right arguments.
+  </p>
+
+  <table>
+    <thead>
+      <tr><th>Assertion</th><th>Passes when</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>.assert_called()</code></td><td>Method was called at least once</td></tr>
+      <tr><td><code>.assert_called_once()</code></td><td>Method was called exactly once</td></tr>
+      <tr><td><code>.assert_called_with(*args, **kwargs)</code></td><td>Last call used these exact arguments</td></tr>
+      <tr><td><code>.assert_called_once_with(*args, **kwargs)</code></td><td>Called exactly once with these exact arguments</td></tr>
+      <tr><td><code>.assert_not_called()</code></td><td>Method was never called</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Example — asserting the storage was called with the right ID</h3>
+
+<pre><code><span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_interactor_passes_correct_id_to_storage</span>():
+    <span style="color:#8b949e"># Arrange</span>
+    storage_mock = Mock()
+    storage_mock.get_movie_by_id.return_value = MovieFactory.build()
+    interactor = GetMovieInteractor(storage=storage_mock)
+
+    <span style="color:#8b949e"># Act</span>
+    interactor.execute(movie_id=<span style="color:#79c0ff">42</span>)
+
+    <span style="color:#8b949e"># Assert — did the interactor forward the ID correctly?</span>
+    storage_mock.get_movie_by_id.assert_called_once_with(movie_id=<span style="color:#79c0ff">42</span>)</code></pre>
+
+  <div class="callout warn">
+    <div class="callout-title">Positional vs keyword arguments matter</div>
+    <code>assert_called_with(42)</code> and <code>assert_called_with(movie_id=42)</code>
+    are <em>different assertions</em> — they check exact call signatures.
+    Match exactly how the code calls the method.
+  </div>
+
+  <h3>Inspection attributes (for debugging)</h3>
+
+<pre><code>storage_mock.get_movie_by_id.call_count        <span style="color:#8b949e"># how many times called</span>
+storage_mock.get_movie_by_id.call_args         <span style="color:#8b949e"># arguments from the last call</span>
+storage_mock.get_movie_by_id.call_args_list    <span style="color:#8b949e"># list of all calls</span></code></pre>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+     PART B — PATCH
+     ══════════════════════════════════════════════ -->
+<div class="part-header" id="patch">
+  <span class="part-badge">Part B</span>
+  <h2>patch() — replacing an imported dependency</h2>
+</div>
+
+<p>
+  <code>Mock()</code> works when the dependency is <em>passed in</em>.
+  But what if the function you're testing <em>imports</em> the dependency internally?
+</p>
+
+<div class="compare">
+  <div class="compare-col">
+    <span class="compare-label bad">Dependency injected — use Mock()</span>
+<pre><code><span style="color:#ff7b72">def</span> <span style="color:#79c0ff">is_weekend</span>(calendar_obj):
+    day = calendar_obj.get_current_day()
+    <span style="color:#ff7b72">return</span> day <span style="color:#ff7b72">in</span> [<span style="color:#79c0ff">6</span>, <span style="color:#79c0ff">7</span>]
+
+<span style="color:#8b949e"># You can pass a Mock() directly</span></code></pre>
+  </div>
+  <div class="compare-col">
+    <span class="compare-label good">Imported inside — must use patch()</span>
+<pre><code><span style="color:#ff7b72">def</span> <span style="color:#79c0ff">is_weekend</span>():
+    <span style="color:#ff7b72">from</span> my_calendar <span style="color:#ff7b72">import</span> get_current_day
+    day = get_current_day()
+    <span style="color:#ff7b72">return</span> day <span style="color:#ff7b72">in</span> [<span style="color:#79c0ff">6</span>, <span style="color:#79c0ff">7</span>]
+
+<span style="color:#8b949e"># Cannot pass anything — use patch()</span></code></pre>
+  </div>
+</div>
+
+<p>
+  <code>patch()</code> looks up the target object in its module and temporarily replaces it
+  with a <code>Mock</code> for the duration of the test.
+</p>
+
+<h3>The target string format</h3>
+
+<div class="target-anatomy">
+  <span class="ta-part ta-mod">my_calendar</span>
+  <span class="ta-dot">.</span>
+  <span class="ta-part ta-name">get_current_day</span>
+  <div class="ta-legend">
+    <span><span class="ta-part ta-mod" style="font-size:0.75rem">module</span> where the name lives</span>
+    <span><span class="ta-part ta-name" style="font-size:0.75rem">name</span> to replace in that module</span>
+  </div>
+</div>
+
+<h3>patch as a decorator (most common)</h3>
+
+<pre><code><span style="color:#ff7b72">from</span> unittest.mock <span style="color:#ff7b72">import</span> patch
+<span style="color:#ff7b72">from</span> is_weekend <span style="color:#ff7b72">import</span> is_weekend
+
+<span style="color:#ffa657">@patch</span>(<span style="color:#a5d6ff">'my_calendar.get_current_day'</span>)
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_is_weekend_on_saturday</span>(get_current_day_mock):
+    <span style="color:#8b949e"># Arrange — the mock is injected as the first argument</span>
+    get_current_day_mock.return_value = <span style="color:#79c0ff">6</span>
+
+    <span style="color:#8b949e"># Act</span>
+    result = is_weekend()
+
+    <span style="color:#8b949e"># Assert</span>
+    assert result <span style="color:#ff7b72">is</span> <span style="color:#79c0ff">True</span>
+    get_current_day_mock.assert_called_once()</code></pre>
+
+<div class="callout">
+  <div class="callout-title">Decorator argument order rule</div>
+  Each <code>@patch</code> decorator injects one argument. Multiple decorators inject
+  from <em>bottom-up</em> — the decorator closest to the function is the first argument.
+</div>
+
+<h3>patch as a context manager (when you only need it for part of the test)</h3>
+
+<pre><code><span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_is_weekend_on_saturday</span>():
+    <span style="color:#ff7b72">with</span> patch(<span style="color:#a5d6ff">'my_calendar.get_current_day'</span>) <span style="color:#ff7b72">as</span> mock:
+        mock.return_value = <span style="color:#79c0ff">6</span>
+
+        result = is_weekend()
+
+        assert result <span style="color:#ff7b72">is</span> <span style="color:#79c0ff">True</span></code></pre>
+
+<div class="callout info">
+  <div class="callout-title">When to use context manager vs decorator</div>
+  Prefer the <strong>decorator</strong> when the mock is active for the entire test.
+  Use the <strong>context manager</strong> when you only want to patch for part of the test body,
+  or when you already have many decorator arguments that hurt readability.
+</div>
+
+
+<!-- ══════════════════════════════════════════════
+     SECTION — PATCH OBJECT
+     ══════════════════════════════════════════════ -->
+<section id="patch-object">
+  <h2>patch.object() — patching one method on a class</h2>
+
+  <p>
+    Use <code>patch.object()</code> when you want to mock <em>only one method</em>
+    of a class, leaving the rest of the class working normally.
+  </p>
+
+<pre><code><span style="color:#ff7b72">from</span> unittest.mock <span style="color:#ff7b72">import</span> patch
+<span style="color:#ff7b72">from</span> my_calendar <span style="color:#ff7b72">import</span> MyCalendar
+<span style="color:#ff7b72">from</span> is_weekend <span style="color:#ff7b72">import</span> is_weekend_v2
+
+<span style="color:#ffa657">@patch.object</span>(MyCalendar, <span style="color:#a5d6ff">'get_current_day'</span>, return_value=<span style="color:#79c0ff">6</span>)
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_weekend_v2</span>(get_current_day_mock):
+    result = is_weekend_v2()
+    assert result <span style="color:#ff7b72">is</span> <span style="color:#79c0ff">True</span></code></pre>
+
+  <table>
+    <thead>
+      <tr><th>Argument</th><th>Value</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>First</td><td>The class or object to patch</td></tr>
+      <tr><td>Second</td><td>The method/attribute name as a string</td></tr>
+      <tr><td>Third (optional)</td><td><code>return_value</code>, <code>side_effect</code>, etc.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+     SECTION — AUTOSPEC / PITFALL
+     ══════════════════════════════════════════════ -->
+<section id="autospec">
+  <h2>Pitfall: misspellings &amp; create_autospec</h2>
+
+  <p>
+    Because Mock creates attributes on-demand, a <strong>misspelling silently creates a new attribute</strong>
+    instead of raising an error:
+  </p>
+
+<pre><code>storage_mock = Mock()
+<span style="color:#8b949e"># Intended: assert_called_once()
+# Actual typo: asert_called_once() — no error, test passes vacuously</span>
+storage_mock.get_movie_by_id.asert_called_once()  <span style="color:#8b949e"># silent bug!</span></code></pre>
+
+  <p>
+    <strong>The fix:</strong> use <code>create_autospec</code> when mocking a real class.
+    It makes the mock enforce the real interface — accessing an attribute that doesn't
+    exist raises <code>AttributeError</code>.
+  </p>
+
+<pre><code><span style="color:#ff7b72">from</span> unittest.mock <span style="color:#ff7b72">import</span> create_autospec
+<span style="color:#ff7b72">from</span> imdb.storages.movies_storage <span style="color:#ff7b72">import</span> MoviesStorageImplementation
+
+<span style="color:#8b949e"># Creates a mock that enforces MoviesStorageImplementation's real interface</span>
+storage_mock = create_autospec(MoviesStorageImplementation)
+
+storage_mock.get_movie_by_id.return_value = movie_object   <span style="color:#8b949e"># fine — method exists</span>
+storage_mock.get_moive_by_id.return_value = movie_object   <span style="color:#8b949e"># AttributeError — typo caught!</span></code></pre>
+
+  <div class="callout key">
+    <div class="callout-title">Org recommendation</div>
+    Use <code>create_autospec</code> whenever mocking a storage class or any injected
+    dependency that has a real implementation. It makes your tests resilient to
+    interface changes — if a method is renamed, the mock immediately flags the mismatch.
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+     QUICK REFERENCE
+     ══════════════════════════════════════════════ -->
+<section id="reference">
+  <h2>Quick reference</h2>
+
+  <table>
+    <thead>
+      <tr><th>Situation</th><th>Tool</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Dependency passed as argument (injected storage)</td><td><code>Mock()</code> or <code>create_autospec()</code></td></tr>
+      <tr><td>Control what a mock method returns</td><td><code>mock.method.return_value = ...</code></td></tr>
+      <tr><td>Force a mock method to raise an exception</td><td><code>mock.method.side_effect = MyException</code></td></tr>
+      <tr><td>Different return values on consecutive calls</td><td><code>mock.method.side_effect = [val1, Exception]</code></td></tr>
+      <tr><td>Dependency imported inside the function under test</td><td><code>@patch('module.name')</code></td></tr>
+      <tr><td>Patch only one method on a real class</td><td><code>@patch.object(Class, 'method_name')</code></td></tr>
+      <tr><td>Verify the mock was called with exact arguments</td><td><code>mock.method.assert_called_once_with(...)</code></td></tr>
+      <tr><td>Prevent misspelling bugs on a known class</td><td><code>create_autospec(RealClass)</code></td></tr>
+      <tr><td>Enforce real interface via patch</td><td><code>@patch('...', autospec=True)</code></td></tr>
+    </tbody>
+  </table>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+     QUIZ
+     ══════════════════════════════════════════════ -->
+<section>
+  <h2>Check your understanding</h2>
+  <p>Answer from memory — don't scroll up first.</p>
+  <div class="quiz" data-quiz-id="q11"></div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+     NEXT STEPS
+     ══════════════════════════════════════════════ -->
+<section>
+  <h2>What comes next</h2>
+  <ul>
+    <li>
+      <strong>Practice:</strong>
+      Pick any interactor in the IMDb project and write a test suite that uses
+      <code>create_autospec</code> on the storage, covers one normal case and one
+      exception case, and asserts the storage was called with the right arguments.
+    </li>
+  </ul>
+
+  <div class="callout info">
+    <div class="callout-title">Primary sources</div>
+    <ul>
+      <li>NxtWave — Mocking overview</li>
+      <li>NxtWave — Mock object &amp; return_value</li>
+      <li>NxtWave — Using patch</li>
+      <li>NxtWave — Common mocking mistakes</li>
+    </ul>
+  </div>
+
+  <div class="callout">
+    <div class="callout-title">Ask your teacher</div>
+    Anything unclear? Post a follow-up in this chat.
+    Common questions: "when exactly should I use patch vs Mock?",
+    "how do I patch something in the same file?",
+    "how do I mock a chained call like <code>storage.get_movie().title</code>?"
+  </div>
+</section>
+
+</main>
+
+<footer class="lesson-footer">
+  <div class="lesson-nav">
+    <a href="0010-writing-test-cases.html">&#8592; Lesson 10: Testing with pytest</a>
+    <a href="../index.html">Course Home</a>
+  </div>
+</footer>
+
+<script src="../assets/quiz.js"></script>
+<script type="application/json" data-quiz-data="q11">
+[
+  {
+    "q": "Your interactor receives a storage object as an argument. What do you use to mock it?",
+    "options": [
+      "Mock() or create_autospec() — pass it directly as the argument",
+      "patch() — replace it in the module where it is defined",
+      "patch.object() — replace only one method on the class",
+      "side_effect — configure the exception it should raise"
+    ],
+    "answer": 0,
+    "explain": "When the dependency is injected (passed as an argument), Mock() is the right tool. You create a mock and pass it to the function just as production code would pass the real object."
+  },
+  {
+    "q": "A mock method returns a Mock object by default. How do you make it return 42?",
+    "options": [
+      "mock.method.return_value = 42",
+      "mock.method.set_return(42)",
+      "mock.method = 42",
+      "mock.return_value.method = 42"
+    ],
+    "answer": 0,
+    "explain": "Set the return_value attribute on the method attribute of the mock object: mock.method.return_value = 42. This pins what the method returns on every call."
+  },
+  {
+    "q": "How do you make a mock method raise MovieDoesNotExistException when called?",
+    "options": [
+      "mock.method.side_effect = MovieDoesNotExistException",
+      "mock.method.return_value = MovieDoesNotExistException",
+      "mock.method.raises = MovieDoesNotExistException",
+      "mock.method.exception = MovieDoesNotExistException()"
+    ],
+    "answer": 0,
+    "explain": "side_effect accepts an exception class (or instance). When the mock method is called, it raises that exception. return_value only controls the return value, not exceptions."
+  },
+  {
+    "q": "A function imports its dependency internally with 'from my_mod import helper'. Which tool isolates it?",
+    "options": [
+      "patch('my_mod.helper') as a decorator or context manager",
+      "Mock() — pass a mock as the first argument to the function",
+      "patch.object(my_mod, helper) on the function itself",
+      "create_autospec(helper) then pass it as an argument"
+    ],
+    "answer": 0,
+    "explain": "patch() replaces a name inside a module at runtime. When the function does 'from my_mod import helper', patch('my_mod.helper') intercepts it. Mock() only works when you can pass the dependency as an argument."
+  },
+  {
+    "q": "After the Act step, how do you assert a storage method was called exactly once with movie_id=5?",
+    "options": [
+      "storage_mock.get_movie.assert_called_once_with(movie_id=5)",
+      "assert storage_mock.get_movie.call_count == 1 and movie_id == 5",
+      "storage_mock.get_movie.assert_called_with(movie_id=5)",
+      "storage_mock.get_movie.assert_once(movie_id=5)"
+    ],
+    "answer": 0,
+    "explain": "assert_called_once_with checks both that the method was called exactly once AND that the arguments match. assert_called_with only checks the last call arguments, not the count."
+  },
+  {
+    "q": "You type 'storage_mock.get_moive.return_value = x' (typo). What happens?",
+    "options": [
+      "Nothing — Mock creates get_moive as a new attribute silently",
+      "AttributeError is raised because get_moive does not exist",
+      "The test fails with a NameError at the misspelled line",
+      "Mock raises a warning but continues normally"
+    ],
+    "answer": 0,
+    "explain": "A plain Mock() creates any attribute on-demand. The typo silently creates a new method called get_moive — your real get_movie_by_id is never configured, and the test may pass vacuously or fail for the wrong reason."
+  },
+  {
+    "q": "How do you prevent the silent-typo problem when mocking a real class?",
+    "options": [
+      "Use create_autospec(RealClass) — it enforces the real interface",
+      "Use Mock(strict=True) — it blocks unknown attributes",
+      "Use patch.object with autospec=False to catch misspellings",
+      "Set side_effect on every method to raise AttributeError"
+    ],
+    "answer": 0,
+    "explain": "create_autospec creates a mock that mirrors the real class's interface. Accessing an attribute that does not exist raises AttributeError, catching misspellings and interface drift immediately."
+  },
+  {
+    "q": "patch.object(MyClass, 'get_day', return_value=6) — what does the second argument do?",
+    "options": [
+      "Specifies the method name to replace as a string",
+      "Specifies the class whose instance should be mocked",
+      "Sets the return value for all methods on MyClass",
+      "Specifies the module path where MyClass is defined"
+    ],
+    "answer": 0,
+    "explain": "patch.object takes (class_or_object, 'method_name_as_string', optional_behavior). The second argument is always the name of the attribute/method you want to replace, as a string."
+  }
+]
+</script>
+
+</div>
+</body>
+</html>

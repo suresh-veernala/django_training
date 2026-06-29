@@ -29,3 +29,9 @@ Become productive on a production-style Django backend codebase — able to mode
 4. Building APIs — `lessons/0004-building-apis.html`
 5. OpenAPI / Swagger — `lessons/0005-openapi-swagger.html`
 6. Wrap Up & Learning Path — `lessons/0006-wrap-up-and-learning-path.html`
+7. Clean Architecture — `lessons/0007-clean-architecture.html`
+8. Backend Code Guide — `lessons/0008-backend-code-guide.html`
+9. DSU — Django Swagger Utils — `lessons/0009-dsu.html`
+10. Writing Test Cases with pytest — `lessons/0010-writing-test-cases.html`
+11. Fixtures, Parametrize & Factory Boy — `lessons/0011-fixtures-parametrize-factory-boy.html`
+12. Mocking — *(pending)*
