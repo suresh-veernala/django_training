@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <title>Assignment — Social Network with DSU</title>
+  <link rel="stylesheet" href="../assets/styles.css?v=2" />
+  <style>
+    /* ── Assignment task list ── */
+    .task-nav {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      margin-bottom: 2rem;
+    }
+    .task-nav h3 {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 0.6rem;
+      font-family: var(--font-sans);
+    }
+    .task-nav ol {
+      margin: 0; padding-left: 1.3rem;
+      font-family: var(--font-sans);
+      font-size: 0.88rem;
+      line-height: 2;
+    }
+    .task-nav a { color: var(--accent-mid); text-decoration: none; }
+    .task-nav a:hover { text-decoration: underline; }
+
+    /* ── Task heading strip ── */
+    .task-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin: 2.5rem 0 1rem;
+    }
+    .task-badge {
+      flex-shrink: 0;
+      background: var(--accent);
+      color: #fff;
+      font-family: var(--font-sans);
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0.25rem 0.65rem;
+      border-radius: 4px;
+    }
+    .task-header h2 {
+      margin: 0;
+      font-size: 1.15rem;
+      border: none;
+      padding: 0;
+    }
+    .task-header h2::before { display: none; }
+
+    /* ── Phase divider ── */
+    .phase-label {
+      font-family: var(--font-sans);
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      padding-top: 1.5rem;
+      margin-top: 2.5rem;
+    }
+
+    /* ── Endpoint pill ── */
+    .endpoint {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.83rem;
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: 4px;
+      padding: 0.3rem 0.7rem;
+      margin: 0.2rem 0;
+    }
+    .method {
+      font-weight: 800;
+      font-size: 0.75rem;
+      padding: 0.15rem 0.45rem;
+      border-radius: 3px;
+    }
+    .method.post   { background: #dcfce7; color: #166534; }
+    .method.get    { background: #dbeafe; color: #1e40af; }
+    .method.delete { background: #fee2e2; color: #991b1b; }
+
+    /* ── Checklist ── */
+    .checklist {
+      list-style: none;
+      padding: 0;
+      margin: 0.5rem 0;
+    }
+    .checklist li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      padding: 0.25rem 0;
+      font-family: var(--font-sans);
+      font-size: 0.92rem;
+      line-height: 1.55;
+    }
+    .checklist li::before {
+      content: "☐";
+      color: var(--accent-mid);
+      font-size: 1rem;
+      flex-shrink: 0;
+      margin-top: 0.05rem;
+    }
+
+    /* ── hint callout ── */
+    .hint {
+      background: var(--info-bg);
+      border-left: 3px solid #93c5fd;
+      border-radius: 0 var(--radius) var(--radius) 0;
+      padding: 0.65rem 1rem;
+      margin: 0.85rem 0;
+      font-size: 0.9rem;
+      color: #1e3a5f;
+      font-family: var(--font-sans);
+    }
+    .hint strong { color: var(--info); }
+
+    /* ── warn callout ── */
+    .warn {
+      background: var(--warn-bg);
+      border-left: 3px solid #fbbf24;
+      border-radius: 0 var(--radius) var(--radius) 0;
+      padding: 0.65rem 1rem;
+      margin: 0.85rem 0;
+      font-size: 0.9rem;
+      color: #7c2d12;
+      font-family: var(--font-sans);
+    }
+
+    /* ── Response shape card ── */
+    .shape-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin: 0.8rem 0;
+    }
+    .shape-card-header {
+      background: var(--code-bg);
+      padding: 0.4rem 0.9rem;
+      font-family: var(--font-sans);
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+    .shape-card pre {
+      margin: 0;
+      border-radius: 0;
+      border: none;
+    }
+
+    /* ── flow row (reuse from DSU lesson) ── */
+    .flow-row {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin: 1.25rem 0 1.5rem;
+    }
+    .flow-box {
+      border-radius: 8px;
+      padding: 0.5rem 1.1rem;
+      font-family: var(--font-sans);
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-align: center;
+      min-width: 110px;
+    }
+    .flow-box.url      { background: #f0f4ff; border: 2px solid #6b7fcc; color: #2d3a8c; }
+    .flow-box.view     { background: #fff7ed; border: 2px solid #c2773b; color: #7c3d0d; }
+    .flow-box.valid    { background: #fdf4ff; border: 2px solid #a855f7; color: #6b21a8; }
+    .flow-box.wrapper  { background: #e8f5e9; border: 2px solid #2e7d52; color: #0c4b33; }
+    .flow-box.interactor { background: #fff1f2; border: 2px solid #e11d48; color: #881337; }
+    .flow-box.storage  { background: #f0f9ff; border: 2px solid #0284c7; color: #075985; }
+    .flow-box.presenter{ background: #fdf4ff; border: 2px solid #9333ea; color: #581c87; }
+    .flow-arrow {
+      font-size: 1.3rem;
+      color: var(--muted);
+      padding: 0 0.4rem;
+    }
+  </style>
+</head>
+<body>
+
+<header class="lesson-header">
+  <div class="lesson-meta">
+    <span class="lesson-number">Lesson 11</span>
+    <span class="lesson-topic">Social Network — Django Swagger Utils</span>
+  </div>
+  <h1>Social Network with DSU</h1>
+  <p class="lesson-subtitle">
+    Translate the classic Social Network domain into production-style DSU APIs —
+    complete with OpenAPI specs, Clean Architecture interactors, storages, and presenters.
+  </p>
+</header>
+
+  <nav class="course-map">
+    <div class="course-map-title">Course Map — Django Backend Training</div>
+    <ol>
+      <li><a href="0001-introduction-to-django.html">Introduction to Django</a></li>
+      <li><a href="0002-django-project-structure.html">Django Project Structure</a></li>
+      <li><a href="0003-models-and-orm.html">Models &amp; ORM</a></li>
+      <li><a href="0004-building-apis.html">Building APIs</a></li>
+      <li><a href="0005-openapi-swagger.html">OpenAPI / Swagger</a></li>
+      <li><a href="0006-wrap-up-and-learning-path.html">Wrap Up &amp; Learning Path</a></li>
+      <li><a href="0007-clean-architecture.html">Clean Architecture</a></li>
+      <li><a href="0008-backend-code-guide.html">Backend Code Guide</a></li>
+      <li><a href="0009-dsu.html">DSU — Django Swagger Utils</a></li>
+      <li><a href="0010-poetry.html">Poetry &amp; Environment Setup</a></li>
+      <li class="current"><a href="0013-social-network-dsu-assignment.html">Social Network — DSU Assignment</a></li>
+      <li><a href="0011-writing-test-cases.html">Testing with pytest</a></li>
+      <li><a href="0012-mocking.html">Mocking — Test in Isolation</a></li>
+    </ol>
+  </nav>
+
+<main>
+
+<!-- ── Task nav ── -->
+<nav class="task-nav">
+  <h3>Tasks</h3>
+  <ol>
+    <li><a href="#task1">Scaffold &amp; register the DSU app</a></li>
+    <li><a href="#task2">Write the Social Network models</a></li>
+    <li><a href="#task3">Write the OpenAPI spec</a></li>
+    <li><a href="#task4">Build the views</a></li>
+    <li><a href="#task5">Implement <code>create_post</code> (api_wrapper + interactor + storage + presenter)</a></li>
+    <li><a href="#task6">Implement <code>get_post</code></a></li>
+    <li><a href="#task7">Implement <code>create_comment</code></a></li>
+    <li><a href="#task8">Implement <code>react_to_post</code></a></li>
+    <li><a href="#task9">Implement <code>delete_post</code></a></li>
+  </ol>
+</nav>
+
+<!-- ── Domain overview ── -->
+<section>
+  <h2>Domain Overview</h2>
+  <p>You are building a subset of the Social Network application from <a href="../env_files/content_preparation_refernces/django/assignments/django_assignment_006.html">Assignment 006</a>. The full data model is described there — here you will expose five of its operations as REST APIs through DSU.</p>
+
+  <p>The five endpoints you will implement:</p>
+
+  <table>
+    <thead>
+      <tr><th>Operation</th><th>HTTP Method + Path</th><th>Key behaviour</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>create_post</code></td>
+        <td><span class="endpoint"><span class="method post">POST</span>/fb_post/create_post/v1/</span></td>
+        <td>Returns <code>post_id</code>. Raises 400 for invalid user or empty content.</td>
+      </tr>
+      <tr>
+        <td><code>get_post</code></td>
+        <td><span class="endpoint"><span class="method get">GET</span>/fb_post/get_post/v1/{post_id}/</span></td>
+        <td>Returns full post details with comments &amp; reactions. Raises 404 for unknown post.</td>
+      </tr>
+      <tr>
+        <td><code>create_comment</code></td>
+        <td><span class="endpoint"><span class="method post">POST</span>/fb_post/create_comment/v1/</span></td>
+        <td>Returns <code>comment_id</code>. Raises 400 for invalid user, post, or empty content.</td>
+      </tr>
+      <tr>
+        <td><code>react_to_post</code></td>
+        <td><span class="endpoint"><span class="method post">POST</span>/fb_post/react_to_post/v1/</span></td>
+        <td>Toggle-react logic. Raises 400 for invalid user, post, or reaction type.</td>
+      </tr>
+      <tr>
+        <td><code>delete_post</code></td>
+        <td><span class="endpoint"><span class="method delete">DELETE</span>/fb_post/delete_post/v1/{post_id}/</span></td>
+        <td>Cascades delete. Raises 403 if user is not the post creator.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="hint">
+    <strong>Reminder — full Clean Architecture flow in DSU:</strong><br>
+    Every request travels: <code>urls.py → view file → validator_class → api_wrapper → interactor → storage / presenter</code>
+  </div>
+
+  <div class="flow-row" style="margin-top:1rem;">
+    <div class="flow-box url">urls.py</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box view">view file<br><small>(auto-gen)</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box valid">validator_class</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box wrapper">api_wrapper<br><small>(you write)</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box interactor">interactor</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box storage">storage</div>
+    <div class="flow-box presenter" style="margin-left:0.5rem;">presenter</div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════ PHASE 1 ════════════════════════════════════ -->
+<div class="phase-label">Phase 1 — Setup</div>
+
+<!-- ── Task 1 ── -->
+<div class="task-header" id="task1">
+  <span class="task-badge">Task 1</span>
+  <h2>Scaffold &amp; Register the DSU App</h2>
+</div>
+
+<p>Create the DSU project and app from scratch using the DSU management commands.</p>
+
+<ul class="checklist">
+  <li>Run <code>python manage.py create_cleanapp fb_post -p social_network</code> to scaffold the app with a full Clean Architecture folder structure.</li>
+  <li>Open <code>settings/base_swagger_utils.py</code> and register the app in <strong>both</strong> required places:
+    <pre><code># 1. In the INSTALLED_APPS / APPS list:
+"fb_post",
+
+# 2. In SWAGGER_UTILS["APPS"]:
+"fb_post": {
+    "prefix_url": "fb_post",
+},</code></pre>
+  </li>
+  <li>Start the server and confirm Django starts without errors.</li>
+</ul>
+
+<div class="warn">
+  <strong>Common mistake:</strong> Forgetting the second registration in <code>SWAGGER_UTILS["APPS"]</code>. If your endpoints don't appear after <code>build</code>, this is the first thing to check.
+</div>
+
+<!-- ── Task 2 ── -->
+<div class="task-header" id="task2">
+  <span class="task-badge">Task 2</span>
+  <h2>Write the Social Network Models</h2>
+</div>
+
+<p>
+  In <code>fb_post/models/</code> (or a single <code>models.py</code>), define the following models exactly as described in
+  <a href="../env_files/content_preparation_refernces/django/assignments/django_assignment_006.html">Assignment 006 — Task 1</a>.
+  Use the exact field and class names from the spec.
+</p>
+
+<ul class="checklist">
+  <li>
+    <strong>User</strong> — <code>name</code> (CharField, max 100), <code>profile_pic</code> (TextField)
+  </li>
+  <li>
+    <strong>Post</strong> — <code>content</code> (max 1000), <code>posted_at</code> (DateTimeField, auto_now_add), <code>posted_by</code> (FK → User)
+  </li>
+  <li>
+    <strong>Comment</strong> — <code>content</code> (max 1000), <code>commented_at</code> (auto_now_add), <code>commented_by</code> (FK → User), <code>post</code> (FK → Post), <code>parent_comment</code> (nullable FK → self)
+  </li>
+  <li>
+    <strong>Reaction</strong> — <code>post</code> (nullable FK → Post), <code>comment</code> (nullable FK → Comment), <code>reaction</code> (CharField, max 100), <code>reacted_at</code> (auto_now), <code>reacted_by</code> (FK → User)
+  </li>
+  <li>Write the reaction type choices as an enum in <code>fb_post/constants.py</code>:<br>
+    <code>WOW, LIT, LOVE, HAHA, THUMBS-UP, THUMBS-DOWN, ANGRY, SAD</code>
+  </li>
+  <li>Write the custom exceptions in <code>fb_post/exceptions.py</code>:<br>
+    <code>InvalidUserException, InvalidPostException, InvalidPostContent, InvalidCommentContent, InvalidReactionTypeException, UserCannotDeletePostException</code>
+  </li>
+  <li>Run <code>python manage.py makemigrations fb_post &amp;&amp; python manage.py migrate</code> — confirm no errors.</li>
+</ul>
+
+<!-- ════════════════════════════════════ PHASE 2 ════════════════════════════════════ -->
+<div class="phase-label">Phase 2 — OpenAPI Spec + Build</div>
+
+<!-- ── Task 3 ── -->
+<div class="task-header" id="task3">
+  <span class="task-badge">Task 3</span>
+  <h2>Write the OpenAPI Spec</h2>
+</div>
+
+<p>Create <code>fb_post/api_specs/api_spec.json</code>. This file drives everything DSU generates — every <code>operationId</code> becomes a view folder.</p>
+
+<p>You need to define all five endpoints. The scaffolds below show the structure — fill in the request/response schemas yourself.</p>
+
+<div class="hint">
+  <strong>DSU operationId naming convention:</strong> Use snake_case. DSU generates a folder
+  <code>fb_post/views/&lt;operationId&gt;/</code> for each one.
+</div>
+
+<h3><span class="endpoint"><span class="method post">POST</span>/fb_post/create_post/v1/</span></h3>
+<div class="shape-card">
+  <div class="shape-card-header">Request Body</div>
+  <pre><code>{
+  "user_id": 1,
+  "post_content": "Hello world!"
+}</code></pre>
+</div>
+<div class="shape-card">
+  <div class="shape-card-header">201 Response</div>
+  <pre><code>{ "post_id": 42 }</code></pre>
+</div>
+<div class="shape-card">
+  <div class="shape-card-header">400 Response (invalid user / empty content)</div>
+  <pre><code>{
+  "response": "Invalid user",
+  "http_status_code": 400,
+  "res_status": "INVALID_USER_EXCEPTION"
+}</code></pre>
+</div>
+
+<h3 style="margin-top:1.5rem;"><span class="endpoint"><span class="method get">GET</span>/fb_post/get_post/v1/{post_id}/</span></h3>
+<div class="shape-card">
+  <div class="shape-card-header">200 Response</div>
+  <pre><code>{
+  "post_id": 1,
+  "posted_by": { "name": "Alice", "user_id": 1, "profile_pic": "..." },
+  "posted_at": "2024-01-01 10:00:00",
+  "post_content": "Hello world!",
+  "reactions": { "count": 3, "type": ["WOW", "LOVE"] },
+  "comments": [
+    {
+      "comment_id": 1,
+      "commenter": { "user_id": 2, "name": "Bob", "profile_pic": "..." },
+      "commented_at": "2024-01-01 10:05:00",
+      "comment_content": "Great post!",
+      "reactions": { "count": 1, "type": ["THUMBS-UP"] },
+      "replies_count": 0,
+      "replies": []
+    }
+  ],
+  "comments_count": 1
+}</code></pre>
+</div>
+<div class="shape-card">
+  <div class="shape-card-header">404 Response (post not found)</div>
+  <pre><code>{
+  "response": "Post not found",
+  "http_status_code": 404,
+  "res_status": "INVALID_POST_EXCEPTION"
+}</code></pre>
+</div>
+
+<h3 style="margin-top:1.5rem;"><span class="endpoint"><span class="method post">POST</span>/fb_post/create_comment/v1/</span></h3>
+<div class="shape-card">
+  <div class="shape-card-header">Request Body</div>
+  <pre><code>{
+  "user_id": 1,
+  "post_id": 42,
+  "comment_content": "Nice post!"
+}</code></pre>
+</div>
+<div class="shape-card">
+  <div class="shape-card-header">201 Response</div>
+  <pre><code>{ "comment_id": 7 }</code></pre>
+</div>
+
+<h3 style="margin-top:1.5rem;"><span class="endpoint"><span class="method post">POST</span>/fb_post/react_to_post/v1/</span></h3>
+<div class="shape-card">
+  <div class="shape-card-header">Request Body</div>
+  <pre><code>{
+  "user_id": 1,
+  "post_id": 42,
+  "reaction_type": "WOW"
+}</code></pre>
+</div>
+<div class="shape-card">
+  <div class="shape-card-header">200 Response (no body needed)</div>
+  <pre><code>{}</code></pre>
+</div>
+
+<h3 style="margin-top:1.5rem;"><span class="endpoint"><span class="method delete">DELETE</span>/fb_post/delete_post/v1/{post_id}/</span></h3>
+<p>The <code>user_id</code> of the requester should come from <code>kwargs['request_data']</code> or a query param — your choice. Respond 200 on success, 400 if user is not the creator.</p>
+
+<ul class="checklist">
+  <li>All five paths defined in <code>api_spec.json</code> with correct <code>operationId</code> values.</li>
+  <li>All request/response schemas are JSON Schema objects (type, properties, required).</li>
+  <li>Error responses always contain <code>response</code>, <code>http_status_code</code>, <code>res_status</code>.</li>
+</ul>
+
+<!-- ── Task 4 ── -->
+<div class="task-header" id="task4">
+  <span class="task-badge">Task 4</span>
+  <h2>Build the Views</h2>
+</div>
+
+<p>Run the DSU build command for your app:</p>
+
+<pre><code>python manage.py build -a fb_post</code></pre>
+
+<ul class="checklist">
+  <li>Verify that five folders are created under <code>fb_post/views/</code>, one per <code>operationId</code>.</li>
+  <li>Each folder should contain: <code>api_wrapper.py</code>, <code>&lt;operation_id&gt;.py</code>, <code>request_response_mocks.py</code>, <code>validator_class.py</code>, <code>__init__.py</code>.</li>
+  <li>Open each <code>__init__.py</code> and confirm it says <code>ENV_MOCK</code> (the default). Do <strong>not</strong> switch to <code>ENV_IMPL</code> yet.</li>
+  <li>Start the server and hit any of the five endpoints — DSU should return mock data (status 200 with stub values). This confirms the spec + build pipeline is working.</li>
+</ul>
+
+<div class="hint">
+  <strong>Tip:</strong> Use Swagger UI at <code>/swagger/</code> (or <code>/api/schema/swagger-ui/</code>) to browse and test your endpoints without writing any curl commands.
+</div>
+
+<!-- ════════════════════════════════════ PHASE 3 ════════════════════════════════════ -->
+<div class="phase-label">Phase 3 — Implement Each Endpoint</div>
+
+<p>For each of the five tasks below, the pattern is the same — write all four layers, then flip to <code>ENV_IMPL</code> and test.</p>
+
+<div class="flow-row" style="margin-bottom:0.5rem;">
+  <div class="flow-box wrapper">api_wrapper.py</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-box interactor">interactor</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-box storage">storage</div>
+  <div class="flow-arrow">+</div>
+  <div class="flow-box presenter">presenter</div>
+</div>
+
+<p style="font-family:var(--font-sans);font-size:0.9rem;color:var(--muted);margin-bottom:1.5rem;">
+  <strong>api_wrapper</strong> reads <code>kwargs</code> and calls the interactor.<br>
+  <strong>interactor</strong> contains business logic, calls storage and presenter interfaces.<br>
+  <strong>storage</strong> talks to the database (Django ORM).<br>
+  <strong>presenter</strong> formats HTTP responses using <code>HTTPResponseMixin</code>.
+</p>
+
+<!-- ── Task 5 ── -->
+<div class="task-header" id="task5">
+  <span class="task-badge">Task 5</span>
+  <h2>Implement <code>create_post</code></h2>
+</div>
+
+<p><strong>api_wrapper.py</strong> — reads <code>user_id</code> and <code>post_content</code> from <code>kwargs['request_data']</code>.</p>
+
+<p><strong>Interactor</strong> — <code>CreatePostInteractor.execute(user_id, post_content, storage, presenter)</code></p>
+<ul>
+  <li>Calls <code>storage.validate_user(user_id)</code> — raises <code>InvalidUserException</code> if not found</li>
+  <li>Calls <code>storage.validate_post_content(post_content)</code> — raises <code>InvalidPostContent</code> if empty</li>
+  <li>Calls <code>storage.create_post(user_id, post_content)</code> → returns <code>post_id</code></li>
+  <li>Calls <code>presenter.raise_exception_for_invalid_user()</code> on <code>InvalidUserException</code></li>
+  <li>Calls <code>presenter.prepare_201_created_response({"post_id": post_id})</code> on success</li>
+</ul>
+
+<p><strong>Storage</strong> — <code>StorageImplementation</code></p>
+<ul>
+  <li><code>validate_user(user_id)</code> — queries <code>User.objects.filter(id=user_id).exists()</code></li>
+  <li><code>validate_post_content(post_content)</code> — checks if content is empty or whitespace-only</li>
+  <li><code>create_post(user_id, post_content)</code> — creates <code>Post</code> and returns its <code>id</code></li>
+</ul>
+
+<p><strong>Presenter</strong> — <code>JsonPresenter(PresenterInterface, HTTPResponseMixin)</code></p>
+<ul>
+  <li><code>raise_exception_for_invalid_user()</code> → <code>self.prepare_400_bad_request_response({...})</code></li>
+  <li>Success is handled by calling <code>prepare_201_created_response</code> directly from the interactor.</li>
+</ul>
+
+<ul class="checklist">
+  <li>All four layers implemented.</li>
+  <li><code>__init__.py</code> switched to <code>ENV_IMPL</code>.</li>
+  <li><code>POST /fb_post/create_post/v1/</code> returns <code>{"post_id": &lt;n&gt;}</code> with a valid <code>user_id</code>.</li>
+  <li>Returns 400 when <code>user_id</code> is invalid or <code>post_content</code> is empty.</li>
+</ul>
+
+<!-- ── Task 6 ── -->
+<div class="task-header" id="task6">
+  <span class="task-badge">Task 6</span>
+  <h2>Implement <code>get_post</code></h2>
+</div>
+
+<p><strong>api_wrapper.py</strong> — reads <code>post_id</code> from <code>kwargs['path_params']</code>.</p>
+
+<p><strong>Interactor</strong> — <code>GetPostInteractor.execute(post_id, storage, presenter)</code></p>
+<ul>
+  <li>Validates the post exists via storage; raises <code>InvalidPostException</code> if not.</li>
+  <li>Fetches the full post detail (comments, reactions, replies) via storage.</li>
+  <li>Returns the assembled dict through <code>presenter.prepare_200_success_response(post_dict)</code>.</li>
+</ul>
+
+<p><strong>Storage</strong></p>
+<ul>
+  <li><code>validate_post(post_id)</code></li>
+  <li><code>get_post_details(post_id)</code> — returns a Python dict matching the response shape in Task 3.
+    Build it using <code>select_related</code> / <code>prefetch_related</code> to avoid N+1 queries.</li>
+</ul>
+
+<p><strong>Presenter</strong></p>
+<ul>
+  <li><code>raise_exception_for_invalid_post()</code> → <code>self.prepare_404_not_found_response({...})</code></li>
+</ul>
+
+<ul class="checklist">
+  <li>Returns full post JSON (matching shape above) for a valid <code>post_id</code>.</li>
+  <li>Returns 404 for an unknown <code>post_id</code>.</li>
+  <li>No N+1 queries — use <code>prefetch_related("comment_set", "reaction_set")</code>.</li>
+</ul>
+
+<!-- ── Task 7 ── -->
+<div class="task-header" id="task7">
+  <span class="task-badge">Task 7</span>
+  <h2>Implement <code>create_comment</code></h2>
+</div>
+
+<p><strong>api_wrapper.py</strong> — reads <code>user_id</code>, <code>post_id</code>, <code>comment_content</code> from <code>kwargs['request_data']</code>.</p>
+
+<p><strong>Interactor</strong> — <code>CreateCommentInteractor.execute(user_id, post_id, comment_content, storage, presenter)</code></p>
+<ul>
+  <li>Validates user, post, and comment content in that order.</li>
+  <li>Raises the appropriate exception for the first failure found.</li>
+  <li>Creates the comment and returns <code>{"comment_id": &lt;n&gt;}</code>.</li>
+</ul>
+
+<p><strong>Storage</strong></p>
+<ul>
+  <li>Reuse <code>validate_user</code> and <code>validate_post</code> from the previous tasks.</li>
+  <li>Add <code>validate_comment_content(content)</code> and <code>create_comment(user_id, post_id, content)</code>.</li>
+</ul>
+
+<ul class="checklist">
+  <li>Returns <code>{"comment_id": &lt;n&gt;}</code> on success.</li>
+  <li>Returns 400 for invalid user, invalid post, or empty comment.</li>
+</ul>
+
+<div class="hint">
+  <strong>Reuse tip:</strong> <code>validate_user</code> and <code>validate_post</code> were already written in Tasks 5–6. Pass the same <code>StorageImplementation</code> instance — don't duplicate the ORM logic.
+</div>
+
+<!-- ── Task 8 ── -->
+<div class="task-header" id="task8">
+  <span class="task-badge">Task 8</span>
+  <h2>Implement <code>react_to_post</code></h2>
+</div>
+
+<p><strong>api_wrapper.py</strong> — reads <code>user_id</code>, <code>post_id</code>, <code>reaction_type</code> from <code>kwargs['request_data']</code>.</p>
+
+<p><strong>Toggle logic (from Assignment 006 — Task 5):</strong></p>
+<ul>
+  <li>No existing reaction → create one.</li>
+  <li>Same reaction type already exists → delete it (un-react).</li>
+  <li>Different reaction type → update existing reaction and refresh <code>reacted_at</code>.</li>
+</ul>
+
+<p><strong>Interactor</strong> — <code>ReactToPostInteractor.execute(user_id, post_id, reaction_type, storage, presenter)</code></p>
+<ul>
+  <li>Validate user, post, and reaction type (check against the constants enum).</li>
+  <li>Delegate toggle logic to the storage layer.</li>
+  <li>Return a 200 empty response on success.</li>
+</ul>
+
+<p><strong>Storage</strong></p>
+<ul>
+  <li><code>validate_reaction_type(reaction_type)</code> — compare against the <code>ReactionType</code> enum values.</li>
+  <li><code>react_to_post(user_id, post_id, reaction_type)</code> — contains the toggle logic.</li>
+</ul>
+
+<ul class="checklist">
+  <li>First reaction creates a row; second reaction with same type deletes it; different type updates it.</li>
+  <li>Returns 400 for invalid user, post, or reaction type.</li>
+</ul>
+
+<!-- ── Task 9 ── -->
+<div class="task-header" id="task9">
+  <span class="task-badge">Task 9</span>
+  <h2>Implement <code>delete_post</code></h2>
+</div>
+
+<p><strong>api_wrapper.py</strong> — reads <code>post_id</code> from <code>kwargs['path_params']</code> and <code>user_id</code> from <code>kwargs['request_data']</code> (or query params).</p>
+
+<p><strong>Interactor</strong> — <code>DeletePostInteractor.execute(user_id, post_id, storage, presenter)</code></p>
+<ul>
+  <li>Validate user exists.</li>
+  <li>Validate post exists.</li>
+  <li>Check <code>post.posted_by_id == user_id</code>; if not, raise <code>UserCannotDeletePostException</code>.</li>
+  <li>Call <code>storage.delete_post(post_id)</code> — Django cascades will remove comments and reactions if <code>on_delete=CASCADE</code> is set.</li>
+  <li>Return 200 on success.</li>
+</ul>
+
+<p><strong>Presenter</strong></p>
+<ul>
+  <li>Add <code>raise_exception_for_user_cannot_delete_post()</code> → <code>self.prepare_400_bad_request_response({...})</code>.</li>
+</ul>
+
+<ul class="checklist">
+  <li>Post creator can delete their own post — returns 200.</li>
+  <li>Non-creator gets 400 with <code>res_status: "USER_CANNOT_DELETE_POST"</code>.</li>
+  <li>Comments and reactions on the post are also deleted (verify in the DB).</li>
+</ul>
+
+<!-- ════════════════════════════════════ WRAP UP ════════════════════════════════════ -->
+<div class="phase-label">Wrap Up</div>
+
+<section>
+  <h2>Self-Check</h2>
+  <p>Before you consider this assignment complete, verify:</p>
+  <ul class="checklist">
+    <li>All five endpoints return correct data when hit with valid inputs via Swagger UI.</li>
+    <li>Every error case returns the correct HTTP status code and the three-field error body.</li>
+    <li><code>get_post</code> doesn't trigger an N+1 query (check Django debug toolbar or manually count SQL logs).</li>
+    <li><code>api_wrapper.py</code> contains <em>no</em> ORM calls — it only reads <code>kwargs</code> and delegates.</li>
+    <li>Interactor has <em>no</em> ORM calls — it calls <code>storage.*</code> methods only.</li>
+    <li>Presenter has <em>no</em> business logic — it only formats HTTP responses.</li>
+  </ul>
+
+  <h2 style="margin-top:1.5rem;">Extension Challenges</h2>
+  <p>If you finish early, try these harder tasks from <a href="../env_files/content_preparation_refernces/django/assignments/django_assignment_006.html">Assignment 006</a> as additional endpoints:</p>
+  <ul>
+    <li><code>GET /fb_post/reaction_metrics/v1/{post_id}/</code> — Task 8: return count per reaction type.</li>
+    <li><code>GET /fb_post/user_posts/v1/{user_id}/</code> — Task 14: full post list for a given user.</li>
+    <li><code>POST /fb_post/reply_to_comment/v1/</code> — Task 4: comment on a comment, respecting the parent chain.</li>
+  </ul>
+</section>
+
+<section class="lesson-footer">
+  <p>
+    <strong>Lesson reference:</strong>
+    <a href="0009-dsu.html">Lesson 09 — DSU: Django Swagger Utils</a>
+    covers every DSU concept used in this assignment.
+  </p>
+  <p>
+    <strong>Domain reference:</strong>
+    <a href="../env_files/content_preparation_refernces/django/assignments/django_assignment_006.html">Assignment 006 — Social Network</a>
+    has the full business logic specification (Tasks 1–15).
+  </p>
+  <p class="ask-prompt">
+    Stuck on a task? Ask your agent — paste the error and the layer you're working on (api_wrapper / interactor / storage / presenter) and you'll get targeted help.
+  </p>
+  <div class="lesson-nav">
+    <a href="0010-poetry.html">← Lesson 10: Poetry &amp; Environment Setup</a>
+    <a href="0011-writing-test-cases.html">Lesson 12: Testing with pytest →</a>
+  </div>
+</section>
+
+</main>
+
+</body>
+</html>

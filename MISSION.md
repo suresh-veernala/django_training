@@ -32,8 +32,7 @@ Become productive on a production-style Django backend codebase — able to mode
 7. Clean Architecture — `lessons/0007-clean-architecture.html`
 8. Backend Code Guide — `lessons/0008-backend-code-guide.html`
 9. DSU — Django Swagger Utils — `lessons/0009-dsu.html`
-10. Writing Test Cases with pytest — `lessons/0010-writing-test-cases.html`
-11. Fixtures, Parametrize & Factory Boy — `lessons/0011-fixtures-parametrize-factory-boy.html`
-12. Mocking — `lessons/0011-mocking.html`
-13. Poetry: Dependency Management — `lessons/0012-poetry.html`
-14. Full Environment Setup (Poetry + AWS CLI + CodeArtifact) — `lessons/0013-environment-setup.html`
+10. Poetry & Environment Setup — `lessons/0010-poetry.html`
+11. Social Network DSU Assignment — `lessons/0013-social-network-dsu-assignment.html`
+12. Testing with pytest — `lessons/0011-writing-test-cases.html`
+13. Mocking — `lessons/0012-mocking.html`
