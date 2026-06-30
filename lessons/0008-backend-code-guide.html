@@ -107,9 +107,9 @@
       <li><a href="0007-clean-architecture.html">Clean Architecture</a></li>
       <li class="current"><a href="0008-backend-code-guide.html">Backend Code Guide</a></li>
       <li><a href="0009-dsu.html">DSU — Django Swagger Utils</a></li>
-      <li><a href="0010-writing-test-cases.html">Testing with pytest</a></li>
-      <li><a href="0011-mocking.html">Mocking — Test in Isolation</a></li>
-      <li><a href="0012-poetry.html">Poetry &amp; Environment Setup</a></li>
+      <li><a href="0010-poetry.html">Poetry &amp; Environment Setup</a></li>
+      <li><a href="0011-writing-test-cases.html">Testing with pytest</a></li>
+      <li><a href="0012-mocking.html">Mocking — Test in Isolation</a></li>
     </ol>
   </nav>
 
@@ -120,11 +120,54 @@
 
 
   <!-- ═══════════════════════════════════════════════════════
-       PART 1 — FULL APP STRUCTURE (BOILERPLATE)
+       PART 1 — BASIC APP STRUCTURE
   ═══════════════════════════════════════════════════════ -->
-  <h2>Part 1 — The Complete App Structure</h2>
+  <h2>Part 1 — Basic App Structure</h2>
 
-  <p>In <a href="0007-clean-architecture.html">Lesson 7</a> you saw the four core folders. Production apps have more. Here is the full boilerplate:</p>
+  <p>In <a href="0007-clean-architecture.html">Lesson 7</a> you saw the four core folders. When you scaffold a new app, this is the starting structure — everything you need to ship an endpoint without test infrastructure or optional extras:</p>
+
+  <div class="filetree">
+    <span class="ft-section">my_app/</span>
+    <div class="ft-row"><span class="ft-path file">├── app.py</span><span class="ft-dots"></span><span class="ft-desc">Django AppConfig</span></div>
+    <div class="ft-row"><span class="ft-path file">├── admin.py</span><span class="ft-dots"></span><span class="ft-desc">Django admin registrations</span></div>
+    <div class="ft-row"><span class="ft-path dir">├── api_specs/</span><span class="ft-dots"></span><span class="ft-desc">OpenAPI spec (api_spec.json)</span></div>
+    <div class="ft-row"><span class="ft-path dir">├── app_interfaces/</span><span class="ft-dots"></span><span class="ft-desc">ServiceInterface — what this app exposes to other apps</span></div>
+    <div class="ft-row"><span class="ft-path dir">├── adapters/</span><span class="ft-dots"></span><span class="ft-desc">Calls TO other apps — DTOs + ServiceAdapter</span></div>
+    <div class="ft-row"><span class="ft-path file">│   ├── dtos.py</span><span class="ft-dots"></span><span class="ft-desc">adapter-specific DTOs</span></div>
+    <div class="ft-row"><span class="ft-path file">│   └── service_adapter.py</span><span class="ft-dots"></span><span class="ft-desc">single ServiceAdapter class wiring all adapters</span></div>
+    <div class="ft-row"><span class="ft-path dir">├── constants/</span><span class="ft-dots"></span><span class="ft-desc">config, enums, exception_messages</span></div>
+    <div class="ft-row"><span class="ft-path dir">├── exceptions/</span><span class="ft-dots"></span><span class="ft-desc">custom_exceptions.py</span></div>
+    <div class="ft-row"><span class="ft-path dir">├── interactors/</span><span class="ft-dots"></span><span class="ft-desc">business logic + interfaces</span></div>
+    <div class="ft-row"><span class="ft-path file">│   ├── post_interactor.py</span><span class="ft-dots"></span><span class="ft-desc">one interactor per entity (or per use-case)</span></div>
+    <div class="ft-row"><span class="ft-path dir">│   ├── mixins/</span><span class="ft-dots"></span><span class="ft-desc">validation_mixin.py — only if used in 3+ interactors</span></div>
+    <div class="ft-row"><span class="ft-path dir">│   ├── presenter_interfaces/</span><span class="ft-dots"></span><span class="ft-desc">ABC + DTOs for presenters</span></div>
+    <div class="ft-row"><span class="ft-path dir">│   └── storage_interfaces/</span><span class="ft-dots"></span><span class="ft-desc">ABC + DTOs for storages</span></div>
+    <div class="ft-row"><span class="ft-path dir">├── models/</span><span class="ft-dots"></span><span class="ft-desc">Django ORM models</span></div>
+    <div class="ft-row"><span class="ft-path dir">├── storages/</span><span class="ft-dots"></span><span class="ft-desc">concrete ORM implementations</span></div>
+    <div class="ft-row"><span class="ft-path dir">├── presenters/</span><span class="ft-dots"></span><span class="ft-desc">concrete response builders</span></div>
+    <div class="ft-row"><span class="ft-path dir">├── populate/</span><span class="ft-dots"></span><span class="ft-desc">data seeding utilities (wraps interactors)</span></div>
+    <div class="ft-row"><span class="ft-path dir">└── utils/</span><span class="ft-dots"></span><span class="ft-desc">helpers used across 3+ files within this app</span></div>
+  </div>
+
+  <h3>New folders vs Lesson 7</h3>
+  <table>
+    <thead><tr><th>Folder</th><th>Purpose (one sentence)</th></tr></thead>
+    <tbody>
+      <tr><td><code>adapters/</code></td><td>All code that <em>calls other apps</em>. DTOs are converted here so foreign types never enter your interactors.</td></tr>
+      <tr><td><code>app_interfaces/</code></td><td>The <code>ServiceInterface</code> class — what <em>other</em> apps can call on this app. The public API between Django apps.</td></tr>
+      <tr><td><code>constants/</code></td><td>Three files only: <code>config.py</code> (settings/thresholds), <code>enums.py</code> (all enums), <code>exception_messages.py</code> (error strings).</td></tr>
+      <tr><td><code>exceptions/</code></td><td>All custom exception classes for this app, in <code>custom_exceptions.py</code>.</td></tr>
+      <tr><td><code>populate/</code></td><td>Data seeding scripts that wrap interactors. Handle sheet parsing, field validation, and DTO construction here.</td></tr>
+    </tbody>
+  </table>
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       PART 2 — COMPLETE APP STRUCTURE
+  ═══════════════════════════════════════════════════════ -->
+  <h2>Part 2 — Complete App Structure</h2>
+
+  <p>As an app matures, three more folders are added on top of the basic structure. Production apps at your org look like this:</p>
 
   <div class="filetree">
     <span class="ft-section">my_app/</span>
@@ -158,15 +201,13 @@
     <div class="ft-row"><span class="ft-path dir">    └── views/</span><span class="ft-dots"></span><span class="ft-desc">snapshot tests</span></div>
   </div>
 
-  <h3>New folders vs Lesson 7</h3>
+  <h3>Folders added beyond the basic structure</h3>
   <table>
     <thead><tr><th>Folder</th><th>Purpose (one sentence)</th></tr></thead>
     <tbody>
-      <tr><td><code>adapters/</code></td><td>All code that <em>calls other apps</em>. DTOs are converted here so foreign types never enter your interactors.</td></tr>
-      <tr><td><code>app_interfaces/</code></td><td>The <code>ServiceInterface</code> class — what <em>other</em> apps can call on this app. The public API between Django apps.</td></tr>
-      <tr><td><code>constants/</code></td><td>Three files only: <code>config.py</code> (settings/thresholds), <code>enums.py</code> (all enums), <code>exception_messages.py</code> (error strings).</td></tr>
-      <tr><td><code>exceptions/</code></td><td>All custom exception classes for this app, in <code>custom_exceptions.py</code>.</td></tr>
-      <tr><td><code>populate/</code></td><td>Data seeding scripts that wrap interactors. Handle sheet parsing, field validation, and DTO construction here.</td></tr>
+      <tr><td><code>entities/</code></td><td>Pure data classes with no DB or HTTP dependencies — domain objects that sit between interactors and storages when you need richer types than DTOs.</td></tr>
+      <tr><td><code>signals/</code></td><td>Django signal handlers — side effects triggered by model saves, deletes, or other framework events.</td></tr>
+      <tr><td><code>tests/</code></td><td>Test suite that mirrors the app structure — one subfolder per module (<code>interactors/</code>, <code>storages/</code>, etc.).</td></tr>
       <tr><td><code>tests/factories/</code></td><td>Factory Boy model factories + DTO factories used in tests.</td></tr>
       <tr><td><code>tests/common_fixtures/</code></td><td>Reusable mock objects (e.g. <code>auth_service_adapter_mocks.py</code>) shared across multiple test files.</td></tr>
     </tbody>
@@ -174,9 +215,9 @@
 
 
   <!-- ═══════════════════════════════════════════════════════
-       PART 2 — MODULE RULES
+       PART 3 — MODULE RULES
   ═══════════════════════════════════════════════════════ -->
-  <h2>Part 2 — Rules Per Module</h2>
+  <h2>Part 3 — Rules Per Module</h2>
 
   <!-- INTERACTORS -->
   <h3><span class="mpill interactor">Interactors</span> Key rules</h3>
@@ -285,9 +326,9 @@ class AuthServiceAdapter:
 
 
   <!-- ═══════════════════════════════════════════════════════
-       PART 3 — PYTHON CONVENTIONS
+       PART 4 — PYTHON CONVENTIONS
   ═══════════════════════════════════════════════════════ -->
-  <h2>Part 3 — Python Conventions</h2>
+  <h2>Part 4 — Python Conventions</h2>
 
   <h3>Naming</h3>
 
@@ -428,9 +469,9 @@ raise InvalidMovieIdException(
 
 
   <!-- ═══════════════════════════════════════════════════════
-       PART 4 — REFACTORING RULES
+       PART 5 — REFACTORING RULES
   ═══════════════════════════════════════════════════════ -->
-  <h2>Part 4 — When to Split &amp; Refactor</h2>
+  <h2>Part 5 — When to Split &amp; Refactor</h2>
 
   <p>These are the signals your org uses to decide when a file has grown too big:</p>
 
