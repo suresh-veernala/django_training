@@ -323,15 +323,12 @@
 <p>Create the DSU project and app from scratch using the DSU management commands.</p>
 
 <ul class="checklist">
-  <li>Run <code>python manage.py create_cleanapp fb_post -p social_network</code> to scaffold the app with a full Clean Architecture folder structure.</li>
-  <li>Open <code>settings/base_swagger_utils.py</code> and register the app in <strong>both</strong> required places:
-    <pre><code># 1. In the INSTALLED_APPS / APPS list:
-"fb_post",
-
-# 2. In SWAGGER_UTILS["APPS"]:
-"fb_post": {
-    "prefix_url": "fb_post",
-},</code></pre>
+  <li>Set the settings module, then scaffold the app:
+    <pre><code>export DJANGO_SETTINGS_MODULE=social_network.settings.local
+python manage.py create_cleanapp fb_post -p social_network</code></pre>
+  </li>
+  <li>Open <code>settings/base_swagger_utils.py</code> and register the app in <strong>both</strong> required places — add <code>"fb_post"</code> to the <code>APPS</code> list, and add the following entry under <code>SWAGGER_UTILS["APPS"]</code>:
+    <pre><code>"fb_post": {"dsu_version": "1.0"},</code></pre>
   </li>
   <li>Start the server and confirm Django starts without errors.</li>
 </ul>
