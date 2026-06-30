@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <title>Lesson 12 — Poetry &amp; Environment Setup</title>
+  <link rel="stylesheet" href="../assets/styles.css?v=2" />
+  <style>
+    /* ── pip vs Poetry comparison cards ── */
+    .vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0 1.5rem; }
+    .vs-card { border-radius: var(--radius); padding: 1rem; border: 1px solid var(--border); }
+    .vs-card h4 { font-family: var(--font-sans); font-size: 0.92rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .vs-card ul { margin: 0; padding-left: 1.2rem; }
+    .vs-card li { font-size: 0.87rem; color: var(--muted); margin-bottom: 0.25rem; }
+    .vs-card.old { background: #fef2f2; border-color: #fca5a5; }
+    .vs-card.old h4 { color: #b91c1c; }
+    .vs-card.new { background: #f0fdf4; border-color: #86efac; }
+    .vs-card.new h4 { color: #15803d; }
+
+    /* ── Part divider ── */
+    .part-header {
+      display: flex; align-items: center; gap: 0.9rem;
+      margin: 2.5rem 0 1.25rem; padding-top: 1.25rem;
+      border-top: 2px solid var(--border);
+    }
+    .part-badge {
+      background: var(--accent); color: #fff;
+      font-family: var(--font-sans); font-size: 0.72rem; font-weight: 700;
+      padding: 0.3rem 0.85rem; border-radius: 99px;
+      letter-spacing: 0.05em; white-space: nowrap;
+    }
+    .part-header h2 { margin: 0; border: none; padding: 0; font-size: 1.25rem; }
+
+    /* ── Verify block ── */
+    .verify {
+      background: var(--success-bg); border: 1px solid #bbf7d0;
+      border-left: 4px solid #16a34a; border-radius: var(--radius);
+      padding: 0.65rem 1rem; margin: 0.4rem 0 0.9rem;
+      font-family: var(--font-mono); font-size: 0.84rem; color: var(--success);
+    }
+    .verify-label {
+      font-family: var(--font-sans); font-size: 0.72rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      margin-bottom: 0.2rem; color: #15803d;
+    }
+
+    /* ── OS tab switcher ── */
+    .os-tabs { display: flex; gap: 0.5rem; margin-bottom: -1px; margin-top: 0.75rem; }
+    .os-tab {
+      padding: 0.35rem 0.9rem; border: 1px solid var(--border); border-bottom: none;
+      border-radius: var(--radius) var(--radius) 0 0;
+      font-family: var(--font-sans); font-size: 0.84rem;
+      cursor: pointer; background: var(--bg); color: var(--muted); font-weight: 500;
+    }
+    .os-tab.active { background: var(--surface); color: var(--accent); font-weight: 700; border-color: var(--accent); }
+    .os-panel {
+      display: none; border: 1px solid var(--border);
+      border-radius: 0 var(--radius) var(--radius) var(--radius);
+      padding: 1rem 1.25rem; background: var(--surface); margin-bottom: 1rem;
+    }
+    .os-panel.active { display: block; }
+    .os-panel .steps { margin: 0; }
+
+    /* ── Source note ── */
+    .src-note {
+      font-family: var(--font-sans); font-size: 0.86rem; color: var(--muted);
+      margin: 0.3rem 0 0.9rem; padding-left: 0.5rem;
+      border-left: 3px solid var(--border);
+    }
+
+    /* ── Annotated TOML ── */
+    .toml-view {
+      background: #0d1117; color: #e6edf3; border-radius: var(--radius);
+      padding: 1.25rem 1.5rem; font-family: var(--font-mono);
+      font-size: 0.82rem; line-height: 1.8; margin: 1rem 0 1.5rem; overflow-x: auto;
+      white-space: pre;
+    }
+    .toml-key  { color: #79c0ff; }
+    .toml-str  { color: #a5d6ff; }
+    .toml-sect { color: #7ee787; font-weight: 700; }
+    .toml-cmt  { color: #8b949e; font-style: italic; }
+    .toml-ver  { color: #ff9a3c; }
+  </style>
+</head>
+<body>
+<div class="lesson-wrap">
+
+  <a href="../index.html" class="home-btn">← Course Home</a>
+
+  <!-- ── Header ── -->
+  <header class="lesson-header">
+    <div class="lesson-meta">
+      <span class="badge">Lesson 12</span>
+      <span>Python Tooling</span>
+    </div>
+    <h1 class="lesson-title">Poetry &amp; Environment Setup</h1>
+    <p class="lesson-subtitle">Understand why Poetry exists, install it alongside the AWS CLI, connect to CodeArtifact, and master the day-to-day commands.</p>
+  </header>
+
+  <!-- ── Course map ── -->
+  <nav class="course-map">
+    <div class="course-map-title">Course Map — Django Backend Training</div>
+    <ol>
+      <li><a href="0001-introduction-to-django.html">Introduction to Django</a></li>
+      <li><a href="0002-django-project-structure.html">Django Project Structure</a></li>
+      <li><a href="0003-models-and-orm.html">Models &amp; ORM</a></li>
+      <li><a href="0004-building-apis.html">Building APIs</a></li>
+      <li><a href="0005-openapi-swagger.html">OpenAPI / Swagger</a></li>
+      <li><a href="0006-wrap-up-and-learning-path.html">Wrap Up &amp; Learning Path</a></li>
+      <li><a href="0007-clean-architecture.html">Clean Architecture</a></li>
+      <li><a href="0008-backend-code-guide.html">Backend Code Guide</a></li>
+      <li><a href="0009-dsu.html">DSU — Django Swagger Utils</a></li>
+      <li><a href="0010-writing-test-cases.html">Testing with pytest</a></li>
+      <li><a href="0011-mocking.html">Mocking — Test in Isolation</a></li>
+      <li class="current"><a href="0012-poetry.html">Poetry &amp; Environment Setup</a></li>
+    </ol>
+  </nav>
+
+  <!-- ══════════════════════════════════════════
+       WHY POETRY?
+  ══════════════════════════════════════════ -->
+  <h2>Why Poetry?</h2>
+
+  <div class="feature-grid">
+    <div class="feature-card">
+      <h4>Single config file</h4>
+      <p>One <code>pyproject.toml</code> replaces <code>setup.py</code>, <code>setup.cfg</code>, and multiple <code>requirements*.txt</code> files.</p>
+    </div>
+    <div class="feature-card">
+      <h4>Dependency locking</h4>
+      <p><code>poetry.lock</code> pins every package to an exact version — identical installs on every machine and in CI.</p>
+    </div>
+    <div class="feature-card">
+      <h4>Intelligent resolution</h4>
+      <p>Full SAT-solver resolves transitive dependency conflicts that <code>pip</code> silently ignores.</p>
+    </div>
+    <div class="feature-card">
+      <h4>Safe removes</h4>
+      <p>Won't uninstall a package still needed by another — <code>pip uninstall</code> has no such check.</p>
+    </div>
+    <div class="feature-card">
+      <h4>Dev / prod groups</h4>
+      <p><code>--group dev</code> keeps test tools out of production. <code>poetry install --only main</code> for prod deploys.</p>
+    </div>
+    <div class="feature-card">
+      <h4>pip compatible</h4>
+      <p>Works with all existing PyPI packages. Use <code>poetry export</code> to generate <code>requirements.txt</code> when needed.</p>
+    </div>
+  </div>
+
+  <div class="vs-grid">
+    <div class="vs-card old">
+      <h4>pip + requirements.txt (old)</h4>
+      <ul>
+        <li>Manually run <code>pip freeze</code> and commit output</li>
+        <li>No lock — teammate installs a newer sub-dep and things break</li>
+        <li>Multiple files: <code>base.txt</code>, <code>dev.txt</code>, <code>prod.txt</code></li>
+        <li>No separation of dev-only vs prod dependencies</li>
+        <li>Version conflicts silently overwrite packages</li>
+      </ul>
+    </div>
+    <div class="vs-card new">
+      <h4>Poetry (modern)</h4>
+      <ul>
+        <li>One command adds + installs + locks a dependency</li>
+        <li><code>poetry.lock</code> pins <em>every</em> package to exact version + hash</li>
+        <li>One <code>pyproject.toml</code> with named groups</li>
+        <li><code>--group dev</code> for test tools, linters, etc.</li>
+        <li>Resolver detects conflicts before install</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       pyproject.toml
+  ══════════════════════════════════════════ -->
+  <h2>Understanding <code>pyproject.toml</code></h2>
+
+  <div class="toml-view">
+<span class="toml-sect">[tool.poetry]</span>
+<span class="toml-key">name</span> = <span class="toml-str">"imdb"</span>  <span class="toml-cmt"># project name</span>
+<span class="toml-key">version</span> = <span class="toml-str">"0.1.0"</span>
+<span class="toml-key">authors</span> = [<span class="toml-str">"You &lt;you@example.com&gt;"</span>]
+
+<span class="toml-sect">[tool.poetry.dependencies]</span>  <span class="toml-cmt"># prod deps — installed always</span>
+<span class="toml-key">python</span> = <span class="toml-ver">"^3.11"</span>  <span class="toml-cmt"># ^ = ≥3.11, &lt;4.0</span>
+<span class="toml-key">django</span> = <span class="toml-ver">"^5.0"</span>  <span class="toml-cmt"># ^ = ≥5.0, &lt;6.0</span>
+<span class="toml-key">djangorestframework</span> = <span class="toml-ver">"^3.15"</span>
+
+<span class="toml-sect">[tool.poetry.group.dev.dependencies]</span>  <span class="toml-cmt"># dev-only — skipped in prod</span>
+<span class="toml-key">pytest</span> = <span class="toml-ver">"*"</span>
+<span class="toml-key">pytest-django</span> = <span class="toml-ver">"*"</span>
+<span class="toml-key">factory-boy</span> = <span class="toml-ver">"*"</span>
+
+<span class="toml-sect">[[tool.poetry.source]]</span>  <span class="toml-cmt"># private registry (CodeArtifact)</span>
+<span class="toml-key">name</span> = <span class="toml-str">"codeartifact"</span>
+<span class="toml-key">url</span> = <span class="toml-str">"https://&lt;domain&gt;-&lt;account&gt;.d.codeartifact.&lt;region&gt;.amazonaws.com/pypi/&lt;repo&gt;/simple/"</span>
+<span class="toml-key">priority</span> = <span class="toml-str">"supplemental"</span>
+
+<span class="toml-sect">[build-system]</span>
+<span class="toml-key">requires</span> = [<span class="toml-str">"poetry-core"</span>]
+<span class="toml-key">build-backend</span> = <span class="toml-str">"poetry.core.masonry.api"</span>
+  </div>
+
+  <p>The caret (<code>^</code>) means "compatible with this major version". A bare <code>*</code> means "latest available".</p>
+
+  <!-- ══════════════════════════════════════════
+       PART 1 — INSTALL POETRY
+  ══════════════════════════════════════════ -->
+  <div class="part-header">
+    <span class="part-badge">Part 1</span>
+    <h2>Install Poetry</h2>
+  </div>
+
+  <p class="src-note">Source: <a href="https://www.digitalocean.com/community/tutorials/how-to-install-poetry-to-manage-python-dependencies-on-ubuntu-22-04" target="_blank">DigitalOcean — Installing Poetry</a></p>
+
+  <div class="callout warn">
+    <div class="callout-title">Important</div>
+    <strong>Do not install Poetry via <code>pip install poetry</code>.</strong> Always use the official installer below.
+  </div>
+
+  <ul class="steps">
+    <li>
+      <strong>Download and run the official installer</strong>
+      <pre><code>curl -sSL https://install.python-poetry.org | python3 -</code></pre>
+    </li>
+    <li>
+      <strong>Add Poetry to your PATH — append to <code>~/.zshrc</code> (macOS) or <code>~/.bashrc</code> (Linux)</strong>
+      <pre><code>export PATH="$HOME/.local/bin:$PATH"</code></pre>
+      Then reload: <code>source ~/.zshrc</code>
+    </li>
+    <li>
+      <strong>Verify</strong>
+      <pre><code>poetry --version</code></pre>
+      <div class="verify"><div class="verify-label">Expected output</div>Poetry (version 1.x.x)</div>
+    </li>
+  </ul>
+
+  <!-- ══════════════════════════════════════════
+       PART 2 — INSTALL AWS CLI
+  ══════════════════════════════════════════ -->
+  <div class="part-header">
+    <span class="part-badge">Part 2</span>
+    <h2>Install AWS CLI v2</h2>
+  </div>
+
+  <p class="src-note">Source: <a href="https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html#getting-started-install-instructions" target="_blank">AWS Docs — Installing the AWS CLI</a></p>
+
+  <div class="os-tabs">
+    <button class="os-tab active" onclick="showOS('mac')">macOS</button>
+    <button class="os-tab" onclick="showOS('linux')">Linux (x86-64)</button>
+    <button class="os-tab" onclick="showOS('win')">Windows</button>
+  </div>
+
+  <div class="os-panel active" id="os-mac">
+    <ul class="steps">
+      <li>
+        <strong>Download the installer</strong>
+        <pre><code>curl "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o "AWSCLIV2.pkg"</code></pre>
+        Or download in your browser: <a href="https://awscli.amazonaws.com/AWSCLIV2.pkg">AWSCLIV2.pkg</a>
+      </li>
+      <li>
+        <strong>Run the installer</strong>
+        <pre><code>sudo installer -pkg AWSCLIV2.pkg -target /</code></pre>
+        (Or double-click the <code>.pkg</code> file.)
+      </li>
+      <li>
+        <strong>Verify</strong>
+        <pre><code>which aws && aws --version</code></pre>
+        <div class="verify"><div class="verify-label">Expected output</div>/usr/local/bin/aws<br>aws-cli/2.x.x Python/3.x.x Darwin/...</div>
+      </li>
+    </ul>
+  </div>
+
+  <div class="os-panel" id="os-linux">
+    <ul class="steps">
+      <li>
+        <strong>Download and extract</strong>
+        <pre><code>curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip awscliv2.zip</code></pre>
+      </li>
+      <li><strong>Install</strong><pre><code>sudo ./aws/install</code></pre></li>
+      <li>
+        <strong>Verify</strong>
+        <pre><code>aws --version</code></pre>
+        <div class="verify"><div class="verify-label">Expected output</div>aws-cli/2.x.x Python/3.x.x Linux/...</div>
+      </li>
+    </ul>
+  </div>
+
+  <div class="os-panel" id="os-win">
+    <ul class="steps">
+      <li>
+        <strong>Download the MSI installer</strong><br>
+        <a href="https://awscli.amazonaws.com/AWSCLIV2.msi" target="_blank">AWSCLIV2.msi</a>
+      </li>
+      <li><strong>Run the installer</strong> — double-click and follow prompts.</li>
+      <li>
+        <strong>Verify (in a new Command Prompt)</strong>
+        <pre><code>aws --version</code></pre>
+        <div class="verify"><div class="verify-label">Expected output</div>aws-cli/2.x.x Python/3.x.x Windows/...</div>
+      </li>
+    </ul>
+  </div>
+
+  <h3>Configure AWS credentials</h3>
+  <ul class="steps">
+    <li>
+      <strong>Run the configuration wizard</strong>
+      <pre><code>aws configure</code></pre>
+      Enter your Access Key ID, Secret Access Key, default region, and output format (<code>json</code>).
+    </li>
+    <li>
+      <strong>Verify credentials work</strong>
+      <pre><code>aws sts get-caller-identity</code></pre>
+      <div class="verify"><div class="verify-label">Expected output</div>JSON with your UserId, Account, and Arn.</div>
+    </li>
+  </ul>
+
+  <!-- ══════════════════════════════════════════
+       PART 3 — CODEARTIFACT
+  ══════════════════════════════════════════ -->
+  <div class="part-header">
+    <span class="part-badge">Part 3</span>
+    <h2>Connect Poetry to AWS CodeArtifact</h2>
+  </div>
+
+  <p class="src-note">Uses the <a href="https://pypi.org/project/poetry-codeartifact-login/" target="_blank">poetry-codeartifact-login</a> plugin — handles token fetching automatically.</p>
+
+  <ul class="steps">
+    <li>
+      <strong>Install the plugin (once per machine)</strong>
+      <pre><code>poetry self add poetry-codeartifact-login</code></pre>
+    </li>
+    <li>
+      <strong>Add your CodeArtifact source to <code>pyproject.toml</code></strong>
+      <p>URL must end with <code>/simple/</code> — without it Poetry cannot find packages.</p>
+      <pre><code>[[tool.poetry.source]]
+name     = "codeartifact"
+url      = "https://&lt;domain&gt;-&lt;account-id&gt;.d.codeartifact.&lt;region&gt;.amazonaws.com/pypi/&lt;repo&gt;/simple/"
+priority = "supplemental"</code></pre>
+    </li>
+    <li>
+      <strong>Log in using your AWS profile</strong>
+      <pre><code>poetry aws-login codeartifact --profile &lt;aws-profile-name&gt;</code></pre>
+      Using the default profile: <code>poetry aws-login codeartifact</code><br>
+      This fetches a 12-hour token and stores it in Poetry's credential store automatically.
+    </li>
+    <li>
+      <strong>Verify — install dependencies</strong>
+      <pre><code>poetry install</code></pre>
+    </li>
+  </ul>
+
+  <div class="callout warn">
+    <div class="callout-title">Token expiry</div>
+    CodeArtifact tokens last <strong>12 hours</strong>. Re-run <code>poetry aws-login codeartifact</code> the next day if you see authentication errors.
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       PART 4 — COMMANDS & VENV
+  ══════════════════════════════════════════ -->
+  <div class="part-header">
+    <span class="part-badge">Part 4</span>
+    <h2>Essential Commands</h2>
+  </div>
+
+  <h3>Install &amp; manage packages</h3>
+  <table>
+    <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td><code>poetry install</code></td><td>Create virtualenv + install all deps from <code>poetry.lock</code></td></tr>
+      <tr><td><code>poetry install --no-root</code></td><td>Install deps only, skip the project package itself</td></tr>
+      <tr><td><code>poetry install --only main</code></td><td>Install only production deps (skip dev group)</td></tr>
+      <tr><td><code>poetry add django</code></td><td>Add a production dependency and update the lock file</td></tr>
+      <tr><td><code>poetry add "django==5.0.3"</code></td><td>Add a pinned (exact version) dependency</td></tr>
+      <tr><td><code>poetry add --group dev pytest</code></td><td>Add a dev-only dependency</td></tr>
+      <tr><td><code>poetry remove requests</code></td><td>Remove a dependency (checks transitive deps first)</td></tr>
+      <tr><td><code>poetry show</code></td><td>List all installed packages</td></tr>
+      <tr><td><code>poetry show --tree</code></td><td>Show full dependency tree</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Lock file</h3>
+  <table>
+    <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td><code>poetry lock</code></td><td>Resolve and update <code>poetry.lock</code> (upgrades allowed)</td></tr>
+      <tr><td><code>poetry lock --no-update</code></td><td>Re-generate lock file <strong>without</strong> upgrading any package</td></tr>
+      <tr><td><code>poetry update</code></td><td>Upgrade all packages to latest allowed and update lock</td></tr>
+      <tr><td><code>poetry update django</code></td><td>Upgrade only <code>django</code> and update lock</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout key">
+    <div class="callout-title">Rule</div>
+    Always commit <code>poetry.lock</code>. Never commit the <code>.venv/</code> folder.
+  </div>
+
+  <h3>Project-level venv (manually created)</h3>
+  <ul class="steps">
+    <li>
+      <strong>Create the venv inside your project folder</strong>
+      <pre><code>python -m venv .venv</code></pre>
+    </li>
+    <li>
+      <strong>Tell Poetry to use it</strong>
+      <pre><code>poetry env use .venv/bin/python</code></pre>
+    </li>
+    <li>
+      <strong>(Optional) Set globally — Poetry always uses <code>.venv/</code> in-project</strong>
+      <pre><code>poetry config virtualenvs.in-project true</code></pre>
+    </li>
+    <li>
+      <strong>Verify</strong>
+      <pre><code>poetry env info</code></pre>
+      <div class="verify"><div class="verify-label">Expected output</div>Path: .../.venv &nbsp;·&nbsp; Python: 3.x.x &nbsp;·&nbsp; Valid: True</div>
+    </li>
+  </ul>
+
+  <!-- ══════════════════════════════════════════
+       MIGRATE FROM requirements.txt
+  ══════════════════════════════════════════ -->
+  <h2>Migrating an Existing Django Project</h2>
+
+  <ul class="steps">
+    <li>
+      <strong>Initialise Poetry in the project root</strong>
+      <pre><code>poetry init</code></pre>
+      Answer the wizard prompts. Skip adding dependencies interactively.
+    </li>
+    <li>
+      <strong>Import from <code>requirements.txt</code></strong>
+      <pre><code>cat requirements.txt | grep -v "^#" | xargs poetry add</code></pre>
+    </li>
+    <li>
+      <strong>Move dev-only deps to the dev group</strong>
+      <pre><code>poetry add --group dev pytest pytest-django factory-boy</code></pre>
+    </li>
+    <li>
+      <strong>Export back to <code>requirements.txt</code> if needed</strong>
+      <pre><code>poetry export -f requirements.txt --output requirements.txt --without-hashes</code></pre>
+    </li>
+  </ul>
+
+  <!-- ── Quiz ── -->
+  <div class="quiz" id="quiz-container">
+    <div class="quiz-title">Knowledge Check — 5 questions</div>
+
+    <div class="quiz-step" id="q1">
+      <p class="quiz-q">1 of 5 — What file does Poetry use to pin every package to an exact version?</p>
+      <ul class="quiz-options">
+        <li><button onclick="answer(this,'q1',false)">requirements.txt</button></li>
+        <li><button onclick="answer(this,'q1',true)">poetry.lock</button></li>
+        <li><button onclick="answer(this,'q1',false)">pyproject.toml</button></li>
+        <li><button onclick="answer(this,'q1',false)">setup.cfg</button></li>
+      </ul>
+      <div class="quiz-feedback" id="q1-fb"></div>
+      <div class="quiz-next" id="q1-next"><button onclick="showQ('q2')">Next →</button></div>
+    </div>
+
+    <div class="quiz-step" id="q2" style="display:none">
+      <p class="quiz-q">2 of 5 — Which command adds <code>pytest</code> as a dev-only dependency?</p>
+      <ul class="quiz-options">
+        <li><button onclick="answer(this,'q2',false)">poetry add pytest --dev-only</button></li>
+        <li><button onclick="answer(this,'q2',true)">poetry add --group dev pytest</button></li>
+        <li><button onclick="answer(this,'q2',false)">poetry install --dev pytest</button></li>
+        <li><button onclick="answer(this,'q2',false)">poetry add pytest --optional</button></li>
+      </ul>
+      <div class="quiz-feedback" id="q2-fb"></div>
+      <div class="quiz-next" id="q2-next"><button onclick="showQ('q3')">Next →</button></div>
+    </div>
+
+    <div class="quiz-step" id="q3" style="display:none">
+      <p class="quiz-q">3 of 5 — What does <code>^5.0</code> mean as a Poetry version constraint?</p>
+      <ul class="quiz-options">
+        <li><button onclick="answer(this,'q3',false)">Exactly version 5.0, nothing else</button></li>
+        <li><button onclick="answer(this,'q3',true)">Compatible: allows 5.x but not 6.0</button></li>
+        <li><button onclick="answer(this,'q3',false)">Any version from 5.0, no upper limit</button></li>
+        <li><button onclick="answer(this,'q3',false)">Minimum version, no upper bound set</button></li>
+      </ul>
+      <div class="quiz-feedback" id="q3-fb"></div>
+      <div class="quiz-next" id="q3-next"><button onclick="showQ('q4')">Next →</button></div>
+    </div>
+
+    <div class="quiz-step" id="q4" style="display:none">
+      <p class="quiz-q">4 of 5 — How long does an AWS CodeArtifact authentication token last?</p>
+      <ul class="quiz-options">
+        <li><button onclick="answer(this,'q4',false)">Permanently until you rotate it</button></li>
+        <li><button onclick="answer(this,'q4',false)">One hour, matching IAM session tokens</button></li>
+        <li><button onclick="answer(this,'q4',true)">Twelve hours, then needs refreshing</button></li>
+        <li><button onclick="answer(this,'q4',false)">Seven days, like an S3 presigned URL</button></li>
+      </ul>
+      <div class="quiz-feedback" id="q4-fb"></div>
+      <div class="quiz-next" id="q4-next"><button onclick="showQ('q5')">Next →</button></div>
+    </div>
+
+    <div class="quiz-step" id="q5" style="display:none">
+      <p class="quiz-q">5 of 5 — Which command re-generates <code>poetry.lock</code> without upgrading any package?</p>
+      <ul class="quiz-options">
+        <li><button onclick="answer(this,'q5',false)">poetry install --freeze</button></li>
+        <li><button onclick="answer(this,'q5',false)">poetry update --no-upgrade</button></li>
+        <li><button onclick="answer(this,'q5',true)">poetry lock --no-update</button></li>
+        <li><button onclick="answer(this,'q5',false)">poetry lock --freeze-deps</button></li>
+      </ul>
+      <div class="quiz-feedback" id="q5-fb"></div>
+      <div class="quiz-next" id="q5-next"><button onclick="showScore()">See score →</button></div>
+    </div>
+
+    <div id="score-panel" style="display:none" class="callout key">
+      <div class="callout-title">Quiz complete</div>
+      <strong id="score-text"></strong>
+    </div>
+  </div>
+
+  <!-- ── Primary sources ── -->
+  <h2>Primary Sources</h2>
+  <ul>
+    <li><a href="https://www.digitalocean.com/community/tutorials/how-to-install-poetry-to-manage-python-dependencies-on-ubuntu-22-04" target="_blank">DigitalOcean — Installing Poetry</a> — step-by-step install guide</li>
+    <li><a href="https://python-poetry.org/docs/cli/" target="_blank">Poetry CLI docs</a> — full command reference</li>
+    <li><a href="https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html" target="_blank">AWS CLI install guide</a> — official macOS / Linux / Windows instructions</li>
+    <li><a href="https://pypi.org/project/poetry-codeartifact-login/" target="_blank">poetry-codeartifact-login plugin</a> — CodeArtifact authentication for Poetry</li>
+  </ul>
+
+  <!-- ── Ask the agent ── -->
+  <div class="ask-agent">
+    <strong>Have a question?</strong> Ask your agent — for example:
+    <em>"Why does Poetry say 'Source not found' after I added CodeArtifact?"</em>
+    or <em>"What's the difference between <code>poetry update</code> and <code>poetry lock</code>?"</em>
+  </div>
+
+  <!-- ── Footer ── -->
+  <footer class="lesson-footer">
+    <div class="lesson-nav">← <a href="0011-mocking.html">Mocking</a></div>
+    <div>Lesson 12 · Django Training</div>
+    <div class="lesson-nav"><a href="../index.html">Course Home →</a></div>
+  </footer>
+
+</div><!-- .lesson-wrap -->
+
+<script src="../assets/quiz.js"></script>
+<script>
+  let score = 0;
+  const answered = {};
+
+  function answer(btn, qId, correct) {
+    if (answered[qId]) return;
+    answered[qId] = true;
+    btn.closest('.quiz-options').querySelectorAll('button').forEach(b => b.disabled = true);
+    btn.classList.add(correct ? 'correct' : 'wrong');
+    const fb  = document.getElementById(qId + '-fb');
+    const nxt = document.getElementById(qId + '-next');
+    if (correct) {
+      score++;
+      fb.textContent = '✓ Correct!';
+      fb.className = 'quiz-feedback show ok';
+    } else {
+      fb.textContent = '✗ Not quite — the correct answer is highlighted.';
+      fb.className = 'quiz-feedback show bad';
+      btn.closest('.quiz-options').querySelectorAll('button').forEach(b => {
+        if (b.onclick.toString().includes(',true)')) b.classList.add('correct');
+      });
+    }
+    nxt.classList.add('show');
+  }
+
+  function showQ(id) {
+    document.querySelectorAll('.quiz-step').forEach(s => s.style.display = 'none');
+    document.getElementById(id).style.display = 'block';
+  }
+
+  function showScore() {
+    document.querySelectorAll('.quiz-step').forEach(s => s.style.display = 'none');
+    const pct = Math.round(score / 5 * 100);
+    document.getElementById('score-text').textContent =
+      `${score} / 5 correct (${pct}%). ${
+        pct === 100 ? 'Perfect — you\'re ready to set up any Django project!' :
+        pct >= 60   ? 'Good — review the questions you missed.' :
+                      'Re-read Parts 1–3 and retry.'
+      }`;
+    document.getElementById('score-panel').style.display = 'block';
+  }
+
+  function showOS(id) {
+    document.querySelectorAll('.os-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.os-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('os-' + id).classList.add('active');
+    event.target.classList.add('active');
+  }
+</script>
+</body>
+</html>

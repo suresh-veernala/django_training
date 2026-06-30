@@ -34,4 +34,6 @@ Become productive on a production-style Django backend codebase — able to mode
 9. DSU — Django Swagger Utils — `lessons/0009-dsu.html`
 10. Writing Test Cases with pytest — `lessons/0010-writing-test-cases.html`
 11. Fixtures, Parametrize & Factory Boy — `lessons/0011-fixtures-parametrize-factory-boy.html`
-12. Mocking — *(pending)*
+12. Mocking — `lessons/0011-mocking.html`
+13. Poetry: Dependency Management — `lessons/0012-poetry.html`
+14. Full Environment Setup (Poetry + AWS CLI + CodeArtifact) — `lessons/0013-environment-setup.html`
