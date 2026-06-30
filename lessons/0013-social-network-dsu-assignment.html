@@ -327,8 +327,13 @@
     <pre><code>export DJANGO_SETTINGS_MODULE=social_network.settings.local
 python manage.py create_cleanapp fb_post -p social_network</code></pre>
   </li>
-  <li>Open <code>settings/base_swagger_utils.py</code> and register the app in <strong>both</strong> required places — add <code>"fb_post"</code> to the <code>APPS</code> list, and add the following entry under <code>SWAGGER_UTILS["APPS"]</code>:
-    <pre><code>"fb_post": {"dsu_version": "1.0"},</code></pre>
+  <li>Open <code>settings/base_swagger_utils.py</code> and register the app in <strong>two</strong> places:
+    <ul style="margin-top:0.5rem;padding-left:1.2rem;list-style:disc;">
+      <li style="margin-bottom:0.4rem;">Add <code>"fb_post"</code> to the <code>APPS</code> list.</li>
+      <li>Add the following entry under <code>SWAGGER_UTILS["APPS"]</code>:
+        <pre><code>"fb_post": {"dsu_version": "1.0"},</code></pre>
+      </li>
+    </ul>
   </li>
   <li>Start the server and confirm Django starts without errors.</li>
 </ul>
