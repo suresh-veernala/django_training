@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lesson 12 — DTOs, Enums, Inter-App Comms &amp; Interactor Structure</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <style>
+    /* ── Side-by-side diff columns ── */
+    .diff-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1rem 0 1.5rem;
+    }
+    @media (max-width: 640px) { .diff-grid { grid-template-columns: 1fr; } }
+    .diff-head {
+      font-family: var(--font-sans);
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 0.3rem;
+    }
+    .diff-head.bad  { color: #dc2626; }
+    .diff-head.good { color: #16a34a; }
+
+    /* ── Layer flow diagram ── */
+    .layer-flow {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      flex-wrap: wrap;
+      margin: 1.25rem 0;
+      font-family: var(--font-sans);
+      font-size: 0.86rem;
+    }
+    .lf-box {
+      padding: 0.45rem 0.9rem;
+      border-radius: var(--radius);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .lf-box.view      { background: #eff6ff; border: 1.5px solid #3b82f6; color: #1e40af; }
+    .lf-box.interactor{ background: #e8f5e9; border: 1.5px solid #2e7d52; color: #0c4b33; }
+    .lf-box.storage   { background: #fff7ed; border: 1.5px solid #c2773b; color: #7c3d0d; }
+    .lf-box.presenter { background: #f5f0ff; border: 1.5px solid #7c3aed; color: #4c1d95; }
+    .lf-box.adapter   { background: #fefce8; border: 1.5px solid #ca8a04; color: #713f12; }
+    .lf-box.appB      { background: #fef2f2; border: 1.5px solid #ef4444; color: #7f1d1d; }
+    .lf-arrow {
+      color: var(--muted);
+      font-size: 1.1rem;
+      padding: 0 0.3rem;
+    }
+    .lf-label {
+      font-size: 0.7rem;
+      color: var(--muted);
+      font-style: italic;
+      margin: 0 0.2rem;
+    }
+
+    /* ── Section label pill ── */
+    .sec-pill {
+      display: inline-block;
+      font-family: var(--font-sans);
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.15rem 0.55rem;
+      border-radius: 99px;
+      border: 1.5px solid;
+      margin-right: 0.4rem;
+      vertical-align: middle;
+      letter-spacing: 0.04em;
+    }
+    .sec-pill.dto       { border-color: #0c4b33; background: #e8f5e9; color: #0c4b33; }
+    .sec-pill.enum      { border-color: #1e40af; background: #eff6ff; color: #1e40af; }
+    .sec-pill.adapter   { border-color: #ca8a04; background: #fefce8; color: #713f12; }
+    .sec-pill.interactor{ border-color: #7c3aed; background: #f5f0ff; color: #4c1d95; }
+
+    /* ── Wrapper / main split table ── */
+    .wm-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0 1.5rem;
+      font-family: var(--font-sans);
+      font-size: 0.88rem;
+    }
+    .wm-table th {
+      background: var(--accent);
+      color: #fff;
+      padding: 0.55rem 0.9rem;
+    }
+    .wm-table td {
+      padding: 0.5rem 0.9rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    .wm-table tr:nth-child(even) td { background: var(--code-bg); }
+
+    /* ── Inline tag for file paths ── */
+    .fpath {
+      font-family: var(--font-mono);
+      font-size: 0.8em;
+      background: #1c1c1c;
+      color: #7ee787;
+      padding: 0.1em 0.4em;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+<div class="lesson-wrap">
+
+  <!-- ── Back ── -->
+  <a href="../index.html" class="home-btn">&#8592; Course Home</a>
+
+  <!-- ── Header ── -->
+  <header class="lesson-header">
+    <div class="lesson-meta">
+      <span class="badge">Lesson 12</span>
+      <span>Clean Architecture · Intermediate</span>
+      <span>~35 min</span>
+    </div>
+    <h1 class="lesson-title">DTOs, Enums, Inter-App Communication, Interactor Structure &amp; Authentication</h1>
+    <p class="lesson-subtitle">The five building blocks you touch every time you write a feature end-to-end.</p>
+  </header>
+
+  <!-- ── Course Map ── -->
+  <!-- ════════════════════════════════════════════════════════════
+       PART 1 — DTOs
+  ═══════════════════════════════════════════════════════════════ -->
+  <h2><span class="sec-pill dto">1</span> Data Transfer Objects (DTOs)</h2>
+
+  <p>A <strong>DTO (Data Transfer Object)</strong> is a named, typed container for data that travels between layers. In the org's codebase, DTOs are plain Python <code>@dataclass</code> classes.</p>
+
+  <div class="callout info">
+    <div class="callout-title">Why not dict / tuple?</div>
+    Dicts fail silently on typos (<code>KeyError</code> at runtime). Tuples require you to remember field order. DTOs give you IDE auto-complete, type checking, and a meaningful <code>repr</code> — at zero cost.
+  </div>
+
+  <h3>How a DTO looks</h3>
+  <pre><code>from dataclasses import dataclass
+from typing import List, Optional
+
+@dataclass
+class PostDTO:
+    post_id: int
+    content: str
+    author_id: int
+    image_url: Optional[str] = None    # Optional field — default to None</code></pre>
+
+  <p>That's it — plain <code>@dataclass</code>, typed fields, <code>Optional[X] = None</code> for fields that may be absent. No extra decorator arguments needed.</p>
+
+  <h3>Naming conventions</h3>
+  <ul>
+    <li>Class names end in <code>DTO</code> — e.g. <code>PostDTO</code>, <code>UserDetailsDTO</code></li>
+    <li>Variable names end in <code>_dto</code> — e.g. <code>post_dto</code>, <code>user_dto</code></li>
+    <li>Factory classes end in <code>Factory</code> — e.g. <code>PostDTOFactory</code> (in tests)</li>
+  </ul>
+
+  <h3>Where DTOs live</h3>
+
+  <div class="filetree">
+    <div class="ft-row"><span class="ft-path dir">interactors/</span><span class="ft-dots"></span><span class="ft-desc">business logic</span></div>
+    <div class="ft-row"><span class="ft-path file">  storages/dtos.py</span><span class="ft-dots"></span><span class="ft-desc">storage ↔ interactor DTOs</span></div>
+    <div class="ft-row"><span class="ft-path file">  presenters/dtos.py</span><span class="ft-dots"></span><span class="ft-desc">interactor → presenter DTOs</span></div>
+    <div class="ft-row"><span class="ft-path file">  dtos/dtos.py</span><span class="ft-dots"></span><span class="ft-desc">DTOs shared across multiple interactors</span></div>
+    <div class="ft-row"><span class="ft-path cmt">  # DTOs used only within one interactor → defined in that interactor file itself</span></div>
+  </div>
+
+  <!-- Quiz 1 -->
+  <div class="quiz" id="q1">
+    <div class="quiz-title">Quick Check — DTOs</div>
+    <div class="quiz-q">Where should a DTO used only inside one interactor be defined?</div>
+    <ul class="quiz-options">
+      <li><button onclick="answer(this,'q1',false)">In storages/dtos.py</button></li>
+      <li><button onclick="answer(this,'q1',false)">In a separate shared dtos.py</button></li>
+      <li><button onclick="answer(this,'q1',true)">In the interactor file itself</button></li>
+      <li><button onclick="answer(this,'q1',false)">In constants/config.py</button></li>
+    </ul>
+    <div class="quiz-feedback" id="q1-fb"></div>
+    <div class="quiz-next" id="q1-next"><button onclick="showSection('s-enums')">Next: Enums →</button></div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════
+       PART 2 — ENUMS
+  ═══════════════════════════════════════════════════════════════ -->
+  <h2 id="s-enums"><span class="sec-pill enum">2</span> Enums</h2>
+
+  <p>An <strong>enum</strong> is a set of symbolic names bound to unique, constant values.</p>
+
+  <h3>Python enum basics</h3>
+  <pre><code>import enum
+
+class GenderEnum(enum.Enum):
+    MALE   = "MALE"
+    FEMALE = "FEMALE"
+    OTHER  = "OTHER"
+
+# Compare by identity (preferred)
+if user.gender == GenderEnum.MALE:
+    ...
+
+# Access the string value (e.g. to store in DB)
+GenderEnum.MALE.value    # → "MALE"</code></pre>
+
+  <h3>Where enums live — <span class="fpath">constants/enums.py</span></h3>
+  <pre><code>import enum
+
+# ── User enums ──────────────────────────────────────────────────
+class GenderEnum(enum.Enum):
+    MALE   = "MALE"
+    FEMALE = "FEMALE"
+    OTHER  = "OTHER"
+
+class UserStatusEnum(enum.Enum):
+    ACTIVE   = "ACTIVE"
+    INACTIVE = "INACTIVE"
+    BANNED   = "BANNED"
+
+# ── Post enums ──────────────────────────────────────────────────
+class PostStatusEnum(enum.Enum):
+    DRAFT     = "DRAFT"
+    PUBLISHED = "PUBLISHED"
+    DELETED   = "DELETED"
+
+class ReactionTypeEnum(enum.Enum):
+    LIKE  = "LIKE"
+    WOW   = "WOW"
+    ANGRY = "ANGRY"</code></pre>
+
+  <h3>Enums in DTOs, storages, and API specs</h3>
+  <pre><code># In a DTO
+@dataclass
+class UserDTO:
+    user_id: int
+    name: str
+    gender: GenderEnum        # ← typed as enum, not str
+
+# In a storage interface (sorting/filtering)
+class SortByEnum(enum.Enum):
+    NAME = "NAME"
+    AGE  = "AGE"
+
+class OrderEnum(enum.Enum):
+    ASC  = "ASC"
+    DESC = "DESC"
+
+@dataclass
+class SortBy:
+    sort_by: SortByEnum
+    order: OrderEnum
+
+# The interactor passes SortBy to the storage — no loose strings</code></pre>
+
+  <h3>Enums in API responses (OpenAPI)</h3>
+  <pre><code># api_spec.json — every failure response lists its res_status enum values
+"res_status": {
+    "type": "string",
+    "enum": ["INVALID_POST_ID", "USER_NOT_AUTHORIZED", "POST_ALREADY_DELETED"]
+}</code></pre>
+
+  <!-- Quiz 2 -->
+  <div class="quiz" id="q2">
+    <div class="quiz-title">Quick Check — Enums</div>
+    <div class="quiz-q">Where should all enums for a Django app be defined?</div>
+    <ul class="quiz-options">
+      <li><button onclick="answer(this,'q2',false)">In models.py alongside the model that uses them</button></li>
+      <li><button onclick="answer(this,'q2',false)">In interactors/dtos.py next to the DTO that uses them</button></li>
+      <li><button onclick="answer(this,'q2',true)">In constants/enums.py grouped by related concepts</button></li>
+      <li><button onclick="answer(this,'q2',false)">In settings.py so they are globally accessible</button></li>
+    </ul>
+    <div class="quiz-feedback" id="q2-fb"></div>
+    <div class="quiz-next" id="q2-next"><button onclick="showSection('s-adapters')">Next: Inter-App Communication →</button></div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════
+       PART 3 — INTER-APP COMMUNICATION (ADAPTERS)
+  ═══════════════════════════════════════════════════════════════ -->
+  <h2 id="s-adapters"><span class="sec-pill adapter">3</span> Inter-App Communication</h2>
+
+  <p>A Django project typically has multiple apps. When <strong>App A</strong> needs data from <strong>App B</strong>, it must not reach directly into App B's models or interactors. Instead, it goes through two gateways:</p>
+
+  <ol>
+    <li><strong><code>app_interfaces/service_interface.py</code></strong> in App B — what App B promises to expose.</li>
+    <li><strong><code>adapters/</code></strong> in App A — the translator that speaks App B's language and converts it to App A's language.</li>
+  </ol>
+
+  <div class="layer-flow">
+    <span class="lf-box view">App A Interactor</span>
+    <span class="lf-arrow">→</span>
+    <span class="lf-box adapter">App A Adapter</span>
+    <span class="lf-arrow">→</span>
+    <span class="lf-box appB">App B ServiceInterface</span>
+    <span class="lf-arrow">→</span>
+    <span class="lf-box interactor">App B Interactor</span>
+  </div>
+
+  <h3>App B — exposing a ServiceInterface</h3>
+  <pre><code># app_b/app_interfaces/service_interface.py
+from app_b.interactors.storage_interfaces.dtos import UserDetailsDTO
+
+class ServiceInterface:
+
+    def get_user_details(self, user_id: int) -> UserDetailsDTO:
+        from app_b.interactors.get_user_details_interactor import GetUserDetailsInteractor
+        from app_b.storages.storage_implementation import StorageImpl
+        interactor = GetUserDetailsInteractor(storage=StorageImpl())
+        return interactor.get_user_details_wrapper(user_id=user_id)</code></pre>
+
+  <h3>App A — writing an Adapter</h3>
+  <pre><code># app_a/adapters/auth_service_adapter.py
+from dataclasses import dataclass
+
+@dataclass
+class AuthUserDTO:              # App A's own DTO — NOT imported from app_b
+    user_id: int
+    username: str
+    is_verified: bool
+
+class AuthServiceAdapter:
+
+    @property
+    def interface(self):
+        from app_b.app_interfaces.service_interface import ServiceInterface
+        return ServiceInterface()               # ← local import keeps things loosely coupled
+
+    def get_user(self, user_id: int) -> AuthUserDTO:
+        try:
+            user_details_dto = self.interface.get_user_details(user_id=user_id)
+        except app_b_exceptions.UserDoesNotExist:
+            raise app_a_exceptions.InvalidUserId(user_id=user_id)  # ← re-raise as own
+
+        return AuthUserDTO(                     # ← always convert, never pass through directly
+            user_id=user_details_dto.user_id,
+            username=user_details_dto.username,
+            is_verified=user_details_dto.email_verified,
+        )</code></pre>
+
+  <div class="callout">
+    <div class="callout-title">Three rules of Adapters</div>
+    <ol style="margin-bottom:0">
+      <li><strong>Always convert DTOs</strong> — even if App B's DTO looks identical to what you need. This prevents accidental coupling.</li>
+      <li><strong>Always re-raise exceptions</strong> — catch App B's exceptions in the adapter and raise your own app's exceptions instead.</li>
+      <li><strong>DTOs live in the adapter file</strong></li>
+    </ol>
+  </div>
+
+  <h3>ServiceAdapter — the single entry-point</h3>
+  <p>Each adapter is exposed as a <code>@property</code> on <code>ServiceAdapter</code>, with the adapter class imported <em>locally inside the property</em>. A module-level <code>get_service_adapter()</code> factory is what interactors actually call.</p>
+  <pre><code># app_a/adapters/service_adapter.py
+
+class ServiceAdapter:
+
+    @property
+    def auth(self):
+        from app_a.adapters.auth_service_adapter import AuthServiceAdapter
+        return AuthServiceAdapter()
+
+    @property
+    def notifications(self):
+        from app_a.adapters.notifications_adapter import NotificationsAdapter
+        return NotificationsAdapter()
+
+    @property
+    def payments(self):
+        from app_a.adapters.payments_service_adapter import PaymentsServiceAdapter
+        return PaymentsServiceAdapter()
+
+
+def get_service_adapter():
+    return ServiceAdapter()</code></pre>
+
+  <div class="callout info">
+    <div class="callout-title">Why @property + local import?</div>
+    The local import inside the property runs only when that adapter is actually accessed. This avoids circular imports and keeps startup cost low — the heavy service imports only load if that adapter is used in the current request.
+  </div>
+
+  <h3>Using the adapter in an interactor</h3>
+  <pre><code># Inside an interactor method
+from app_a.adapters.service_adapter import get_service_adapter
+
+adapter = get_service_adapter()
+user_dto = adapter.auth.get_user(user_id=user_id)
+# adapter.notifications.send_welcome(user_id=user_id)</code></pre>
+
+  <!-- Quiz 3 -->
+  <div class="quiz" id="q3">
+    <div class="quiz-title">Quick Check — Adapters</div>
+    <div class="quiz-q">App A's adapter calls App B and gets back a <code>B_UserDTO</code>. What should the adapter do next?</div>
+    <ul class="quiz-options">
+      <li><button onclick="answer(this,'q3',false)">Return the B_UserDTO directly to App A's interactor</button></li>
+      <li><button onclick="answer(this,'q3',false)">Import and use B_UserDTO everywhere in App A</button></li>
+      <li><button onclick="answer(this,'q3',true)">Convert B_UserDTO into App A's own DTO, then return that</button></li>
+      <li><button onclick="answer(this,'q3',false)">Store the B_UserDTO in a class variable for reuse</button></li>
+    </ul>
+    <div class="quiz-feedback" id="q3-fb"></div>
+    <div class="quiz-next" id="q3-next"><button onclick="showSection('s-interactor')">Next: Interactor Structure →</button></div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════
+       PART 4 — INTERACTOR STRUCTURE
+  ═══════════════════════════════════════════════════════════════ -->
+  <h2 id="s-interactor"><span class="sec-pill interactor">4</span> Interactor Structure — Wrapper &amp; Main</h2>
+
+  <p>Every interactor has a predictable two-layer structure:</p>
+
+  <table class="wm-table">
+    <thead>
+      <tr><th>Method</th><th>Responsibility</th><th>Who calls it</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>create_post_wrapper</code><br><small>(wrapper method)</small></td>
+        <td>
+          Receives <code>presenter</code> as an argument (wired by the view).<br>
+          Calls the core method, gets back a DTO, passes it to the presenter.<br>
+          Catches domain exceptions and routes them to presenter error methods.<br>
+          Returns the final <code>HttpResponse</code>.
+        </td>
+        <td><code>api_wrapper</code> in the DSU view</td>
+      </tr>
+      <tr>
+        <td><code>create_post</code><br><small>(core method)</small></td>
+        <td>
+          Pure business logic — validates, calls storage, builds and returns a DTO.<br>
+          Raises domain exceptions; never catches them, never calls presenter.<br>
+          Easy to unit-test in isolation.
+        </td>
+        <td>Called by the wrapper method</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Full example</h3>
+  <pre><code># interactors/create_post_interactor.py
+from dataclasses import dataclass
+from typing import Optional
+
+from fb_post.interactors.storages.storage_interface import StorageInterface
+from fb_post.interactors.presenters.presenter_interface import PresenterInterface
+from fb_post.exceptions.custom_exceptions import InvalidUserId, PostContentTooLong
+from fb_post.interactors.storages.dtos import PostDTO
+
+@dataclass
+class CreatePostInputDTO:          # internal DTO — lives in this file
+    user_id: int
+    content: str
+    image_url: Optional[str] = None
+
+
+class CreatePostInteractor:
+
+    def __init__(self, storage: StorageInterface) -> None:
+        self.storage = storage
+
+    # ── PUBLIC (wrapper) ────────────────────────────────────────
+    def create_post_wrapper(
+        self,
+        user_id: int,
+        content: str,
+        presenter: PresenterInterface,
+        image_url: Optional[str] = None,
+    ):
+        try:
+            post_dto = self.create_post(
+                CreatePostInputDTO(user_id=user_id, content=content,
+                                   image_url=image_url)
+            )
+            return presenter.get_create_post_response(post_dto=post_dto)
+        except InvalidUserId:
+            return presenter.raise_exception_for_invalid_user_id()
+        except PostContentTooLong:
+            return presenter.raise_exception_for_post_content_too_long()
+
+    # ── CORE (business logic) ───────────────────────────────────
+    def create_post(self, input_dto: CreatePostInputDTO) -> PostDTO:
+        self.storage.validate_user_id(user_id=input_dto.user_id)
+        self._validate_content(input_dto.content)
+
+        post_id = self.storage.create_post(
+            user_id=input_dto.user_id,
+            content=input_dto.content,
+            image_url=input_dto.image_url,
+        )
+        return self.storage.get_post(post_id=post_id)  # returns PostDTO
+
+    def _validate_content(self, content: str) -> None:
+        if len(content) > 1000:
+            raise PostContentTooLong(length=len(content))</code></pre>
+
+  <div class="callout key">
+    <div class="callout-title">The key split</div>
+    Core method <strong>returns a DTO</strong>. The wrapper receives it and calls <code>presenter.some_response(dto)</code>. Presenter is never passed into the core method.
+  </div>
+
+  <h3>How the view (api_wrapper) wires it up</h3>
+  <pre><code># views/create_post/api_wrapper.py
+@validate_decorator(validator_class=ValidatorClass)
+def api_wrapper(*args, **kwargs):
+    user_id   = kwargs['user_id']
+    body      = kwargs['request_data']
+    content   = body['content']
+    image_url = body.get('image_url')
+
+    from fb_post.interactors.create_post_interactor import CreatePostInteractor
+    from fb_post.storages.storage_implementation import StorageImpl
+    from fb_post.presenters.presenter_implementation import PresenterImpl
+
+    storage    = StorageImpl()
+    presenter  = PresenterImpl()
+    interactor = CreatePostInteractor(storage=storage)
+
+    return interactor.create_post_wrapper(
+        user_id=user_id,
+        content=content,
+        presenter=presenter,
+        image_url=image_url,
+    )</code></pre>
+
+  <div class="callout">
+    <div class="callout-title">Key rules recap</div>
+    <ul style="margin-bottom:0">
+      <li>Wrapper = exception handler + dependency wirer. Core method = pure logic.</li>
+      <li>If a method has <strong>&gt; 3 arguments</strong>, group them into a DTO.</li>
+      <li>When <strong>interactor B</strong> is composed inside interactor A, catch B's exceptions in A's <em>wrapper</em> method.</li>
+      <li>Never create new instance variables mid-flow — pass new values as arguments to private methods.</li>
+      <li>Write one <strong>test file per public method</strong> (per wrapper).</li>
+    </ul>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════
+       PART 5 — PUTTING IT ALL TOGETHER
+  ═══════════════════════════════════════════════════════════════ -->
+  <h2>Putting it all together</h2>
+
+  <p>Here is a realistic flow for "Add a reaction to a post" that uses all four concepts:</p>
+
+  <div class="layer-flow">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:0.15rem">
+      <span class="lf-box view">api_wrapper</span>
+      <span style="font-size:0.65rem;color:var(--muted)">view</span>
+    </div>
+    <span class="lf-arrow">→</span>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:0.15rem">
+      <span class="lf-box interactor">add_reaction_wrapper</span>
+      <span style="font-size:0.65rem;color:var(--muted)">interactor (wrapper)</span>
+    </div>
+    <span class="lf-arrow">→</span>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:0.15rem">
+      <span class="lf-box interactor">add_reaction</span>
+      <span style="font-size:0.65rem;color:var(--muted)">interactor (core)</span>
+    </div>
+    <span class="lf-arrow">→</span>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:0.15rem">
+      <span class="lf-box adapter">AuthServiceAdapter</span>
+      <span style="font-size:0.65rem;color:var(--muted)">inter-app</span>
+    </div>
+    <span class="lf-arrow">→</span>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:0.15rem">
+      <span class="lf-box storage">StorageImpl</span>
+      <span style="font-size:0.65rem;color:var(--muted)">storage</span>
+    </div>
+    <span class="lf-arrow">→</span>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:0.15rem">
+      <span class="lf-box presenter">PresenterImpl</span>
+      <span style="font-size:0.65rem;color:var(--muted)">presenter</span>
+    </div>
+  </div>
+
+  <pre><code># constants/enums.py
+class ReactionTypeEnum(enum.Enum):
+    LIKE  = "LIKE"
+    WOW   = "WOW"
+    ANGRY = "ANGRY"
+
+# interactors/storage_interfaces/dtos.py
+@dataclass
+class ReactionDTO:
+    reaction_id: int
+    post_id: int
+    user_id: int
+    reaction_type: ReactionTypeEnum
+
+# interactors/add_reaction_interactor.py
+@dataclass
+class AddReactionInputDTO:
+    user_id: int
+    post_id: int
+    reaction_type: ReactionTypeEnum
+
+class AddReactionInteractor:
+
+    def __init__(self, storage):
+        self.storage = storage
+
+    def add_reaction_wrapper(
+        self,
+        user_id: int,
+        post_id: int,
+        reaction_type: ReactionTypeEnum,
+        presenter,
+    ):
+        try:
+            reaction_dto = self.add_reaction(
+                AddReactionInputDTO(user_id, post_id, reaction_type)
+            )
+            return presenter.get_add_reaction_response(reaction_dto=reaction_dto)
+        except InvalidUserId:
+            return presenter.raise_exception_for_invalid_user_id()
+        except InvalidPostId:
+            return presenter.raise_exception_for_invalid_post_id()
+
+    def add_reaction(self, input_dto: AddReactionInputDTO):
+        from fb_post.adapters.service_adapter import get_service_adapter
+        adapter = get_service_adapter()
+
+        adapter.auth.get_user(user_id=input_dto.user_id)  # validates user exists
+        self.storage.validate_post_id(post_id=input_dto.post_id)
+
+        return self.storage.add_or_update_reaction(  # returns ReactionDTO
+            user_id=input_dto.user_id,
+            post_id=input_dto.post_id,
+            reaction_type=input_dto.reaction_type,
+        )</code></pre>
+
+  <!-- Quiz 4 -->
+  <div class="quiz" id="q4">
+    <div class="quiz-title">Quick Check — Interactor Structure</div>
+    <div class="quiz-q">An exception raised by a composed interactor B should be caught in…</div>
+    <ul class="quiz-options">
+      <li><button onclick="answer(this,'q4',false)">The core method of interactor A</button></li>
+      <li><button onclick="answer(this,'q4',true)">The wrapper method of interactor A</button></li>
+      <li><button onclick="answer(this,'q4',false)">The storage implementation class</button></li>
+      <li><button onclick="answer(this,'q4',false)">The presenter implementation class</button></li>
+    </ul>
+    <div class="quiz-feedback" id="q4-fb"></div>
+    <div class="quiz-next" id="q4-next"><button onclick="showSection('s-ib-users')">Next: ib_users Package →</button></div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════
+       PART 5 — ib_users PACKAGE
+  ═══════════════════════════════════════════════════════════════ -->
+  <h2 id="s-ib-users"><span class="sec-pill" style="border-color:#7c3aed;background:#f5f0ff;color:#4c1d95">5</span> The <code>ib_users</code> Package</h2>
+
+  <p><code>ib_users</code> is the internal package that manages all user accounts and profiles. Your app never queries its models directly — it calls <code>ib_users.interfaces.service_interface.ServiceInterface</code>.</p>
+
+  <h3>Key method: <code>get_user_profile</code></h3>
+  <pre><code>from ib_users.interfaces.service_interface import ServiceInterface
+
+profile_dto = ServiceInterface().get_user_profile(user_id="abc123")
+# Returns a GetUserProfileDTO</code></pre>
+
+  <p><code>GetUserProfileDTO</code> fields you'll use most often:</p>
+
+  <table>
+    <thead><tr><th>Field</th><th>Type</th></tr></thead>
+    <tbody>
+      <tr><td><code>user_id</code></td><td><code>str</code></td></tr>
+      <tr><td><code>name</code></td><td><code>str</code></td></tr>
+      <tr><td><code>last_name</code></td><td><code>Optional[str]</code></td></tr>
+      <tr><td><code>email</code></td><td><code>str</code></td></tr>
+      <tr><td><code>phone_number</code></td><td><code>str</code></td></tr>
+      <tr><td><code>profile_pic_url</code></td><td><code>str</code></td></tr>
+      <tr><td><code>gender</code></td><td><code>Gender</code> (enum)</td></tr>
+      <tr><td><code>dob</code></td><td><code>str</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Writing the adapter</h3>
+  <p>Follow the same adapter pattern: define your own DTO in the adapter file, expose the <code>ServiceInterface</code> as a <code>@property</code>, convert the returned DTO.</p>
+  <pre><code># your_app/adapters/ib_users_adapter.py
+from dataclasses import dataclass
+from typing import Optional
+
+
+@dataclass
+class UserProfileDTO:           # your app's own DTO
+    user_id: str
+    name: str
+    email: Optional[str]
+    profile_pic_url: Optional[str]
+
+
+class IbUsersServiceAdapter:
+
+    @property
+    def interface(self):
+        from ib_users.interfaces.service_interface import ServiceInterface
+        return ServiceInterface()
+
+    def get_user_profile(self, user_id: str) -> UserProfileDTO:
+        ib_profile_dto = self.interface.get_user_profile(user_id=user_id)
+
+        return UserProfileDTO(
+            user_id=ib_profile_dto.user_id,
+            name=ib_profile_dto.name,
+            email=ib_profile_dto.email,
+            profile_pic_url=ib_profile_dto.profile_pic_url,
+        )</code></pre>
+
+  <p>Then plug it into your <span class="fpath">service_adapter.py</span>:</p>
+  <pre><code>class ServiceAdapter:
+
+    @property
+    def ib_users(self):
+        from your_app.adapters.ib_users_adapter import IbUsersServiceAdapter
+        return IbUsersServiceAdapter()
+
+
+def get_service_adapter():
+    return ServiceAdapter()</code></pre>
+
+  <p>And call it from an interactor:</p>
+  <pre><code>from your_app.adapters.service_adapter import get_service_adapter
+
+adapter = get_service_adapter()
+user_profile_dto = adapter.ib_users.get_user_profile(user_id=user_id)</code></pre>
+
+  <h3>DB entries that must exist</h3>
+  <p><code>get_user_profile</code> reads from two tables. Both rows must exist or it raises an exception.</p>
+
+  <table>
+    <thead><tr><th>What</th><th>Table</th><th>How to create (locally)</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>User Account</strong></td>
+        <td><code>ib_users_useraccount</code></td>
+        <td>Django Admin → <strong>Ib Users → User Accounts → Add</strong><br>or <code>ServiceInterface().create_user_account_with_phone_number(...)</code></td>
+      </tr>
+      <tr>
+        <td><strong>User Profile</strong></td>
+        <td><code>ib_users_userprofile</code></td>
+        <td>Django Admin → <strong>Ib Users → User Profiles → Add</strong> (link to the User Account above)<br>or <code>ServiceInterface().create_user_profile(user_id, CreateUserProfileDTO(...))</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout warn">
+    <div class="callout-title">Common local testing mistake</div>
+    Creating a User Account is not enough — <code>get_user_profile</code> also needs a <strong>User Profile</strong> row. If only the account exists, the call raises <code>UserProfileDoesNotExist</code>.
+  </div>
+
+  <!-- Quiz 5 (renumber old 5 → 6) -->
+  <div class="quiz" id="q5">
+    <div class="quiz-title">Quick Check — ib_users</div>
+    <div class="quiz-q">What two DB rows must exist before <code>get_user_profile</code> succeeds?</div>
+    <ul class="quiz-options">
+      <li><button onclick="answer(this,'q5',false)">Access Token and User Session rows</button></li>
+      <li><button onclick="answer(this,'q5',false)">OAuth2 Application and Access Token rows</button></li>
+      <li><button onclick="answer(this,'q5',true)">User Account and User Profile rows</button></li>
+      <li><button onclick="answer(this,'q5',false)">User Account and Access Token rows</button></li>
+    </ul>
+    <div class="quiz-feedback" id="q5-fb"></div>
+    <div class="quiz-next" id="q5-next"><button onclick="showSection('s-auth')">Next: Authentication →</button></div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════
+       PART 6 — AUTHENTICATION
+  ═══════════════════════════════════════════════════════════════ -->
+  <h2 id="s-auth"><span class="sec-pill" style="border-color:#0369a1;background:#e0f2fe;color:#0369a1">6</span> Authentication</h2>
+
+  <p>DSU handles auth for you — you just need to declare it in two places: the <strong>API spec</strong> and the <strong>api_wrapper</strong>. DSU then validates the Bearer token before your code ever runs.</p>
+
+  <h3>Step 1 — Declare <code>securityDefinitions</code> in the API spec (once per app)</h3>
+  <p>Add this at the top level of <span class="fpath">api_specs/api_spec.json</span>, alongside <code>paths</code>:</p>
+  <pre><code>{
+    "swagger": "2.0",
+    ...
+    "securityDefinitions": {
+        "oauth": {
+            "tokenUrl": "http://auth.ibtspl.com/oauth2/",
+            "flow": "password",
+            "scopes": {
+                "read":   "read",
+                "write":  "write",
+                "update": "update",
+                "delete": "delete"
+            },
+            "type": "oauth2"
+        }
+    },
+    ...
+}</code></pre>
+
+  <p>This is boilerplate — copy it once and forget it. It tells Swagger UI how to acquire a token.</p>
+
+  <h3>Step 2 — Add <code>security</code> to each protected endpoint</h3>
+  <p>Inside the path definition, add a <code>"security"</code> key. Use <code>"read"</code> for GET endpoints, <code>"write"</code> for POST/PUT/DELETE.</p>
+  <pre><code>"/user/fresh_chat/v1/": {
+    "get": {
+        "operationId": "get_user_fresh_chat_details",
+        "summary": "Get user fresh chat details",
+        "security": [{"oauth": ["read"]}],
+        "parameters": [...],
+        "responses": {...}
+    }
+}
+
+// POST endpoint:
+"/post/v1/": {
+    "post": {
+        "operationId": "create_post",
+        "security": [{"oauth": ["write"]}],
+        ...
+    }
+}</code></pre>
+
+  <div class="callout">
+    <div class="callout-title">Public endpoints (login, refresh token)</div>
+    Omit the <code>"security"</code> key entirely. DSU will not require a token for that endpoint.
+  </div>
+
+  <h3>Step 3 — Read <code>user_dto</code> in api_wrapper</h3>
+  <p>Once <code>"security"</code> is in the spec, DSU validates the token and injects a <code>user_dto</code> into <code>kwargs</code>. You extract the user ID like this:</p>
+  <pre><code>@validate_decorator(validator_class=ValidatorClass)
+def api_wrapper(*args, **kwargs):
+    user_id = str(kwargs['user_dto'].user_id)   # ← authenticated user
+    request_data = kwargs['request_data']
+    ...</code></pre>
+
+  <p>The <code>ValidatorClass</code> also receives <code>user_dto</code>, <code>user</code>, and <code>access_token</code> — available as <code>self.user_dto</code> etc. if you need them for custom validation.</p>
+
+  <h3>Step 4 — Create a token from Django Admin (for local testing)</h3>
+  <p>You need a valid OAuth2 access token to call authenticated endpoints in Swagger UI or via curl locally.</p>
+
+  <ol class="steps">
+    <li>Open Django Admin at <code>http://localhost:8000/admin/</code></li>
+    <li>Navigate to <strong>Django OAuth Toolkit → Access tokens</strong></li>
+    <li>Click <strong>Add</strong> — select a User, set Token to any string (e.g. <code>testtoken123</code>), set Expires to a future date, leave Scope as <code>read write</code></li>
+    <li>In Swagger UI, click <strong>Authorize</strong> → enter <code>Bearer testtoken123</code></li>
+    <li>Or in curl: <code>-H "Authorization: Bearer testtoken123"</code></li>
+  </ol>
+
+  <div class="callout info">
+    <div class="callout-title">What DSU does behind the scenes</div>
+    When your endpoint has <code>"security": [{"oauth": [...]}]</code>, DSU reads the <code>Authorization: Bearer &lt;token&gt;</code> header, looks up the token in the <code>oauth2_provider_accesstoken</code> table, resolves the owner <code>User</code>, and packs it into <code>kwargs['user_dto']</code> before calling your <code>api_wrapper</code>. If the token is missing or expired, DSU returns 401 automatically — you write zero auth logic.
+  </div>
+
+  <!-- Quiz 6 -->
+  <div class="quiz" id="q6">
+    <div class="quiz-title">Final Check — Authentication</div>
+    <div class="quiz-q">How do you get the authenticated user's ID inside <code>api_wrapper</code>?</div>
+    <ul class="quiz-options">
+      <li><button onclick="answer(this,'q6',false)">kwargs['user_id'] directly from kwargs</button></li>
+      <li><button onclick="answer(this,'q6',false)">request.user.id from the HTTP request</button></li>
+      <li><button onclick="answer(this,'q6',true)">str(kwargs['user_dto'].user_id) after adding security to spec</button></li>
+      <li><button onclick="answer(this,'q6',false)">kwargs['access_token'].user_id from the token</button></li>
+    </ul>
+    <div class="quiz-feedback" id="q6-fb"></div>
+  </div>
+
+  <!-- ── Primary source ── -->
+  <div class="callout info" style="margin-top:2rem">
+    <div class="callout-title">Primary source</div>
+    Read the full <a href="../env_files/content_preparation_refernces/clean_architecture/code-guidelines.html" target="_blank">Backend Style Guide</a> — especially the <em>Interactors</em>, <em>Adapters</em>, and <em>Writing Enums</em> sections. For the OpenAPI spec format, see <a href="../env_files/content_preparation_refernces/open-api/wirting-open-api.html" target="_blank">Writing an OAS</a>.
+  </div>
+
+  <!-- ── Ask your teacher ── -->
+  <div class="ask-agent">
+    <strong>Ask your teacher:</strong> Anything unclear? Try:<br>
+    <em>"Show me a full adapter example where App A calls App B and re-raises exceptions."</em><br>
+    <em>"When should I put a DTO in the interactor file vs storages/dtos.py?"</em><br>
+    <em>"How does DSU validate the token — where does user_dto come from exactly?"</em>
+  </div>
+
+  <!-- ── Footer ── -->
+  <footer class="lesson-footer">
+    <div class="lesson-nav">← <a href="0013-social-network-dsu-assignment.html">Lesson 11: Social Network Assignment</a></div>
+    <div>Lesson 12 of 14</div>
+    <div class="lesson-nav"><a href="0011-writing-test-cases.html">Lesson 13: Testing with pytest →</a></div>
+  </footer>
+
+</div><!-- /.lesson-wrap -->
+
+<script src="../assets/quiz.js"></script>
+<script>
+function showSection(id) {
+  const el = document.getElementById(id);
+  if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+}
+
+function answer(btn, quizId, correct) {
+  const opts = btn.closest('.quiz-options').querySelectorAll('button');
+  opts.forEach(b => b.disabled = true);
+  btn.classList.add(correct ? 'correct' : 'wrong');
+
+  const fb = document.getElementById(quizId + '-fb');
+  fb.classList.add('show', correct ? 'ok' : 'bad');
+  fb.textContent = correct
+    ? '✓ Correct!'
+    : '✗ Not quite — re-read the section above.';
+
+  const nxt = document.getElementById(quizId + '-next');
+  if (nxt) nxt.classList.add('show');
+}
+</script>
+</body>
+</html>

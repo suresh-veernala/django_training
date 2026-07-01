@@ -34,5 +34,6 @@ Become productive on a production-style Django backend codebase — able to mode
 9. DSU — Django Swagger Utils — `lessons/0009-dsu.html`
 10. Poetry & Environment Setup — `lessons/0010-poetry.html`
 11. Social Network DSU Assignment — `lessons/0013-social-network-dsu-assignment.html`
-12. Testing with pytest — `lessons/0011-writing-test-cases.html`
-13. Mocking — `lessons/0012-mocking.html`
+12. DTOs, Enums, Inter-App Comms, Interactor Structure & Authentication — `lessons/0014-dtos-enums-adapters-interactors.html`
+13. Testing with pytest — `lessons/0011-writing-test-cases.html`
+14. Mocking — `lessons/0012-mocking.html`

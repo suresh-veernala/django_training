@@ -213,25 +213,6 @@
   </p>
 </header>
 
-  <nav class="course-map">
-    <div class="course-map-title">Course Map — Django Backend Training</div>
-    <ol>
-      <li><a href="0001-introduction-to-django.html">Introduction to Django</a></li>
-      <li><a href="0002-django-project-structure.html">Django Project Structure</a></li>
-      <li><a href="0003-models-and-orm.html">Models &amp; ORM</a></li>
-      <li><a href="0004-building-apis.html">Building APIs</a></li>
-      <li><a href="0005-openapi-swagger.html">OpenAPI / Swagger</a></li>
-      <li><a href="0006-wrap-up-and-learning-path.html">Wrap Up &amp; Learning Path</a></li>
-      <li><a href="0007-clean-architecture.html">Clean Architecture</a></li>
-      <li><a href="0008-backend-code-guide.html">Backend Code Guide</a></li>
-      <li><a href="0009-dsu.html">DSU — Django Swagger Utils</a></li>
-      <li><a href="0010-poetry.html">Poetry &amp; Environment Setup</a></li>
-      <li class="current"><a href="0013-social-network-dsu-assignment.html">Social Network — DSU Assignment</a></li>
-      <li><a href="0011-writing-test-cases.html">Testing with pytest</a></li>
-      <li><a href="0012-mocking.html">Mocking — Test in Isolation</a></li>
-    </ol>
-  </nav>
-
 <main>
 
 <!-- ── Task nav ── -->
@@ -253,7 +234,7 @@
 <!-- ── Domain overview ── -->
 <section>
   <h2>Domain Overview</h2>
-  <p>You are building a subset of the Social Network application from <a href="../env_files/content_preparation_refernces/django/assignments/django_assignment_006.html">Assignment 006</a>. The full data model is described there — here you will expose five of its operations as REST APIs through DSU.</p>
+  <p>You are building a subset of the Social Network application from <a href="https://nw-tech-backend-training.s3.ap-south-1.amazonaws.com/django/assignments/django_assignment_006.html" target="_blank">Assignment 006</a>. The full data model is described there — here you will expose five of its operations as REST APIs through DSU.</p>
 
   <p>The five endpoints you will implement:</p>
 
@@ -350,7 +331,7 @@ python manage.py create_cleanapp fb_post -p social_network</code></pre>
 
 <p>
   In <code>fb_post/models/</code> (or a single <code>models.py</code>), define the following models exactly as described in
-  <a href="../env_files/content_preparation_refernces/django/assignments/django_assignment_006.html">Assignment 006 — Task 1</a>.
+  <a href="https://nw-tech-backend-training.s3.ap-south-1.amazonaws.com/django/assignments/django_assignment_006.html" target="_blank">Assignment 006 — Task 1</a>.
   Use the exact field and class names from the spec.
 </p>
 
@@ -501,9 +482,6 @@ python manage.py create_cleanapp fb_post -p social_network</code></pre>
   <li>Start the server and hit any of the five endpoints — DSU should return mock data (status 200 with stub values). This confirms the spec + build pipeline is working.</li>
 </ul>
 
-<div class="hint">
-  <strong>Tip:</strong> Use Swagger UI at <code>/swagger/</code> (or <code>/api/schema/swagger-ui/</code>) to browse and test your endpoints without writing any curl commands.
-</div>
 
 <!-- ════════════════════════════════════ PHASE 3 ════════════════════════════════════ -->
 <div class="phase-label">Phase 3 — Implement Each Endpoint</div>
@@ -635,7 +613,7 @@ python manage.py create_cleanapp fb_post -p social_network</code></pre>
 
 <p><strong>api_wrapper.py</strong> — reads <code>user_id</code>, <code>post_id</code>, <code>reaction_type</code> from <code>kwargs['request_data']</code>.</p>
 
-<p><strong>Toggle logic (from Assignment 006 — Task 5):</strong></p>
+<p><strong>Toggle logic (from <a href="https://nw-tech-backend-training.s3.ap-south-1.amazonaws.com/django/assignments/django_assignment_006.html" target="_blank">Assignment 006</a> — Task 5):</strong></p>
 <ul>
   <li>No existing reaction → create one.</li>
   <li>Same reaction type already exists → delete it (un-react).</li>
@@ -704,7 +682,7 @@ python manage.py create_cleanapp fb_post -p social_network</code></pre>
   </ul>
 
   <h2 style="margin-top:1.5rem;">Extension Challenges</h2>
-  <p>If you finish early, try these harder tasks from <a href="../env_files/content_preparation_refernces/django/assignments/django_assignment_006.html">Assignment 006</a> as additional endpoints:</p>
+  <p>If you finish early, try these harder tasks from <a href="https://nw-tech-backend-training.s3.ap-south-1.amazonaws.com/django/assignments/django_assignment_006.html" target="_blank">Assignment 006</a> as additional endpoints:</p>
   <ul>
     <li><code>GET /fb_post/reaction_metrics/v1/{post_id}/</code> — Task 8: return count per reaction type.</li>
     <li><code>GET /fb_post/user_posts/v1/{user_id}/</code> — Task 14: full post list for a given user.</li>
@@ -720,15 +698,14 @@ python manage.py create_cleanapp fb_post -p social_network</code></pre>
   </p>
   <p>
     <strong>Domain reference:</strong>
-    <a href="../env_files/content_preparation_refernces/django/assignments/django_assignment_006.html">Assignment 006 — Social Network</a>
-    has the full business logic specification (Tasks 1–15).
+    <a href="https://nw-tech-backend-training.s3.ap-south-1.amazonaws.com/django/assignments/django_assignment_006.html" target="_blank">Assignment 006 — Social Network</a> has the full business logic specification (Tasks 1–15).
   </p>
   <p class="ask-prompt">
     Stuck on a task? Ask your agent — paste the error and the layer you're working on (api_wrapper / interactor / storage / presenter) and you'll get targeted help.
   </p>
   <div class="lesson-nav">
     <a href="0010-poetry.html">← Lesson 10: Poetry &amp; Environment Setup</a>
-    <a href="0011-writing-test-cases.html">Lesson 12: Testing with pytest →</a>
+    <a href="0014-dtos-enums-adapters-interactors.html">Lesson 12: DTOs, Enums, Adapters &amp; Interactors →</a>
   </div>
 </section>
 
