@@ -129,13 +129,12 @@
 
 <header class="lesson-header">
   <div class="lesson-meta">
-    <span class="lesson-number badge">Lesson 12</span>
+    <span class="lesson-number badge">Lesson 13</span>
     <span class="lesson-tag">Testing Track</span>
   </div>
   <h1 class="lesson-title">Testing with pytest</h1>
   <p class="lesson-subtitle">
-    Write clear test cases, reuse setup with fixtures, run one test across
-    many inputs, and generate model data with Factory Boy — all in one lesson.
+    Write clear test cases for the Social Network app across separate modules — interactors, storages, presenters, and DSU views — with Factory Boy, fixtures, and parametrize.
   </p>
   <div class="callout key" style="margin-top: 1rem;">
     <div class="callout-title">After this lesson you will be able to</div>
@@ -143,8 +142,9 @@
       <li>Identify normal, edge, and error cases for any function</li>
       <li>Structure every test with Arrange–Act–Assert and name it clearly</li>
       <li>Assert exceptions with <code>pytest.raises</code></li>
-      <li>Configure pytest for Django with <code>pytest.ini</code></li>
-      <li>Generate Django model data in one line with <code>DjangoModelFactory</code></li>
+      <li>Lay out the org test folder: <code>tests/interactors/</code>, <code>tests/storages/</code>, <code>tests/presenters/</code>, <code>tests/views/&lt;op&gt;/</code></li>
+      <li>Know which factory file to use: <code>models.py</code> vs <code>storage_dtos.py</code> vs <code>interactor_dtos.py</code> vs <code>presenter_dtos.py</code></li>
+      <li>Write a DSU view test with <code>TestUtils</code> and <code>make_api_call()</code></li>
       <li>Extract shared setup into <code>@pytest.fixture</code> and <code>conftest.py</code></li>
       <li>Run one test across many inputs with <code>@pytest.mark.parametrize</code></li>
     </ul>
@@ -161,10 +161,11 @@
     <li><a href="#cases">Step 1 — List your cases</a></li>
     <li><a href="#aaa">Step 2 — Write each test (AAA)</a></li>
     <li><a href="#exceptions">Asserting exceptions</a></li>
-    <li><a href="#django">Django setup</a></li>
+    <li><a href="#django">Django setup, test folder layout &amp; assert vs snapshot</a></li>
     <li><a href="#factoryboy">Part B — Factory Boy: test data without noise</a></li>
     <li><a href="#fixtures">Part C — Fixtures: reuse your Arrange code</a></li>
     <li><a href="#parametrize">Part D — Parametrize: one test, many inputs</a></li>
+    <li><a href="#dsu-views">Part E — DSU view testing with <code>TestUtils</code></a></li>
     <li><a href="#reference">Quick reference</a></li>
   </ol>
 </div>
@@ -202,15 +203,15 @@
 <section id="basics">
   <h2>pytest basics &amp; naming rules</h2>
 
-  <p>Install pytest and the Django plugin (already present in most org projects):</p>
+  <p>All test packages are already declared in the shared repo's <code>pyproject.toml</code>. Install them with:</p>
 
-<pre><code>pip install pytest pytest-django</code></pre>
+<pre><code>poetry install --with dev,test</code></pre>
 
   <p>pytest discovers tests by following three naming rules. Break any one of them and your test is silently skipped.</p>
 
   <ol>
     <li><strong>File:</strong> name starts or ends with <code>test</code> — e.g. <code>test_movies.py</code></li>
-    <li><strong>Class:</strong> name starts with <code>Test</code> and has no <code>__init__</code> — e.g. <code>class TestGetMovie</code></li>
+    <li><strong>Class:</strong> name starts with <code>Test</code> and has no <code>__init__</code> — e.g. <code>class TestCreatePost</code></li>
     <li><strong>Function:</strong> name starts with <code>test_</code> — e.g. <code>def test_returns_movie_details_for_valid_id()</code></li>
   </ol>
 
@@ -248,15 +249,15 @@
     </div>
   </div>
 
-  <h3>Example — <code>get_movie_rating(movie_id)</code></h3>
+  <h3>Example — <code>create_post(user_id, post_content)</code></h3>
 
   <ul class="case-list">
-    <li><span class="badge normal">normal</span> Returns rating for a valid movie ID that exists in the DB</li>
-    <li><span class="badge normal">normal</span> Returns a float value (not an integer)</li>
-    <li><span class="badge edge">edge</span> Returns 0 when the movie has no ratings yet</li>
-    <li><span class="badge edge">edge</span> Handles a movie with exactly one rating</li>
-    <li><span class="badge error">error</span> Raises <code>MovieDoesNotExistException</code> for an invalid ID</li>
-    <li><span class="badge error">error</span> Raises an exception when <code>movie_id</code> is <code>None</code></li>
+    <li><span class="badge normal">normal</span> Creates a post for a valid user with non-empty content — returns <code>post_id</code></li>
+    <li><span class="badge normal">normal</span> Returned <code>post_id</code> is an integer</li>
+    <li><span class="badge edge">edge</span> Creates a post when content is exactly 1000 characters (max length)</li>
+    <li><span class="badge edge">edge</span> Creates a post with content that contains only whitespace — should it raise?</li>
+    <li><span class="badge error">error</span> Raises <code>InvalidUserException</code> for a non-existent <code>user_id</code></li>
+    <li><span class="badge error">error</span> Raises <code>InvalidPostContent</code> for an empty string content</li>
   </ul>
 
   <div class="callout">
@@ -298,34 +299,39 @@
 
   <h3>A complete example</h3>
 
-<pre><code><span style="color:#8b949e"># imdb/tests/test_get_movie.py</span>
+<pre><code><span style="color:#8b949e"># fb_post/tests/test_create_post.py</span>
 <span style="color:#ff7b72">import</span> pytest
-<span style="color:#ff7b72">from</span> imdb.interactors.get_movie_interactor <span style="color:#ff7b72">import</span> GetMovieInteractor
-<span style="color:#ff7b72">from</span> imdb.exceptions <span style="color:#ff7b72">import</span> MovieDoesNotExistException
+<span style="color:#ff7b72">from</span> unittest.mock <span style="color:#ff7b72">import</span> Mock
+<span style="color:#ff7b72">from</span> fb_post.interactors.create_post_interactor <span style="color:#ff7b72">import</span> CreatePostInteractor
+<span style="color:#ff7b72">from</span> fb_post.exceptions <span style="color:#ff7b72">import</span> InvalidUserException
 
 
-<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_get_movie_with_valid_id_returns_movie_dto</span>():
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_create_post_with_valid_user_and_content_returns_post_id</span>():
     <span style="color:#8b949e"># Arrange</span>
-    movie_id = 1
-    interactor = GetMovieInteractor(movie_id=movie_id)
+    storage_mock = Mock()
+    storage_mock.create_post.return_value = <span style="color:#79c0ff">42</span>
+    presenter_mock = Mock()
+    presenter_mock.response.return_value = {<span style="color:#a5d6ff">"post_id"</span>: <span style="color:#79c0ff">42</span>}
+    interactor = CreatePostInteractor(storage=storage_mock)
 
     <span style="color:#8b949e"># Act</span>
-    result = interactor.execute()
+    result = interactor.create_post_wrapper(
+        user_id=<span style="color:#79c0ff">1</span>, post_content=<span style="color:#a5d6ff">"Hello world!"</span>, presenter=presenter_mock)
 
     <span style="color:#8b949e"># Assert</span>
-    assert result.movie_id == movie_id</code></pre>
+    assert result == {<span style="color:#a5d6ff">"post_id"</span>: <span style="color:#79c0ff">42</span>}</code></pre>
 
   <h3>Naming — the three-part formula</h3>
 
   <p>A good test name reads like a sentence: <strong>method · scenario · expected result</strong>.</p>
 
 <pre><code><span style="color:#8b949e"># Bad — says nothing about scenario or outcome</span>
-<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_movie</span>(): ...
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_post</span>(): ...
 
 <span style="color:#8b949e"># Good</span>
-<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_get_movie_with_valid_id_returns_movie_dto</span>(): ...
-<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_get_movie_with_invalid_id_raises_not_found_exception</span>(): ...
-<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_create_movie_with_duplicate_title_raises_validation_error</span>(): ...</code></pre>
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_create_post_with_valid_user_and_content_returns_post_id</span>(): ...
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_create_post_with_invalid_user_raises_exception</span>(): ...
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_create_post_with_empty_content_raises_invalid_post_content</span>(): ...</code></pre>
 
   <div class="callout info">
     <div class="callout-title">Tests are documentation</div>
@@ -336,17 +342,17 @@
   <h3>Common assert patterns</h3>
 
 <pre><code><span style="color:#8b949e"># Equality</span>
-assert dto.movie_id == 42
+assert result[<span style="color:#a5d6ff">"post_id"</span>] == <span style="color:#79c0ff">42</span>
 
 <span style="color:#8b949e"># Boolean / None</span>
-assert result is True
 assert result is not None
+assert dto.post_id <span style="color:#ff7b72">is</span> <span style="color:#ff7b72">not</span> None
 
 <span style="color:#8b949e"># Length</span>
-assert len(results) == 3
+assert len(comments) == <span style="color:#79c0ff">3</span>
 
 <span style="color:#8b949e"># Membership</span>
-assert movie_id in [dto.movie_id for dto in results]</code></pre>
+assert post_id <span style="color:#ff7b72">in</span> [dto.post_id <span style="color:#ff7b72">for</span> dto <span style="color:#ff7b72">in</span> results]</code></pre>
 
   <div class="callout">
     <div class="callout-title">One assert per test (usually)</div>
@@ -368,20 +374,23 @@ assert movie_id in [dto.movie_id for dto in results]</code></pre>
     specified exception is raised inside the <code>with</code> block.
   </p>
 
-<pre><code><span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_get_movie_with_invalid_id_raises_exception</span>():
+<pre><code><span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_create_post_with_invalid_user_raises_exception</span>():
     <span style="color:#8b949e"># Arrange</span>
-    INVALID_MOVIE_ID = -999
-    interactor = GetMovieInteractor(movie_id=INVALID_MOVIE_ID)
+    INVALID_USER_ID = -999
+    storage_mock = Mock()
+    storage_mock.validate_user_id.side_effect = InvalidUserException
+    interactor = CreatePostInteractor(storage=storage_mock)
 
     <span style="color:#8b949e"># Act &amp; Assert</span>
-    <span style="color:#ff7b72">with</span> pytest.raises(MovieDoesNotExistException):
-        interactor.execute()</code></pre>
+    <span style="color:#ff7b72">with</span> pytest.raises(InvalidUserException):
+        interactor.create_post_wrapper(
+            user_id=INVALID_USER_ID, post_content=<span style="color:#a5d6ff">"Hello!"</span>, presenter=Mock())</code></pre>
 
   <p>If you also need to check the exception message:</p>
 
-<pre><code><span style="color:#ff7b72">with</span> pytest.raises(MovieDoesNotExistException) <span style="color:#ff7b72">as</span> exc_info:
-    interactor.execute()
-assert str(exc_info.value) == <span style="color:#a5d6ff">"Movie with id -999 does not exist"</span></code></pre>
+<pre><code><span style="color:#ff7b72">with</span> pytest.raises(InvalidUserException) <span style="color:#ff7b72">as</span> exc_info:
+    interactor.create_post_wrapper(user_id=-999, post_content=<span style="color:#a5d6ff">"Hello!"</span>, presenter=Mock())
+assert str(exc_info.value) == <span style="color:#a5d6ff">"User with id -999 does not exist"</span></code></pre>
 
   <div class="callout warn">
     <div class="callout-title">Don't use bare try/except in tests</div>
@@ -395,33 +404,173 @@ assert str(exc_info.value) == <span style="color:#a5d6ff">"Movie with id -999 do
      SECTION 6 — DJANGO SETUP
      ══════════════════════════════════════════════ -->
 <section id="django">
-  <h2>Django setup — <code>pytest.ini</code> and <code>@pytest.mark.django_db</code></h2>
+  <h2>Django setup — test folder layout &amp; <code>@pytest.mark.django_db</code></h2>
 
-  <p>Create <code>pytest.ini</code> in the project root (next to <code>manage.py</code>):</p>
+  <p>
+    The shared repo already contains a <code>pytest.ini</code> in the project root — no need to create one.
+    It sets <code>DJANGO_SETTINGS_MODULE</code> so pytest knows which settings to load.
+  </p>
 
-<pre><code>[pytest]
-python_files = test*.py
-DJANGO_SETTINGS_MODULE = imdb.settings.local</code></pre>
+  <h3>Org test folder layout</h3>
+
+  <p>
+    Tests are <strong>not</strong> written in a single file or folder. Each layer of Clean Architecture
+    gets its own sub-folder inside <code>&lt;app&gt;/tests/</code>.
+    DSU view tests live inside <code>tests/views/&lt;operation_name&gt;/</code> (inside the app's <code>tests/</code> folder).
+  </p>
+
+  <div class="filetree">
+    <div class="ft-row"><span class="ft-path dir">fb_post/</span></div>
+    <div class="ft-row"><span class="ft-path">  ├── <span class="dir">tests/</span></span><span class="ft-dots"></span><span class="ft-desc">top-level test package</span></div>
+    <div class="ft-row"><span class="ft-path">  │   ├── <span class="file">conftest.py</span></span><span class="ft-dots"></span><span class="ft-desc">shared fixtures for all test files</span></div>
+    <div class="ft-row"><span class="ft-path">  │   ├── <span class="dir">factories/</span></span></div>
+    <div class="ft-row"><span class="ft-path">  │   │   ├── <span class="file">models.py</span></span><span class="ft-dots"></span><span class="ft-desc">DjangoModelFactory — creates real DB rows</span></div>
+    <div class="ft-row"><span class="ft-path">  │   │   ├── <span class="file">storage_dtos.py</span></span><span class="ft-dots"></span><span class="ft-desc">factory.Factory — DTOs returned by storage</span></div>
+    <div class="ft-row"><span class="ft-path">  │   │   ├── <span class="file">interactor_dtos.py</span></span><span class="ft-dots"></span><span class="ft-desc">factory.Factory — DTOs used in interactor tests</span></div>
+    <div class="ft-row"><span class="ft-path">  │   │   └── <span class="file">presenter_dtos.py</span></span><span class="ft-dots"></span><span class="ft-desc">factory.Factory — DTOs passed to presenters</span></div>
+    <div class="ft-row"><span class="ft-path">  │   ├── <span class="dir">interactors/</span></span><span class="ft-dots"></span><span class="ft-desc">one test file per interactor</span></div>
+    <div class="ft-row"><span class="ft-path">  │   ├── <span class="dir">storages/</span></span><span class="ft-dots"></span><span class="ft-desc">one test file per storage method</span></div>
+    <div class="ft-row"><span class="ft-path">  │   ├── <span class="dir">presenters/</span></span><span class="ft-dots"></span><span class="ft-desc">one test file per presenter method</span></div>
+    <div class="ft-row"><span class="ft-path">  │   └── <span class="dir">views/</span></span><span class="ft-dots"></span><span class="ft-desc">DSU end-to-end view tests</span></div>
+    <div class="ft-row"><span class="ft-path">  │       └── <span class="dir">create_post/</span></span></div>
+    <div class="ft-row"><span class="ft-path">  │           ├── <span class="file">__init__.py</span></span><span class="ft-dots"></span><span class="ft-desc">APP_NAME, OPERATION_NAME, REQUEST_METHOD, URL_SUFFIX</span></div>
+    <div class="ft-row"><span class="ft-path">  │           ├── <span class="file">test_case_01.py</span></span><span class="ft-dots"></span><span class="ft-desc">error case</span></div>
+    <div class="ft-row"><span class="ft-path">  │           └── <span class="file">test_case_02.py</span></span><span class="ft-dots"></span><span class="ft-desc">success case</span></div>
+  </div>
+
+  <div class="callout">
+    <div class="callout-title">Rule of thumb — which factory file?</div>
+    <table style="margin:0">
+      <thead><tr><th>What you're creating</th><th>Factory file</th><th>Base class</th></tr></thead>
+      <tbody>
+        <tr><td>A real Django model row (needs DB)</td><td><code>factories/models.py</code></td><td><code>DjangoModelFactory</code></td></tr>
+        <tr><td>A DTO your storage method returns</td><td><code>factories/storage_dtos.py</code></td><td><code>factory.Factory</code></td></tr>
+        <tr><td>A DTO your interactor uses internally</td><td><code>factories/interactor_dtos.py</code></td><td><code>factory.Factory</code></td></tr>
+        <tr><td>A DTO you pass to a presenter</td><td><code>factories/presenter_dtos.py</code></td><td><code>factory.Factory</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Assert vs Snapshot — which to use per layer</h3>
+
+  <p>
+    The org uses two different verification strategies depending on which layer is under test.
+    Mixing them up is a common mistake.
+  </p>
+
+  <table>
+    <thead>
+      <tr><th>Layer</th><th>Test folder</th><th>Storage dependency</th><th>Verification</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Interactors</strong></td>
+        <td><code>tests/interactors/</code></td>
+        <td><code>Mock()</code> — no real storage</td>
+        <td><code>assert</code> — check DTOs, return values, exceptions</td>
+      </tr>
+      <tr>
+        <td><strong>Storages</strong></td>
+        <td><code>tests/storages/</code></td>
+        <td><code>StorageImplementation()</code> — real DB</td>
+        <td><code>assert</code> — check saved row, returned DTO</td>
+      </tr>
+      <tr>
+        <td><strong>Presenters</strong></td>
+        <td><code>tests/presenters/</code></td>
+        <td>—</td>
+        <td><code>snapshot</code> — pins entire JSON shape</td>
+      </tr>
+      <tr>
+        <td><strong>Views (DSU)</strong></td>
+        <td><code>tests/views/</code></td>
+        <td>adapter mocked via <code>mocker.patch</code></td>
+        <td><code>snapshot</code> — pins full HTTP status + body</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="compare" style="margin-top:1rem;">
+    <div class="compare-col">
+      <span class="compare-label good">Interactor — use assert (Mock storage)</span>
+<pre><code><span style="color:#8b949e"># tests/interactors/test_create_post_interactor.py</span>
+<span style="color:#ff7b72">from</span> unittest.mock <span style="color:#ff7b72">import</span> Mock
+<span style="color:#ff7b72">from</span> fb_post.interactors.create_post_interactor <span style="color:#ff7b72">import</span> CreatePostInteractor
+
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_create_post_returns_post_id</span>():
+    storage_mock = Mock()
+    storage_mock.create_post.return_value = <span style="color:#79c0ff">42</span>
+    interactor = CreatePostInteractor(storage=storage_mock)
+
+    result_dto = interactor.create_post_core(
+        user_id=<span style="color:#79c0ff">1</span>, post_content=<span style="color:#a5d6ff">"Hello!"</span>)
+
+    assert result_dto.post_id == <span style="color:#79c0ff">42</span>
+    storage_mock.create_post.assert_called_once_with(
+        user_id=<span style="color:#79c0ff">1</span>, post_content=<span style="color:#a5d6ff">"Hello!"</span>)</code></pre>
+    </div>
+    <div class="compare-col">
+      <span class="compare-label good">Presenter / View — use snapshot</span>
+<pre><code><span style="color:#8b949e"># tests/presenters/test_create_post_presenter.py</span>
+<span style="color:#ff7b72">import</span> json
+<span style="color:#ff7b72">from</span> fb_post.tests.factories.presenter_dtos <span style="color:#ff7b72">import</span> \
+    CreatePostResponseDTOFactory
+
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_create_post_success_response</span>(snapshot):
+    dto = CreatePostResponseDTOFactory(post_id=<span style="color:#79c0ff">42</span>)
+    presenter = CreatePostPresenterImplementation()
+
+    response = presenter.get_create_post_response(dto)
+
+    data = json.loads(response.content)
+    snapshot.assert_match(data, <span style="color:#a5d6ff">"response"</span>)
+    snapshot.assert_match(
+        response.status_code, <span style="color:#a5d6ff">"status_code"</span>)</code></pre>
+    </div>
+  </div>
+
+  <div class="callout key">
+    <div class="callout-title">The rule</div>
+    <strong>assert</strong> when you know the exact expected value — for interactors and storages.<br>
+    <strong>snapshot</strong> when you want to pin the full JSON shape — for presenters and views.
+    Snapshots are stored in <code>tests/snapshots/</code> and are committed to git.
+    They act as a safety net against unintentional API contract changes.
+  </div>
+
+  <div class="callout warn">
+    <div class="callout-title">Which tests import the storage implementation?</div>
+    <strong>Storage tests only.</strong> Interactor tests never import
+    <code>CreatePostStorageImplementation</code> — they use <code>Mock()</code> instead.
+    <table style="margin:0.6rem 0 0">
+      <thead><tr><th>Layer</th><th>Storage dependency</th></tr></thead>
+      <tbody>
+        <tr><td>Interactor test (<code>tests/interactors/</code>)</td><td><code>Mock()</code> — no DB, no import of implementation</td></tr>
+        <tr><td>Storage test (<code>tests/storages/</code>)</td><td><code>CreatePostStorageImplementation()</code> — real DB, needs <code>@pytest.mark.django_db</code></td></tr>
+      </tbody>
+    </table>
+  </div>
 
   <p>
     Any test that reads or writes the database must be decorated with
-    <code>@pytest.mark.django_db</code>:
+    <code>@pytest.mark.django_db</code>. This applies to <strong>storage tests</strong>:
   </p>
 
-<pre><code><span style="color:#ff7b72">import</span> pytest
+<pre><code><span style="color:#8b949e"># fb_post/tests/storages/test_create_post_storage.py</span>
+<span style="color:#ff7b72">import</span> pytest
+<span style="color:#ff7b72">from</span> fb_post.tests.factories.models <span style="color:#ff7b72">import</span> UserFactory
+<span style="color:#ff7b72">from</span> fb_post.storages.create_post_storage <span style="color:#ff7b72">import</span> CreatePostStorageImplementation
 
 <span style="color:#ffa657">@pytest.mark.django_db</span>
-<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_get_movie_with_valid_id_returns_movie_dto</span>():
-    <span style="color:#8b949e"># Arrange — creates a real DB row</span>
-    <span style="color:#ff7b72">from</span> imdb.tests.factories <span style="color:#ff7b72">import</span> MovieFactory
-    movie = MovieFactory()
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_create_post_saves_to_database</span>():
+    <span style="color:#8b949e"># Arrange — real DB row via factory</span>
+    user = UserFactory()
+    storage = CreatePostStorageImplementation()
 
     <span style="color:#8b949e"># Act</span>
-    <span style="color:#ff7b72">from</span> imdb.interactors <span style="color:#ff7b72">import</span> GetMovieInteractor
-    result = GetMovieInteractor(movie_id=movie.id).execute()
+    post_id = storage.create_post(user_id=user.id, post_content=<span style="color:#a5d6ff">"Hello world!"</span>)
 
     <span style="color:#8b949e"># Assert</span>
-    assert result.movie_id == movie.id</code></pre>
+    assert post_id <span style="color:#ff7b72">is</span> <span style="color:#ff7b72">not</span> None</code></pre>
 
   <div class="callout">
     <div class="callout-title">Each test gets a clean database</div>
@@ -435,10 +584,10 @@ DJANGO_SETTINGS_MODULE = imdb.settings.local</code></pre>
 pytest
 
 <span style="color:#8b949e"># Specific file</span>
-pytest imdb/tests/test_get_movie.py
+pytest fb_post/tests/test_create_post.py
 
 <span style="color:#8b949e"># Specific function</span>
-pytest imdb/tests/test_get_movie.py::test_get_movie_with_valid_id_returns_movie_dto
+pytest fb_post/tests/test_create_post.py::test_create_post_with_valid_user_and_content_returns_post_id
 
 <span style="color:#8b949e"># Verbose (shows full name per result)</span>
 pytest -v</code></pre>
@@ -457,42 +606,80 @@ pytest -v</code></pre>
 
 <p>
   The problem with creating test data manually is that it leaks irrelevant details into your tests.
-  If <code>Movie</code> has 12 required fields but you're testing rating logic,
+  If <code>Post</code> has required FK fields but you're testing content logic,
   you shouldn't have to specify all 12 every time.
 </p>
 
 <p>
   <strong>Factory Boy</strong> defines sensible defaults for every model field once,
   then lets you override only what matters for a given test.
+  It is included in the repo's dev/test dependencies — available after <code>poetry install --with dev,test</code>.
 </p>
 
-<pre><code>pip install factory_boy</code></pre>
+<h3>Two base classes — choose by layer</h3>
 
-<h3>DjangoModelFactory — the base class you always use</h3>
+<p>The org uses two different base classes depending on what you are building:</p>
 
-<p>For Django models, always subclass <code>factory.django.DjangoModelFactory</code> — not plain <code>factory.Factory</code>.
-It calls <code>Model.objects.create()</code> and handles DB saving correctly.</p>
+<table>
+  <thead><tr><th>Base class</th><th>Saves to DB?</th><th>Factory file</th></tr></thead>
+  <tbody>
+    <tr><td><code>DjangoModelFactory</code></td><td>Yes</td><td><code>factories/models.py</code></td></tr>
+    <tr><td><code>factory.Factory</code></td><td>No</td><td><code>factories/storage_dtos.py</code>, <code>interactor_dtos.py</code>, <code>presenter_dtos.py</code></td></tr>
+  </tbody>
+</table>
 
-<pre><code><span style="color:#8b949e"># imdb/tests/factories/movie_factory.py</span>
+<h3><code>factories/models.py</code> — real DB rows</h3>
+
+<p>Use <code>DjangoModelFactory</code> for Django model instances. It calls <code>Model.objects.create()</code>. Tests using these need <code>@pytest.mark.django_db</code>.</p>
+
+<pre><code><span style="color:#8b949e"># fb_post/tests/factories/models.py</span>
 <span style="color:#ff7b72">import</span> factory
 <span style="color:#ff7b72">from</span> factory.django <span style="color:#ff7b72">import</span> DjangoModelFactory
-<span style="color:#ff7b72">from</span> imdb.models <span style="color:#ff7b72">import</span> Movie
+<span style="color:#ff7b72">from</span> fb_post.models <span style="color:#ff7b72">import</span> User, Post
 
-<span style="color:#ff7b72">class</span> <span style="color:#79c0ff">MovieFactory</span>(DjangoModelFactory):
+<span style="color:#ff7b72">class</span> <span style="color:#79c0ff">UserFactory</span>(DjangoModelFactory):
     <span style="color:#ff7b72">class</span> <span style="color:#79c0ff">Meta</span>:
-        model = Movie
+        model = User
 
-    title  = factory.Sequence(<span style="color:#ff7b72">lambda</span> n: <span style="color:#a5d6ff">f"Movie {n}"</span>)   <span style="color:#8b949e"># unique on every call</span>
-    rating = <span style="color:#79c0ff">7.5</span>
-    year   = <span style="color:#79c0ff">2020</span></code></pre>
+    name        = factory.Sequence(<span style="color:#ff7b72">lambda</span> n: <span style="color:#a5d6ff">f"User {n}"</span>)
+    profile_pic = factory.LazyAttribute(<span style="color:#ff7b72">lambda</span> o: <span style="color:#a5d6ff">f"https://pic.example.com/{o.name}.jpg"</span>)
+
+<span style="color:#ff7b72">class</span> <span style="color:#79c0ff">PostFactory</span>(DjangoModelFactory):
+    <span style="color:#ff7b72">class</span> <span style="color:#79c0ff">Meta</span>:
+        model = Post
+
+    posted_by = factory.SubFactory(UserFactory)
+    content   = factory.Sequence(<span style="color:#ff7b72">lambda</span> n: <span style="color:#a5d6ff">f"Post content {n}"</span>)</code></pre>
+
+<h3><code>factories/storage_dtos.py</code> — DTO factories</h3>
+
+<p>Use <code>factory.Factory</code> (no <code>Django</code>) for plain dataclass DTOs — no DB is touched. This is used in <strong>storage, interactor, and presenter</strong> test files.</p>
+
+<pre><code><span style="color:#8b949e"># fb_post/tests/factories/storage_dtos.py</span>
+<span style="color:#ff7b72">import</span> factory
+<span style="color:#ff7b72">from</span> fb_post.interactors.storages.dtos <span style="color:#ff7b72">import</span> PostDetailsDTO
+
+<span style="color:#ff7b72">class</span> <span style="color:#79c0ff">PostDetailsDTOFactory</span>(factory.Factory):
+    <span style="color:#ff7b72">class</span> <span style="color:#79c0ff">Meta</span>:
+        model = PostDetailsDTO       <span style="color:#8b949e"># a @dataclass, not a Django model</span>
+
+    post_id        = factory.Sequence(<span style="color:#ff7b72">lambda</span> n: n + <span style="color:#79c0ff">1</span>)
+    content        = factory.Sequence(<span style="color:#ff7b72">lambda</span> n: <span style="color:#a5d6ff">f"Post content {n}"</span>)
+    comments_count = <span style="color:#79c0ff">0</span>
+
+<span style="color:#8b949e"># No @pytest.mark.django_db needed:</span>
+dto = PostDetailsDTOFactory(post_id=<span style="color:#79c0ff">42</span>, content=<span style="color:#a5d6ff">"Hello!"</span>)</code></pre>
 
 <pre><code><span style="color:#8b949e"># Using it:</span>
-movie_object = MovieFactory()                       <span style="color:#8b949e"># title="Movie 0", rating=7.5</span>
-movie_object = MovieFactory()                       <span style="color:#8b949e"># title="Movie 1"  (auto-increments)</span>
+user_object = UserFactory()                       <span style="color:#8b949e"># name="User 0"</span>
+user_object = UserFactory()                       <span style="color:#8b949e"># name="User 1"  (auto-increments)</span>
 
 <span style="color:#8b949e"># Override only what matters for this test:</span>
-movie_object = MovieFactory(rating=<span style="color:#79c0ff">9.2</span>)
-movie_object = MovieFactory(title=<span style="color:#a5d6ff">"Inception"</span>, year=<span style="color:#79c0ff">2010</span>)</code></pre>
+user_object = UserFactory(name=<span style="color:#a5d6ff">"Alice"</span>)
+
+<span style="color:#8b949e"># PostFactory with FK to UserFactory:</span>
+post_object = PostFactory()                       <span style="color:#8b949e"># auto-creates a User too</span>
+post_object = PostFactory(posted_by=user_object)  <span style="color:#8b949e"># reuse an existing user</span></code></pre>
 
 <h3>Key factory declarations</h3>
 
@@ -504,7 +691,7 @@ movie_object = MovieFactory(title=<span style="color:#a5d6ff">"Inception"</span>
     <tr>
       <td><code>factory.Sequence</code></td>
       <td>Unique value using auto-counter <code>n</code></td>
-      <td><code>title = factory.Sequence(lambda n: f"Movie {n}")</code></td>
+      <td><code>name = factory.Sequence(lambda n: f"User {n}")</code></td>
     </tr>
     <tr>
       <td><code>factory.LazyAttribute</code></td>
@@ -514,27 +701,26 @@ movie_object = MovieFactory(title=<span style="color:#a5d6ff">"Inception"</span>
     <tr>
       <td><code>factory.SubFactory</code></td>
       <td>Auto-create a related FK object</td>
-      <td><code>movie = factory.SubFactory(MovieFactory)</code></td>
+      <td><code>posted_by = factory.SubFactory(UserFactory)</code></td>
     </tr>
   </tbody>
 </table>
 
 <h3>SubFactory — FK relationships</h3>
 
-<pre><code><span style="color:#ff7b72">class</span> <span style="color:#79c0ff">RatingFactory</span>(DjangoModelFactory):
+<pre><code><span style="color:#ff7b72">class</span> <span style="color:#79c0ff">PostFactory</span>(DjangoModelFactory):
     <span style="color:#ff7b72">class</span> <span style="color:#79c0ff">Meta</span>:
-        model = Rating
+        model = Post
 
-    <span style="color:#8b949e"># Creates a Movie automatically — no need to pass movie_id manually</span>
-    movie  = factory.SubFactory(MovieFactory)
-    score  = <span style="color:#79c0ff">8</span>
-    review = factory.Sequence(<span style="color:#ff7b72">lambda</span> n: <span style="color:#a5d6ff">f"Review {n}"</span>)
+    <span style="color:#8b949e"># Creates a User automatically — no need to pass user_id manually</span>
+    posted_by = factory.SubFactory(UserFactory)
+    content   = factory.Sequence(<span style="color:#ff7b72">lambda</span> n: <span style="color:#a5d6ff">f"Post content {n}"</span>)
 
-<span style="color:#8b949e"># Creates a Rating AND its Movie in one call:</span>
-rating_object = RatingFactory()
+<span style="color:#8b949e"># Creates a Post AND its User in one call:</span>
+post_object = PostFactory()
 
-<span style="color:#8b949e"># Reuse an existing movie:</span>
-rating_object = RatingFactory(movie=existing_movie_object)</code></pre>
+<span style="color:#8b949e"># Reuse an existing user:</span>
+post_object = PostFactory(posted_by=existing_user_object)</code></pre>
 
 <h3>create() vs build() vs create_batch()</h3>
 
@@ -543,9 +729,9 @@ rating_object = RatingFactory(movie=existing_movie_object)</code></pre>
     <tr><th>Method</th><th>Saves to DB?</th><th>When to use</th></tr>
   </thead>
   <tbody>
-    <tr><td><code>MovieFactory()</code> / <code>.create()</code></td><td>Yes</td><td>Tests that need a real DB row (requires <code>@pytest.mark.django_db</code>)</td></tr>
-    <tr><td><code>MovieFactory.build()</code></td><td>No</td><td>Tests that don't touch the DB — much faster</td></tr>
-    <tr><td><code>MovieFactory.create_batch(5)</code></td><td>Yes</td><td>Need multiple objects at once</td></tr>
+    <tr><td><code>PostFactory()</code> / <code>.create()</code></td><td>Yes</td><td>Tests that need a real DB row (requires <code>@pytest.mark.django_db</code>)</td></tr>
+    <tr><td><code>PostFactory.build()</code></td><td>No</td><td>Tests that don't touch the DB — much faster</td></tr>
+    <tr><td><code>PostFactory.create_batch(5)</code></td><td>Yes</td><td>Need multiple objects at once</td></tr>
   </tbody>
 </table>
 
@@ -567,39 +753,39 @@ rating_object = RatingFactory(movie=existing_movie_object)</code></pre>
 <div class="compare">
   <div class="compare-col">
     <span class="compare-label bad">Repeated Arrange</span>
-<pre><code><span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_get_movie_title</span>():
+<pre><code><span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_get_post_returns_content</span>():
     <span style="color:#8b949e"># duplicated!</span>
-    movie = MovieFactory(title=<span style="color:#a5d6ff">"Inception"</span>)
-    result = GetMovieInteractor(movie.id).execute()
-    assert result.title == <span style="color:#a5d6ff">"Inception"</span>
+    post = PostFactory(content=<span style="color:#a5d6ff">"Hello world!"</span>)
+    result = storage.get_post_details(post.id)
+    assert result.content == <span style="color:#a5d6ff">"Hello world!"</span>
 
-<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_get_movie_rating</span>():
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_get_post_returns_poster</span>():
     <span style="color:#8b949e"># duplicated!</span>
-    movie = MovieFactory(title=<span style="color:#a5d6ff">"Inception"</span>)
-    result = GetMovieInteractor(movie.id).execute()
-    assert result.rating == <span style="color:#79c0ff">8.8</span></code></pre>
+    post = PostFactory(content=<span style="color:#a5d6ff">"Hello world!"</span>)
+    result = storage.get_post_details(post.id)
+    assert result.posted_by.name <span style="color:#ff7b72">is</span> <span style="color:#ff7b72">not</span> None</code></pre>
   </div>
   <div class="compare-col">
     <span class="compare-label good">Fixture</span>
 <pre><code><span style="color:#ff7b72">import</span> pytest
 
 <span style="color:#ffa657">@pytest.fixture</span>
-<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">inception_movie</span>():
-    <span style="color:#ff7b72">return</span> MovieFactory(title=<span style="color:#a5d6ff">"Inception"</span>, rating=<span style="color:#79c0ff">8.8</span>)
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">post_object</span>():
+    <span style="color:#ff7b72">return</span> PostFactory(content=<span style="color:#a5d6ff">"Hello world!"</span>)
 
 
-<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_get_movie_title</span>(inception_movie):
-    result = GetMovieInteractor(inception_movie.id).execute()
-    assert result.title == <span style="color:#a5d6ff">"Inception"</span>
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_get_post_returns_content</span>(post_object):
+    result = storage.get_post_details(post_object.id)
+    assert result.content == <span style="color:#a5d6ff">"Hello world!"</span>
 
-<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_get_movie_rating</span>(inception_movie):
-    result = GetMovieInteractor(inception_movie.id).execute()
-    assert result.rating == <span style="color:#79c0ff">8.8</span></code></pre>
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_get_post_returns_poster_name</span>(post_object):
+    result = storage.get_post_details(post_object.id)
+    assert result.posted_by.name <span style="color:#ff7b72">is</span> <span style="color:#ff7b72">not</span> None</code></pre>
   </div>
 </div>
 
 <p>
-  pytest sees that <code>inception_movie</code> is a parameter name that matches a fixture.
+  pytest sees that <code>post_object</code> is a parameter name that matches a fixture.
   It calls the fixture, gets the return value, and passes it as the argument.
   A fresh object is created for every test — they never share state.
 </p>
@@ -613,29 +799,34 @@ rating_object = RatingFactory(movie=existing_movie_object)</code></pre>
 </p>
 
 <div class="filetree">
-  <div class="ft-row"><span class="ft-path dir">imdb/tests/</span></div>
-  <div class="ft-row"><span class="ft-path">  ├── <span class="file">conftest.py</span></span><span class="ft-dots"></span><span class="ft-desc">shared fixtures for all test files here</span></div>
-  <div class="ft-row"><span class="ft-path">  ├── <span class="dir">factories/</span></span><span class="ft-dots"></span><span class="ft-desc">Factory Boy factories</span></div>
-  <div class="ft-row"><span class="ft-path">  ├── <span class="file">test_get_movie.py</span></span><span class="ft-dots"></span><span class="ft-desc">uses fixtures from conftest.py</span></div>
-  <div class="ft-row"><span class="ft-path">  └── <span class="file">test_create_movie.py</span></span><span class="ft-dots"></span><span class="ft-desc">also uses fixtures from conftest.py</span></div>
+  <div class="ft-row"><span class="ft-path dir">fb_post/tests/</span></div>
+  <div class="ft-row"><span class="ft-path">  ├── <span class="file">conftest.py</span></span><span class="ft-dots"></span><span class="ft-desc">shared fixtures — auto-discovered by pytest</span></div>
+  <div class="ft-row"><span class="ft-path">  ├── <span class="dir">factories/</span></span></div>
+  <div class="ft-row"><span class="ft-path">  │   ├── <span class="file">models.py</span></span><span class="ft-dots"></span><span class="ft-desc">DjangoModelFactory classes</span></div>
+  <div class="ft-row"><span class="ft-path">  │   ├── <span class="file">storage_dtos.py</span></span><span class="ft-dots"></span><span class="ft-desc">factory.Factory for storage DTOs</span></div>
+  <div class="ft-row"><span class="ft-path">  │   ├── <span class="file">interactor_dtos.py</span></span><span class="ft-dots"></span><span class="ft-desc">factory.Factory for interactor DTOs</span></div>
+  <div class="ft-row"><span class="ft-path">  │   └── <span class="file">presenter_dtos.py</span></span><span class="ft-dots"></span><span class="ft-desc">factory.Factory for presenter DTOs</span></div>
+  <div class="ft-row"><span class="ft-path">  ├── <span class="dir">interactors/</span></span><span class="ft-dots"></span><span class="ft-desc">test_create_post.py, test_get_post.py, …</span></div>
+  <div class="ft-row"><span class="ft-path">  ├── <span class="dir">storages/</span></span><span class="ft-dots"></span><span class="ft-desc">test_create_post_storage.py, …</span></div>
+  <div class="ft-row"><span class="ft-path">  └── <span class="dir">presenters/</span></span><span class="ft-dots"></span><span class="ft-desc">test_create_post_presenter.py, …</span></div>
 </div>
 
-<pre><code><span style="color:#8b949e"># imdb/tests/conftest.py</span>
+<pre><code><span style="color:#8b949e"># fb_post/tests/conftest.py</span>
 <span style="color:#ff7b72">import</span> pytest
-<span style="color:#ff7b72">from</span> imdb.tests.factories <span style="color:#ff7b72">import</span> MovieFactory, ActorFactory
+<span style="color:#ff7b72">from</span> fb_post.tests.factories.models <span style="color:#ff7b72">import</span> UserFactory, PostFactory
 
 <span style="color:#ffa657">@pytest.fixture</span>
-<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">movie_object</span>():          <span style="color:#8b949e"># org convention: _object suffix for model instances</span>
-    <span style="color:#ff7b72">return</span> MovieFactory()
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">user_object</span>():          <span style="color:#8b949e"># org convention: _object suffix for model instances</span>
+    <span style="color:#ff7b72">return</span> UserFactory()
 
 <span style="color:#ffa657">@pytest.fixture</span>
-<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">actor_object</span>():
-    <span style="color:#ff7b72">return</span> ActorFactory()</code></pre>
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">post_object</span>(user_object):
+    <span style="color:#ff7b72">return</span> PostFactory(posted_by=user_object)</code></pre>
 
 <div class="callout warn">
   <div class="callout-title">Naming convention</div>
   The org names Django model instances with the <code>_object</code> suffix.
-  So your fixture is <code>movie_object</code>, not <code>movie</code>.
+  So your fixture is <code>user_object</code> / <code>post_object</code>, not <code>user</code> / <code>post</code>.
 </div>
 
 
@@ -656,26 +847,24 @@ rating_object = RatingFactory(movie=existing_movie_object)</code></pre>
 <div class="compare">
   <div class="compare-col">
     <span class="compare-label bad">Loop in test</span>
-<pre><code><span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_invalid_ratings</span>():
-    invalid = [-1, 0, 10.1, 100]
-    <span style="color:#ff7b72">for</span> rating <span style="color:#ff7b72">in</span> invalid:
+<pre><code><span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_invalid_reaction_types</span>():
+    invalid = [<span style="color:#a5d6ff">"INVALID"</span>, <span style="color:#a5d6ff">""</span>, <span style="color:#a5d6ff">"thumbs_up"</span>, <span style="color:#a5d6ff">"123"</span>]
+    <span style="color:#ff7b72">for</span> reaction_type <span style="color:#ff7b72">in</span> invalid:
         <span style="color:#8b949e"># first failure hides the rest</span>
-        <span style="color:#ff7b72">with</span> pytest.raises(ValidationError):
-            CreateMovieInteractor(
-                rating=rating
-            ).execute()</code></pre>
+        <span style="color:#ff7b72">with</span> pytest.raises(InvalidReactionTypeException):
+            storage.react_to_post(
+                user_id=<span style="color:#79c0ff">1</span>, post_id=<span style="color:#79c0ff">1</span>, reaction_type=reaction_type)</code></pre>
   </div>
   <div class="compare-col">
     <span class="compare-label good">Parametrize</span>
-<pre><code><span style="color:#ffa657">@pytest.mark.parametrize</span>(<span style="color:#a5d6ff">"rating"</span>, [
-    -1, 0, 10.1, 100
+<pre><code><span style="color:#ffa657">@pytest.mark.parametrize</span>(<span style="color:#a5d6ff">"reaction_type"</span>, [
+    <span style="color:#a5d6ff">"INVALID"</span>, <span style="color:#a5d6ff">""</span>, <span style="color:#a5d6ff">"thumbs_up"</span>, <span style="color:#a5d6ff">"123"</span>
 ])
-<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_create_movie_with_invalid_rating_raises_error</span>(
-        rating):
-    <span style="color:#ff7b72">with</span> pytest.raises(ValidationError):
-        CreateMovieInteractor(
-            rating=rating
-        ).execute()
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_react_to_post_with_invalid_reaction_type_raises_exception</span>(
+        reaction_type):
+    <span style="color:#ff7b72">with</span> pytest.raises(InvalidReactionTypeException):
+        storage.react_to_post(
+            user_id=<span style="color:#79c0ff">1</span>, post_id=<span style="color:#79c0ff">1</span>, reaction_type=reaction_type)
 <span style="color:#8b949e"># pytest runs this 4× — reports each
 # failure separately with its input value</span></code></pre>
   </div>
@@ -683,46 +872,251 @@ rating_object = RatingFactory(movie=existing_movie_object)</code></pre>
 
 <h3>Multiple parameters at once</h3>
 
-<pre><code><span style="color:#ffa657">@pytest.mark.parametrize</span>(<span style="color:#a5d6ff">"title, expected_slug"</span>, [
-    (<span style="color:#a5d6ff">"The Dark Knight"</span>, <span style="color:#a5d6ff">"the-dark-knight"</span>),
-    (<span style="color:#a5d6ff">"Inception"</span>,       <span style="color:#a5d6ff">"inception"</span>),
-    (<span style="color:#a5d6ff">"2001: A Space"</span>,   <span style="color:#a5d6ff">"2001-a-space"</span>),
+<pre><code><span style="color:#ffa657">@pytest.mark.parametrize</span>(<span style="color:#a5d6ff">"content, expected_count"</span>, [
+    (<span style="color:#a5d6ff">"Hello!"</span>,       <span style="color:#79c0ff">1</span>),
+    (<span style="color:#a5d6ff">"Post 2 content"</span>, <span style="color:#79c0ff">2</span>),
+    (<span style="color:#a5d6ff">"Third post"</span>,    <span style="color:#79c0ff">3</span>),
 ])
-<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_slugify_title_returns_expected_slug</span>(title, expected_slug):
-    result = slugify_title(title)
-    assert result == expected_slug</code></pre>
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_get_posts_returns_correct_count</span>(content, expected_count):
+    PostFactory.create_batch(expected_count)
+    result = storage.get_all_posts()
+    assert len(result) == expected_count</code></pre>
 
 <div class="callout info">
   <div class="callout-title">What pytest reports</div>
   Each parametrized run appears separately:
-  <code>test_slugify_title[The Dark Knight-the-dark-knight]</code>.
+  <code>test_react_to_post_with_invalid_reaction_type_raises_exception[INVALID]</code>.
   Failures are pinpointed to the exact input.
 </div>
 
 <h3>Putting it all together — Factory Boy + Fixtures + Parametrize</h3>
 
-<pre><code><span style="color:#8b949e"># imdb/tests/test_get_top_rated_movies.py</span>
+<pre><code><span style="color:#8b949e"># fb_post/tests/storages/test_get_post_storage.py</span>
 <span style="color:#ff7b72">import</span> pytest
-<span style="color:#ff7b72">from</span> imdb.tests.factories <span style="color:#ff7b72">import</span> MovieFactory
-<span style="color:#ff7b72">from</span> imdb.interactors <span style="color:#ff7b72">import</span> GetTopRatedMoviesInteractor
+<span style="color:#ff7b72">from</span> fb_post.tests.factories.models <span style="color:#ff7b72">import</span> UserFactory, PostFactory, CommentFactory
+<span style="color:#ff7b72">from</span> fb_post.storages.get_post_storage <span style="color:#ff7b72">import</span> GetPostStorageImplementation
 
 
 <span style="color:#ffa657">@pytest.fixture</span>                              <span style="color:#8b949e"># Part C — fixture</span>
-<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">top_rated_movies</span>():
-    MovieFactory.create_batch(<span style="color:#79c0ff">3</span>, rating=<span style="color:#79c0ff">9.0</span>)  <span style="color:#8b949e"># Part B — factory</span>
-    MovieFactory.create_batch(<span style="color:#79c0ff">2</span>, rating=<span style="color:#79c0ff">5.0</span>)
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">post_with_comments</span>():
+    user = UserFactory()
+    post = PostFactory(posted_by=user)
+    CommentFactory.create_batch(<span style="color:#79c0ff">3</span>, post=post, commented_by=user)  <span style="color:#8b949e"># Part B — factory</span>
+    <span style="color:#ff7b72">return</span> post
 
 
 <span style="color:#ffa657">@pytest.mark.django_db</span>
-<span style="color:#ffa657">@pytest.mark.parametrize</span>(<span style="color:#a5d6ff">"min_rating, expected_count"</span>, [  <span style="color:#8b949e"># Part D — parametrize</span>
-    (<span style="color:#79c0ff">8.0</span>, <span style="color:#79c0ff">3</span>),
-    (<span style="color:#79c0ff">5.0</span>, <span style="color:#79c0ff">5</span>),
-    (<span style="color:#79c0ff">9.5</span>, <span style="color:#79c0ff">0</span>),
+<span style="color:#ffa657">@pytest.mark.parametrize</span>(<span style="color:#a5d6ff">"extra_comments, expected_count"</span>, [  <span style="color:#8b949e"># Part D — parametrize</span>
+    (<span style="color:#79c0ff">0</span>, <span style="color:#79c0ff">3</span>),
+    (<span style="color:#79c0ff">2</span>, <span style="color:#79c0ff">5</span>),
 ])
-<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_returns_correct_count_for_various_thresholds</span>(
-        top_rated_movies, min_rating, expected_count):
-    results = GetTopRatedMoviesInteractor(min_rating=min_rating).execute()
-    assert len(results) == expected_count</code></pre>
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_get_post_returns_correct_comments_count</span>(
+        post_with_comments, extra_comments, expected_count):
+    <span style="color:#ff7b72">if</span> extra_comments:
+        CommentFactory.create_batch(extra_comments, post=post_with_comments)
+    storage = GetPostStorageImplementation()
+    result = storage.get_post_details(post_id=post_with_comments.id)
+    assert result.comments_count == expected_count   <span style="color:#8b949e"># storage tests use assert</span></code></pre>
+
+
+<!-- ══════════════════════════════════════════════
+     PART E — DSU VIEW TESTING
+     ══════════════════════════════════════════════ -->
+<div class="part-header" id="dsu-views">
+  <span class="part-badge">Part E</span>
+  <h2>DSU view testing with <code>TestUtils</code></h2>
+</div>
+
+<p>
+  DSU view tests exercise the full stack — URL routing, validation, interactor, presenter — in one shot.
+  They live inside <code>tests/views/&lt;operation_name&gt;/</code> and use <code>TestUtils</code>
+  from <code>django_swagger_utils.utils.test_utils</code>.
+</p>
+
+<h3>The file structure</h3>
+
+<div class="filetree">
+  <div class="ft-row"><span class="ft-path dir">fb_post/tests/views/</span></div>
+  <div class="ft-row"><span class="ft-path">  └── <span class="dir">create_post/</span></span></div>
+  <div class="ft-row"><span class="ft-path">      ├── <span class="file">__init__.py</span></span><span class="ft-dots"></span><span class="ft-desc">APP_NAME, OPERATION_NAME, REQUEST_METHOD, URL_SUFFIX</span></div>
+  <div class="ft-row"><span class="ft-path">      ├── <span class="dir">snapshots/</span></span><span class="ft-dots"></span><span class="ft-desc">auto-generated on first run</span></div>
+  <div class="ft-row"><span class="ft-path">      ├── <span class="file">test_case_01.py</span></span><span class="ft-dots"></span><span class="ft-desc">error: InvalidUserException</span></div>
+  <div class="ft-row"><span class="ft-path">      └── <span class="file">test_case_02.py</span></span><span class="ft-dots"></span><span class="ft-desc">success: valid user + content → 201</span></div>
+</div>
+
+<h3><code>__init__.py</code> — constants shared by all test cases</h3>
+
+<pre><code><span style="color:#8b949e"># fb_post/tests/views/create_post/__init__.py</span>
+APP_NAME       = <span style="color:#a5d6ff">"fb_post"</span>
+URL_BASE_PATH  = <span style="color:#a5d6ff">"/api/fb_post/"</span>
+OPERATION_NAME = <span style="color:#a5d6ff">"create_post"</span>
+REQUEST_METHOD = <span style="color:#a5d6ff">"post"</span>
+URL_SUFFIX     = <span style="color:#a5d6ff">"create_post/v1/"</span></code></pre>
+
+<h3><code>test_case_01.py</code> — error case</h3>
+
+<pre><code><span style="color:#8b949e">"""
+Raise InvalidUserException
+"""</span>
+<span style="color:#ff7b72">import</span> pytest
+<span style="color:#ff7b72">from</span> django_swagger_utils.utils.test_utils <span style="color:#ff7b72">import</span> TestUtils
+<span style="color:#ff7b72">from</span> . <span style="color:#ff7b72">import</span> APP_NAME, OPERATION_NAME, REQUEST_METHOD, URL_SUFFIX
+
+
+<span style="color:#ff7b72">class</span> <span style="color:#79c0ff">TestCase01CreatePostAPITestCase</span>(TestUtils):
+    APP_NAME       = APP_NAME
+    OPERATION_NAME = OPERATION_NAME
+    REQUEST_METHOD = REQUEST_METHOD
+    URL_SUFFIX     = URL_SUFFIX
+    SECURITY = {<span style="color:#a5d6ff">'oauth'</span>: {<span style="color:#a5d6ff">'scopes'</span>: [<span style="color:#a5d6ff">'read'</span>, <span style="color:#a5d6ff">'write'</span>]}}
+
+    <span style="color:#ffa657">@pytest.mark.django_db</span>
+    <span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_case</span>(self, api_user, mocker, snapshot):
+        body         = {<span style="color:#a5d6ff">"user_id"</span>: <span style="color:#79c0ff">1</span>, <span style="color:#a5d6ff">"post_content"</span>: <span style="color:#a5d6ff">"Hello world!"</span>}
+        path_params  = {}
+        query_params = {}
+        headers      = {}
+
+        <span style="color:#ff7b72">from</span> fb_post.tests.common_fixtures.adapters <span style="color:#ff7b72">import</span> create_post_mock
+        <span style="color:#ff7b72">from</span> fb_post.exceptions <span style="color:#ff7b72">import</span> InvalidUserException
+        mock = create_post_mock(mocker)
+        mock.side_effect = InvalidUserException()
+
+        self.make_api_call(body=body, path_params=path_params,
+                           query_params=query_params, headers=headers,
+                           snapshot=snapshot)</code></pre>
+
+<h3><code>test_case_02.py</code> — success case</h3>
+
+<pre><code><span style="color:#8b949e">"""
+Valid user and content — returns 201 with post_id
+"""</span>
+<span style="color:#ff7b72">import</span> pytest
+<span style="color:#ff7b72">from</span> django_swagger_utils.utils.test_utils <span style="color:#ff7b72">import</span> TestUtils
+<span style="color:#ff7b72">from</span> . <span style="color:#ff7b72">import</span> APP_NAME, OPERATION_NAME, REQUEST_METHOD, URL_SUFFIX
+
+
+<span style="color:#ff7b72">class</span> <span style="color:#79c0ff">TestCase02CreatePostAPITestCase</span>(TestUtils):
+    APP_NAME       = APP_NAME
+    OPERATION_NAME = OPERATION_NAME
+    REQUEST_METHOD = REQUEST_METHOD
+    URL_SUFFIX     = URL_SUFFIX
+    SECURITY = {<span style="color:#a5d6ff">'oauth'</span>: {<span style="color:#a5d6ff">'scopes'</span>: [<span style="color:#a5d6ff">'read'</span>, <span style="color:#a5d6ff">'write'</span>]}}
+
+    <span style="color:#ffa657">@pytest.mark.django_db</span>
+    <span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_case</span>(self, api_user, mocker, snapshot):
+        body         = {<span style="color:#a5d6ff">"user_id"</span>: <span style="color:#79c0ff">1</span>, <span style="color:#a5d6ff">"post_content"</span>: <span style="color:#a5d6ff">"Hello world!"</span>}
+        path_params  = {}
+        query_params = {}
+        headers      = {}
+
+        <span style="color:#ff7b72">from</span> fb_post.tests.common_fixtures.adapters <span style="color:#ff7b72">import</span> create_post_mock
+        <span style="color:#ff7b72">from</span> fb_post.tests.factories.adapter_dtos <span style="color:#ff7b72">import</span> CreatePostResponseDTOFactory
+        mock = create_post_mock(mocker)
+        mock.return_value = CreatePostResponseDTOFactory()   <span style="color:#8b949e"># pin success DTO</span>
+
+        self.make_api_call(body=body, path_params=path_params,
+                           query_params=query_params, headers=headers,
+                           snapshot=snapshot)</code></pre>
+
+<h3><code>common_fixtures/adapters.py</code> — adapter mock helpers</h3>
+
+<p>
+  Adapter patches are centralised in <code>tests/common_fixtures/adapters.py</code> as plain functions
+  that accept <code>mocker</code>. This keeps the patch target string in one place — if the adapter
+  path ever changes, you fix it once.
+</p>
+
+<pre><code><span style="color:#8b949e"># fb_post/tests/common_fixtures/adapters.py</span>
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">create_post_mock</span>(mocker):
+    <span style="color:#ff7b72">return</span> mocker.patch(
+        <span style="color:#a5d6ff">"fb_post.adapters.service_adapter.ServiceAdapter.create_post"</span>
+    )</code></pre>
+
+<h3>How snapshots work in DSU view tests</h3>
+
+<p>
+  <code>make_api_call()</code> fires the full HTTP request through Django's test client.
+  It then calls <code>snapshot.assert_match(response, "name")</code> internally.
+</p>
+
+<p><strong>First run</strong> — no snapshot file exists yet:</p>
+<ol>
+  <li>The response is serialised (status code + JSON body).</li>
+  <li>It is written to <code>snapshots/snap_test_case_01.py</code> — the <em>golden file</em>.</li>
+  <li>The test passes.</li>
+</ol>
+
+<p><strong>Every subsequent run:</strong></p>
+<ol>
+  <li>The response is serialised again.</li>
+  <li>It is compared byte-for-byte against the golden file.</li>
+  <li>Any difference — a new field, changed status code, renamed key — fails the test immediately.</li>
+</ol>
+
+<div class="callout warn">
+  <div class="callout-title">Updating a snapshot</div>
+  If you <em>intentionally</em> changed the API response, delete the snapshot file and re-run.
+  The new response becomes the new golden file.
+  Commit both the code change and the updated snapshot file together.
+</div>
+
+<h3>What a snapshot file looks like</h3>
+
+<pre><code><span style="color:#8b949e"># fb_post/tests/views/create_post/snapshots/snap_test_case_01.py</span>
+<span style="color:#8b949e"># This file is auto-generated — do not edit manually</span>
+snapshots = {
+    <span style="color:#a5d6ff">'test_case 1'</span>: {
+        <span style="color:#a5d6ff">'status_code'</span>: <span style="color:#79c0ff">400</span>,
+        <span style="color:#a5d6ff">'response'</span>: {
+            <span style="color:#a5d6ff">'res_status'</span>: <span style="color:#a5d6ff">'INVALID_USER_EXCEPTION'</span>,
+            <span style="color:#a5d6ff">'response'</span>:   <span style="color:#a5d6ff">'Invalid user exception'</span>
+        }
+    }
+}
+
+<span style="color:#8b949e"># snap_test_case_02.py — success case</span>
+snapshots = {
+    <span style="color:#a5d6ff">'test_case 1'</span>: {
+        <span style="color:#a5d6ff">'status_code'</span>: <span style="color:#79c0ff">201</span>,
+        <span style="color:#a5d6ff">'response'</span>: {
+            <span style="color:#a5d6ff">'post_id'</span>: <span style="color:#79c0ff">1</span>
+        }
+    }
+}</code></pre>
+
+<p>
+  Snapshot files are committed to git. A reviewer reading the PR sees not just the test code
+  but also the exact JSON the endpoint will return — no manual documentation needed.
+</p>
+
+<div class="callout">
+  <div class="callout-title">Why snapshot for views, not assert?</div>
+  A JSON response can have 10+ fields. Writing <code>assert response["post_id"] == 1</code>
+  for every field is tedious and easy to miss. Snapshot captures the <em>whole shape</em> in one call.
+  If the presenter accidentally drops a field or changes a key name, the snapshot diff catches it instantly.
+</div>
+
+<h3>One test case file per scenario</h3>
+
+<p>The org convention is one file per case — not one file per endpoint. Failures are pinpointed
+and diffs are readable in code review.</p>
+
+<table>
+  <thead><tr><th>File</th><th>Scenario</th></tr></thead>
+  <tbody>
+    <tr><td><code>test_case_01.py</code></td><td>Error: invalid user_id → 400 <code>INVALID_USER_EXCEPTION</code></td></tr>
+    <tr><td><code>test_case_02.py</code></td><td>Success: valid user + content → 201 with <code>post_id</code></td></tr>
+    <tr><td><code>test_case_03.py</code></td><td>Error: empty content → 400 <code>INVALID_POST_CONTENT</code></td></tr>
+  </tbody>
+</table>
+
+<div class="callout warn">
+  <div class="callout-title">DSU view tests vs interactor tests</div>
+  <strong>View tests</strong> (<code>TestUtils</code>) go through the full HTTP stack — use them to test the request/response contract and snapshot the JSON shape.<br>
+  <strong>Interactor tests</strong> (<code>tests/interactors/</code>) mock the storage and test business logic in isolation — much faster and more granular.
+  Write both.
+</div>
 
 
 <!-- ══════════════════════════════════════════════
@@ -740,13 +1134,19 @@ rating_object = RatingFactory(movie=existing_movie_object)</code></pre>
       <tr><td>Fixture needed across multiple test files</td><td><code>conftest.py</code></td></tr>
       <tr><td>Same test logic, different input values</td><td><code>@pytest.mark.parametrize</code></td></tr>
       <tr><td>Test needs database access</td><td><code>@pytest.mark.django_db</code></td></tr>
-      <tr><td>Create a Django model with defaults</td><td><code>DjangoModelFactory</code></td></tr>
-      <tr><td>Field must be unique in DB</td><td><code>factory.Sequence</code></td></tr>
+      <tr><td>Create a real Django model row</td><td><code>DjangoModelFactory</code> in <code>factories/models.py</code></td></tr>
+      <tr><td>Create a DTO for a storage/interactor/presenter test</td><td><code>factory.Factory</code> in matching <code>factories/*.py</code></td></tr>
+      <tr><td>Field must be unique</td><td><code>factory.Sequence</code></td></tr>
       <tr><td>Field derived from another field</td><td><code>factory.LazyAttribute</code></td></tr>
       <tr><td>Model has a ForeignKey</td><td><code>factory.SubFactory</code></td></tr>
-      <tr><td>Need multiple objects at once</td><td><code>create_batch(n)</code></td></tr>
+      <tr><td>Need multiple objects at once</td><td><code>Factory.create_batch(n)</code></td></tr>
       <tr><td>Test doesn't hit the DB</td><td><code>ModelFactory.build()</code></td></tr>
       <tr><td>Assert a function raises an exception</td><td><code>pytest.raises(MyException)</code></td></tr>
+      <tr><td>Test a DSU endpoint end-to-end</td><td><code>TestUtils</code> + <code>make_api_call()</code></td></tr>
+      <tr><td>Where do DSU view tests live?</td><td><code>tests/views/&lt;operation_name&gt;/test_case_01.py</code></td></tr>
+      <tr><td>Verify exact return value or DTO (interactor / storage)</td><td><code>assert result == expected</code></td></tr>
+      <tr><td>Verify full JSON shape (presenter / view)</td><td><code>snapshot.assert_match(data, "name")</code></td></tr>
+      <tr><td>Update a snapshot after intentional change</td><td>Delete the <code>snapshots/snap_test_case_XX.py</code> file and re-run</td></tr>
     </tbody>
   </table>
 </section>
@@ -849,15 +1249,15 @@ rating_object = RatingFactory(movie=existing_movie_object)</code></pre>
     "explain": "pytest's dependency injection: if a test function has a parameter whose name matches a fixture, pytest calls that fixture and passes its return value. No import needed."
   },
   {
-    "q": "What is the difference between MovieFactory() and MovieFactory.build()?",
+    "q": "What is the difference between PostFactory() and PostFactory.build()?",
     "options": [
-      "MovieFactory() saves to the database; build() creates an in-memory object only",
-      "build() saves to the database; MovieFactory() creates an in-memory object only",
-      "MovieFactory() creates the class; build() instantiates it with defaults",
+      "PostFactory() saves to the database; build() creates an in-memory object only",
+      "build() saves to the database; PostFactory() creates an in-memory object only",
+      "PostFactory() creates the class; build() instantiates it with defaults",
       "They are identical — both save to the database automatically"
     ],
     "answer": 0,
-    "explain": "create() (called by MovieFactory()) calls objects.create() and persists the row. build() creates the object in memory only — useful for tests that don't need the DB."
+    "explain": "create() (called by PostFactory()) calls objects.create() and persists the row. build() creates the object in memory only — useful for tests that don't need the DB."
   },
   {
     "q": "@pytest.mark.parametrize('rating', [-1, 0, 10.1, 100]) — how many tests run?",
@@ -871,23 +1271,23 @@ rating_object = RatingFactory(movie=existing_movie_object)</code></pre>
     "explain": "Each item in the parametrize list becomes a separate test run. You'll see them as test_name[-1], test_name[0], etc. in the output."
   },
   {
-    "q": "Your Movie model has a unique 'title' field. Which factory declaration prevents IntegrityError?",
+    "q": "Your Post model has a unique constraint. Which factory declaration prevents IntegrityError?",
     "options": [
-      "title = factory.Sequence(lambda n: f'Movie {n}')",
-      "title = 'Default Movie'",
-      "title = factory.LazyAttribute(lambda obj: 'Default Movie')",
-      "title = factory.UniqueField('Movie')"
+      "content = factory.Sequence(lambda n: f'Post {n}')",
+      "content = 'Hello world!'",
+      "content = factory.LazyAttribute(lambda obj: 'Hello world!')",
+      "content = factory.UniqueField('Post')"
     ],
     "answer": 0,
-    "explain": "factory.Sequence increments n for every new object (0, 1, 2…), guaranteeing unique values. A static string causes IntegrityError on the second factory call."
+    "explain": "factory.Sequence increments n for every new object (0, 1, 2…), guaranteeing unique values. A static string causes IntegrityError on the second factory call if the field has a unique constraint."
   },
   {
-    "q": "A RatingFactory needs a Movie FK. Which declaration creates the Movie automatically?",
+    "q": "A PostFactory needs a User FK. Which declaration creates the User automatically?",
     "options": [
-      "movie = factory.SubFactory(MovieFactory)",
-      "movie = factory.LazyAttribute(lambda o: MovieFactory())",
-      "movie = MovieFactory.build()",
-      "movie_id = factory.Sequence(lambda n: n)"
+      "posted_by = factory.SubFactory(UserFactory)",
+      "posted_by = factory.LazyAttribute(lambda o: UserFactory())",
+      "posted_by = UserFactory.build()",
+      "user_id = factory.Sequence(lambda n: n)"
     ],
     "answer": 0,
     "explain": "SubFactory is the correct tool for FK relations. It also propagates the create/build strategy — so build() on the parent won't accidentally save the sub-object to the DB."

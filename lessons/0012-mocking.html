@@ -249,17 +249,19 @@ storage_mock.get_movie_by_id()   <span style="color:#8b949e"># &lt;Mock name='mo
   the interactor. That means you can just pass a <code>Mock()</code> straight in:
 </p>
 
-<pre><code><span style="color:#8b949e"># imdb/tests/test_get_movie_interactor.py</span>
+<pre><code><span style="color:#8b949e"># fb_post/tests/test_create_post_interactor.py</span>
 <span style="color:#ff7b72">from</span> unittest.mock <span style="color:#ff7b72">import</span> Mock
-<span style="color:#ff7b72">from</span> imdb.interactors.get_movie_interactor <span style="color:#ff7b72">import</span> GetMovieInteractor
+<span style="color:#ff7b72">from</span> fb_post.interactors.create_post_interactor <span style="color:#ff7b72">import</span> CreatePostInteractor
 
-<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_get_movie_with_valid_id_returns_movie_dto</span>():
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_create_post_with_valid_data_returns_post_id</span>():
     <span style="color:#8b949e"># Arrange</span>
     storage_mock = Mock()
-    interactor = GetMovieInteractor(storage=storage_mock)
+    presenter_mock = Mock()
+    interactor = CreatePostInteractor(storage=storage_mock)
 
     <span style="color:#8b949e"># Act — runs without hitting the real database</span>
-    result = interactor.execute(movie_id=1)
+    result = interactor.create_post_wrapper(
+        user_id=<span style="color:#79c0ff">1</span>, post_content=<span style="color:#a5d6ff">"Hello world!"</span>, presenter=presenter_mock)
 
     <span style="color:#8b949e"># Assert</span>
     ...</code></pre>
@@ -284,22 +286,27 @@ storage_mock.get_movie_by_id()   <span style="color:#8b949e"># &lt;Mock name='mo
   </p>
 
 <pre><code><span style="color:#ff7b72">from</span> unittest.mock <span style="color:#ff7b72">import</span> Mock
-<span style="color:#ff7b72">from</span> imdb.tests.factories <span style="color:#ff7b72">import</span> MovieFactory
+<span style="color:#ff7b72">from</span> fb_post.tests.factories <span style="color:#ff7b72">import</span> UserFactory
 
-<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_get_movie_returns_correct_title</span>():
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_create_post_returns_post_id</span>():
     <span style="color:#8b949e"># Arrange</span>
-    movie_object = MovieFactory.build(title=<span style="color:#a5d6ff">"Inception"</span>, movie_id=<span style="color:#79c0ff">1</span>)
+    storage_mock = Mock()
+    storage_mock.create_post.return_value = <span style="color:#79c0ff">42</span>   <span style="color:#8b949e"># pin the return value</span>
 
     storage_mock = Mock()
     storage_mock.get_movie_by_id.return_value = movie_object  <span style="color:#8b949e"># pin the return value</span>
 
-    interactor = GetMovieInteractor(storage=storage_mock)
+    presenter_mock = Mock()
+    presenter_mock.response.return_value = {<span style="color:#a5d6ff">"post_id"</span>: <span style="color:#79c0ff">42</span>}
+
+    interactor = CreatePostInteractor(storage=storage_mock)
 
     <span style="color:#8b949e"># Act</span>
-    result = interactor.execute(movie_id=<span style="color:#79c0ff">1</span>)
+    result = interactor.create_post_wrapper(
+        user_id=<span style="color:#79c0ff">1</span>, post_content=<span style="color:#a5d6ff">"Hello world!"</span>, presenter=presenter_mock)
 
     <span style="color:#8b949e"># Assert</span>
-    assert result.title == <span style="color:#a5d6ff">"Inception"</span></code></pre>
+    assert result == {<span style="color:#a5d6ff">"post_id"</span>: <span style="color:#79c0ff">42</span>}</code></pre>
 
   <div class="callout">
     <div class="callout-title">The syntax rule</div>
@@ -325,18 +332,19 @@ storage_mock.get_movie_by_id()   <span style="color:#8b949e"># &lt;Mock name='mo
 
 <pre><code><span style="color:#ff7b72">import</span> pytest
 <span style="color:#ff7b72">from</span> unittest.mock <span style="color:#ff7b72">import</span> Mock
-<span style="color:#ff7b72">from</span> imdb.exceptions <span style="color:#ff7b72">import</span> MovieDoesNotExistException
+<span style="color:#ff7b72">from</span> fb_post.exceptions <span style="color:#ff7b72">import</span> InvalidUserException
 
-<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_get_movie_with_invalid_id_raises_exception</span>():
+<span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_create_post_with_invalid_user_raises_exception</span>():
     <span style="color:#8b949e"># Arrange</span>
     storage_mock = Mock()
-    storage_mock.get_movie_by_id.side_effect = MovieDoesNotExistException
+    storage_mock.validate_user_id.side_effect = InvalidUserException
 
-    interactor = GetMovieInteractor(storage=storage_mock)
+    interactor = CreatePostInteractor(storage=storage_mock)
 
     <span style="color:#8b949e"># Act &amp; Assert</span>
-    <span style="color:#ff7b72">with</span> pytest.raises(MovieDoesNotExistException):
-        interactor.execute(movie_id=<span style="color:#79c0ff">-999</span>)</code></pre>
+    <span style="color:#ff7b72">with</span> pytest.raises(InvalidUserException):
+        interactor.create_post_wrapper(
+            user_id=<span style="color:#79c0ff">-999</span>, post_content=<span style="color:#a5d6ff">"Hello!"</span>, presenter=Mock())</code></pre>
 
   <div class="callout warn">
     <div class="callout-title">return_value vs side_effect</div>
@@ -347,10 +355,10 @@ storage_mock.get_movie_by_id()   <span style="color:#8b949e"># &lt;Mock name='mo
   <h3>The iterable form — different outputs on each call</h3>
 
 <pre><code><span style="color:#8b949e"># First call returns a movie, second call raises the exception</span>
-storage_mock.get_movie_by_id.side_effect = [movie_object, MovieDoesNotExistException]
+storage_mock.validate_user_id.side_effect = [None, InvalidUserException]
 
-storage_mock.get_movie_by_id(<span style="color:#79c0ff">1</span>)    <span style="color:#8b949e"># returns movie_object</span>
-storage_mock.get_movie_by_id(<span style="color:#79c0ff">99</span>)   <span style="color:#8b949e"># raises MovieDoesNotExistException</span></code></pre>
+storage_mock.validate_user_id(<span style="color:#79c0ff">1</span>)    <span style="color:#8b949e"># valid — returns None</span>
+storage_mock.validate_user_id(<span style="color:#79c0ff">99</span>)   <span style="color:#8b949e"># raises InvalidUserException</span></code></pre>
 </section>
 
 
@@ -380,17 +388,18 @@ storage_mock.get_movie_by_id(<span style="color:#79c0ff">99</span>)   <span styl
 
   <h3>Example — asserting the storage was called with the right ID</h3>
 
-<pre><code><span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_interactor_passes_correct_id_to_storage</span>():
+<pre><code><span style="color:#ff7b72">def</span> <span style="color:#79c0ff">test_interactor_passes_correct_args_to_storage</span>():
     <span style="color:#8b949e"># Arrange</span>
     storage_mock = Mock()
-    storage_mock.get_movie_by_id.return_value = MovieFactory.build()
-    interactor = GetMovieInteractor(storage=storage_mock)
+    storage_mock.create_post.return_value = <span style="color:#79c0ff">42</span>
+    interactor = CreatePostInteractor(storage=storage_mock)
 
     <span style="color:#8b949e"># Act</span>
-    interactor.execute(movie_id=<span style="color:#79c0ff">42</span>)
+    interactor.create_post_wrapper(
+        user_id=<span style="color:#79c0ff">1</span>, post_content=<span style="color:#a5d6ff">"Hello!"</span>, presenter=Mock())
 
-    <span style="color:#8b949e"># Assert — did the interactor forward the ID correctly?</span>
-    storage_mock.get_movie_by_id.assert_called_once_with(movie_id=<span style="color:#79c0ff">42</span>)</code></pre>
+    <span style="color:#8b949e"># Assert — did the interactor forward args correctly?</span>
+    storage_mock.create_post.assert_called_once_with(user_id=<span style="color:#79c0ff">1</span>, post_content=<span style="color:#a5d6ff">"Hello!"</span>)</code></pre>
 
   <div class="callout warn">
     <div class="callout-title">Positional vs keyword arguments matter</div>
@@ -401,9 +410,9 @@ storage_mock.get_movie_by_id(<span style="color:#79c0ff">99</span>)   <span styl
 
   <h3>Inspection attributes (for debugging)</h3>
 
-<pre><code>storage_mock.get_movie_by_id.call_count        <span style="color:#8b949e"># how many times called</span>
-storage_mock.get_movie_by_id.call_args         <span style="color:#8b949e"># arguments from the last call</span>
-storage_mock.get_movie_by_id.call_args_list    <span style="color:#8b949e"># list of all calls</span></code></pre>
+<pre><code>storage_mock.create_post.call_count        <span style="color:#8b949e"># how many times called</span>
+storage_mock.create_post.call_args         <span style="color:#8b949e"># arguments from the last call</span>
+storage_mock.create_post.call_args_list    <span style="color:#8b949e"># list of all calls</span></code></pre>
 </section>
 
 
@@ -554,13 +563,13 @@ storage_mock.get_movie_by_id.asert_called_once()  <span style="color:#8b949e"># 
   </p>
 
 <pre><code><span style="color:#ff7b72">from</span> unittest.mock <span style="color:#ff7b72">import</span> create_autospec
-<span style="color:#ff7b72">from</span> imdb.storages.movies_storage <span style="color:#ff7b72">import</span> MoviesStorageImplementation
+<span style="color:#ff7b72">from</span> fb_post.storages.create_post_storage <span style="color:#ff7b72">import</span> CreatePostStorageImplementation
 
-<span style="color:#8b949e"># Creates a mock that enforces MoviesStorageImplementation's real interface</span>
-storage_mock = create_autospec(MoviesStorageImplementation)
+<span style="color:#8b949e"># Creates a mock that enforces the real interface</span>
+storage_mock = create_autospec(CreatePostStorageImplementation)
 
-storage_mock.get_movie_by_id.return_value = movie_object   <span style="color:#8b949e"># fine — method exists</span>
-storage_mock.get_moive_by_id.return_value = movie_object   <span style="color:#8b949e"># AttributeError — typo caught!</span></code></pre>
+storage_mock.create_post.return_value = <span style="color:#79c0ff">42</span>           <span style="color:#8b949e"># fine — method exists</span>
+storage_mock.cerate_post.return_value = <span style="color:#79c0ff">42</span>           <span style="color:#8b949e"># AttributeError — typo caught!</span></code></pre>
 
   <div class="callout key">
     <div class="callout-title">Org recommendation</div>
@@ -590,7 +599,6 @@ storage_mock.get_moive_by_id.return_value = movie_object   <span style="color:#8
       <tr><td>Patch only one method on a real class</td><td><code>@patch.object(Class, 'method_name')</code></td></tr>
       <tr><td>Verify the mock was called with exact arguments</td><td><code>mock.method.assert_called_once_with(...)</code></td></tr>
       <tr><td>Prevent misspelling bugs on a known class</td><td><code>create_autospec(RealClass)</code></td></tr>
-      <tr><td>Enforce real interface via patch</td><td><code>@patch('...', autospec=True)</code></td></tr>
     </tbody>
   </table>
 </section>
@@ -614,7 +622,7 @@ storage_mock.get_moive_by_id.return_value = movie_object   <span style="color:#8
   <ul>
     <li>
       <strong>Practice:</strong>
-      Pick any interactor in the IMDb project and write a test suite that uses
+      Pick any interactor in the Social Network project (<code>create_post</code>, <code>get_post</code>, <code>delete_post</code>) and write a test suite that uses
       <code>create_autospec</code> on the storage, covers one normal case and one
       exception case, and asserts the storage was called with the right arguments.
     </li>
@@ -634,18 +642,17 @@ storage_mock.get_moive_by_id.return_value = movie_object   <span style="color:#8
   <div class="callout">
     <div class="callout-title">Ask your teacher</div>
     Anything unclear? Post a follow-up in this chat.
-    Common questions: "when exactly should I use patch vs Mock?",
-    "how do I patch something in the same file?",
-    "how do I mock a chained call like <code>storage.get_movie().title</code>?"
+    Common questions: "when exactly should I use patch vs Mock?".
   </div>
 </section>
 
 </main>
 
 <footer class="lesson-footer">
-  <div class="lesson-nav">
-    <a href="0011-writing-test-cases.html">&#8592; Lesson 13: Testing with pytest</a>
-    <a href="../index.html">Course Home →</a>
+  <div class="lesson-footer-inner">
+    <a href="0011-writing-test-cases.html" class="nav-btn prev">&#8592; Lesson 13: Testing with pytest</a>
+    <span class="footer-lesson-name">Lesson 14 — Mocking</span>
+    <a href="../index.html" class="nav-btn next">Course Home &#8594;</a>
   </div>
 </footer>
 
@@ -675,12 +682,12 @@ storage_mock.get_moive_by_id.return_value = movie_object   <span style="color:#8
     "explain": "Set the return_value attribute on the method attribute of the mock object: mock.method.return_value = 42. This pins what the method returns on every call."
   },
   {
-    "q": "How do you make a mock method raise MovieDoesNotExistException when called?",
+    "q": "How do you make a mock method raise InvalidUserException when called?",
     "options": [
-      "mock.method.side_effect = MovieDoesNotExistException",
-      "mock.method.return_value = MovieDoesNotExistException",
-      "mock.method.raises = MovieDoesNotExistException",
-      "mock.method.exception = MovieDoesNotExistException()"
+      "mock.method.side_effect = InvalidUserException",
+      "mock.method.return_value = InvalidUserException",
+      "mock.method.raises = InvalidUserException",
+      "mock.method.exception = InvalidUserException()"
     ],
     "answer": 0,
     "explain": "side_effect accepts an exception class (or instance). When the mock method is called, it raises that exception. return_value only controls the return value, not exceptions."
